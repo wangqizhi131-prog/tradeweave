@@ -14,11 +14,16 @@ import { runInNewContext } from 'node:vm';
 import { simulatedAssistantResponse } from './fixtures/simulated-ai.mjs';
 
 const uiFixture = await readFile(new URL('../scripts/ui-fixture.mjs', import.meta.url), 'utf8');
+assert.match(uiFixture, /--ai-failure-once[\s\S]*SECRET_FIXTURE_PROVIDER_DETAIL_MUST_NOT_LEAK[\s\S]*status: 429/, 'The browser fixture must support one simulated provider failure followed by a successful retry.');
 const simulatedAi = await readFile(new URL('../scripts/fixtures/simulated-ai.mjs', import.meta.url), 'utf8');
 assert.match(uiFixture, /second\.name = \{ en: 'Nanjing Woven Market Tote', zh: '南京手织市集包' \}[\s\S]*?second\.subtitle = \{ en: 'A useful carryall, made slowly\.', zh: '慢慢织成，日常好用。' \}[\s\S]*?second\.description = \{ en: 'A handwoven cotton carryall for small everyday finds\.', zh: '手工编织棉布，适合收纳日常随身物品。' \}/, 'The option-test product copy must match its tote illustration and not borrow another seed product story.');
 const stylesheet = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
 const buyerStylesheet = await readFile(new URL('../storefront.css', import.meta.url), 'utf8');
 const sampleStore = JSON.parse(await readFile(new URL('../store-data.json', import.meta.url), 'utf8'));
+const renderConfig = await readFile(new URL('../render.yaml', import.meta.url), 'utf8');
+const packageMetadata = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+assert.match(renderConfig, /plan:\s*free[\s\S]*?healthCheckPath:\s*\/healthz[\s\S]*?key:\s*NODE_VERSION\s*\n\s*value:\s*24\.22\.1[\s\S]*?key:\s*DISABLE_LOCAL_EDITOR\s*\n\s*value:\s*["']?1/, 'The Render Blueprint must pin Node 24, use the implemented health route, stay on Free and disable the unauthenticated editor.');
+assert.equal(packageMetadata.engines.node, '>=24.0.0 <25.0.0', 'The Node engine range must stay within the tested major.');
 assert.equal(sampleStore.products.find(product => product.id === 'riverbank-cup')?.images[0], '/media/31b028a799280fca5b064307f246c39973e47e83e4ef62381201256fbed4a655.jpg', 'The sample stoneware cup must use its visually verified cup photo.');
 assert.equal(sampleStore.products.find(product => product.id === 'field-notes-towel')?.images[0], '/media/b03338f5b49004cd5fa495b1b8c66d12226283fa87c112cd428920a811802d52.jpg', 'The sample linen towel must use its visually verified towel photo.');
 assert.match(stylesheet, /\.modal::backdrop\{background:rgb\(20 35 30 \/ 100%\);backdrop-filter:blur\(7px\)\}/, 'Merchant dialogs must suppress page copy behind their narrow-screen edges.');
@@ -32,7 +37,7 @@ assert.match(stylesheet, /@media\(max-width:600px\)\{#order-dialog\{height:calc\
 assert.match(buyerStylesheet, /\.buyer-dialog::backdrop\{background:rgb\(24 51 41 \/ 78%\);backdrop-filter:blur\(3px\)\}/, 'Buyer dialogs must use the same legible blurred backdrop treatment.');
 assert.match(buyerStylesheet, /@media\(max-width:360px\)\{\.shop-catalog-toolbar\{grid-template-columns:minmax\(0,1fr\)\}\}/, 'The smallest mobile catalog view must give each filter a full-width value instead of clipping selected text.');
 assert.match(buyerStylesheet, /@media\(max-width:700px\)\{\.shop-catalog-filters>summary\{display:flex;[\s\S]*?\.shop-catalog-filters:not\(\[open\]\) #shop-catalog-filter-controls\{display:none\}/, 'Mobile filters must collapse into a visible, focusable disclosure while preserving the full filter panel.');
-assert.match(buyerStylesheet, /@media\(max-width:400px\)\{\.shop-art,\.shop-product-image\{aspect-ratio:1\.55\}\.shop-visual\{min-width:0\}\.shop-image-thumbs\{width:100%;min-width:0;box-sizing:border-box;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;padding-bottom:4px\}\.shop-image-thumbs button\{flex:0 0 60px;scroll-snap-align:start\}\}/, 'The smallest mobile product view must constrain a one-row image gallery and reveal product information sooner.');
+assert.match(buyerStylesheet, /@media\(max-width:400px\)\{\.shop-art\{aspect-ratio:1\.55\}\.shop-product-image\{aspect-ratio:3\/2\}\.shop-visual\{min-width:0\}\.shop-image-thumbs\{width:100%;min-width:0;box-sizing:border-box;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;padding-bottom:4px\}\.shop-image-thumbs button\{flex:0 0 60px;scroll-snap-align:start\}\}/, 'The smallest mobile product view must match the product photo ratio and constrain its thumbnail gallery to one scrollable row.');
 assert.match(buyerStylesheet, /\.receipt-dialog\[open\]\{display:flex;flex-direction:column;overflow:hidden\}[\s\S]*?\.receipt-dialog \.receipt-facts\{flex:0 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain\}/, 'Buyer order details must keep the close and receipt actions fixed while only long facts scroll.');
 assert.match(stylesheet, /@media\(max-width:600px\)[\s\S]*?\.nav-item\{[^}]*min-height:62px[^}]*white-space:normal/, 'Mobile merchant navigation labels must wrap within the compact five-item bar.');
 assert.match(stylesheet, /\.nav-item>span:not\(\.nav-count\)\{[^}]*white-space:normal/, 'Mobile merchant navigation label spans must be allowed to wrap.');
@@ -53,6 +58,7 @@ assert.ok(merchantApp.includes("aiProviderState = 'failed';"), 'A failed request
 assert.match(merchantApp, /title\.title = item\.name\.en/, 'The full product title must remain available as a hover title when the list is clamped.');
 const storefrontApp = await readFile(new URL('../storefront.js', import.meta.url), 'utf8');
 const buyerLocales = await readFile(new URL('../buyer-locales.js', import.meta.url), 'utf8');
+assert.equal((buyerLocales.match(/aiTemporaryError:/g) || []).length, 5, 'Assistant provider failures need localized recovery copy in every supported storefront language.');
 const storefrontHtml = await readFile(new URL('../storefront.html', import.meta.url), 'utf8');
 const localeRuntime = { window: {} };
 runInNewContext(buyerLocales.replace('window.TradeWeaveI18n = {', 'window.__translations = translations;\n  window.TradeWeaveI18n = {'), localeRuntime);
@@ -88,9 +94,10 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
   assert.ok(html.includes('/dialog-focus.js'), htmlName + ': shared dialog keyboard behavior must load.');
   assert.ok(html.includes('/styles.css?v=6.21'), htmlName + ': shared interface, mobile account target and narrow editor navigation updates must bypass cached CSS.');
   assert.match(await readFile(new URL('../styles.css', import.meta.url), 'utf8'), /html:has\(dialog\[open\]\),body:has\(dialog\[open\]\)\{overflow:hidden\}/, 'An open workspace dialog must lock document and body scrolling so background copy cannot move into view.');
-  if (scriptName === 'app.js') { assert.ok(html.includes('/app.js?v=workspace-6.7'), 'Merchant provider-status distinctions must bypass cached JavaScript.'); assert.ok(html.includes('class="live-dot pending"'), 'The workspace must default to an unverified provider indicator before credentials load.'); }
+  if (scriptName === 'app.js') { assert.ok(html.includes('/app.js?v=workspace-6.9'), 'Merchant payment status labels and refund controls must bypass cached JavaScript.'); assert.ok(html.includes('class="live-dot pending"'), 'The workspace must default to an unverified provider indicator before credentials load.'); }
   if (scriptName === 'storefront.js') {
-    assert.ok(html.includes('/storefront.js?v=6.19'), 'Buyer workflow improvements must bypass cached storefront JavaScript.');
+    assert.ok(html.includes('/storefront.js?v=6.22'), 'Buyer payment status labels must bypass cached storefront JavaScript.');
+    assert.ok(html.includes('/buyer-locales.js?v=5'), 'Localized refund statuses must bypass cached locale bundles.');
     assert.ok(html.includes('/storefront.css?v=6.8'), 'Buyer responsive improvements must bypass cached storefront CSS.');
     assert.match(code, /shop-pending'\)\.scrollIntoView\(\{ block: 'start', behavior: reducedMotion \? 'auto' : 'smooth' \}\);[\s\S]*?recoveryButton\.focus\(\{ preventScroll: true \}\)/, 'Payment recovery must bring its retry action into view and keyboard focus.');
   }
@@ -101,9 +108,12 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /dialog\.showModal\(\);[^}]*const orderContent = dialog\.querySelector\('\.order-dialog-content'\); if \(orderContent\) orderContent\.scrollTop = 0;/, 'Merchant order content resets after native dialog autofocus so every open begins at the top.');
     assert.match(code, /if \(order\.status === 'COMPLETED'\) info\.append\(element\('span', '', 'Fulfillment · '/, 'Fulfillment status is only applicable to paid orders in the merchant list.');
     assert.match(code, /if \(order\.status === 'COMPLETED'\) root\.append\(element\('dt', '', 'Fulfillment'\)/, 'Merchant order details must not show fulfillment for orders without completed payment.');
+    assert.match(code, /\['COMPLETED','CANCELLED','FAILED','DECLINED','DENIED','REFUNDED'\]\.includes\(order\.status\)/, 'Merchant payment reconciliation must be disabled for every terminal order state.');
+    assert.match(code, /PARTIALLY_REFUNDED: 'Partially refunded'/); assert.match(code, /REFUNDED: 'Refunded'/);
   }
   if (scriptName === 'storefront.js') {
     assert.match(html, /storefront\.css\?v=6\.8/, 'The latest narrow-screen catalog, gallery and buyer modal layout must bypass cached CSS.');
+    assert.match(code, /statusPartiallyRefunded/); assert.match(code, /statusRefunded/);
     assert.match(code, /if \(order\.status === 'COMPLETED'\) info\.append\(node\('small', '', t\('fulfillment'\)/, 'Buyer order list must not show fulfillment for orders without completed payment.');
     assert.match(code, /if \(order\.status === 'COMPLETED'\) root\.append\(node\('dt', '', t\('fulfillment'\)/, 'Buyer receipt must not show fulfillment for orders without completed payment.');
     assert.match(code, /replyLanguageTouched === true \? normalizeLanguage\(saved\.replyLanguage\) : normalizeLanguage\(saved\.language\)/, 'Reply language defaults to the selected storefront language unless the buyer changed it manually.');
@@ -111,7 +121,10 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /state\.replyLanguageTouched = true/, 'A manual reply-language selection remains explicit.');
     assert.match(code, /const summary = \(order\.items \|\| \[\]\)\.map\(item => item\.quantity \+ ' × ' \+ \(localizedOrderItem\(item\)/, 'Pending checkout recovery shows localized item names from its immutable snapshot.');
     assert.match(code, /\$\('#shop-contact-history'\)\.checked = false/, 'Conversation history is shared with the maker only after an explicit opt-in.');
-    assert.match(html, /storefront\.js\?v=6\.19/, 'The browser must load the updated buyer workflow.');
+    assert.match(html, /storefront\.js\?v=6\.22/, 'The browser must load the updated buyer payment status labels.');
+    assert.match(code, /catch \{ addMessage\('assistant', t\('questionErrorSaved', \{ error: t\('aiTemporaryError'\) \}\), true, contextId, \{ retryQuestion: question \}\); \}/, 'Assistant failures must show localized recovery copy and preserve a one-click retry.');
+    assert.match(code, /state\.histories\[product\.id\] = history; persist\(\); renderChat\(\); ask\(failure\.retryQuestion\)/, 'Retry must reuse the failed question without duplicating it in conversation context.');
+    assert.match(await readFile(new URL('../storefront.css', import.meta.url), 'utf8'), /\.shop-retry-question\{margin-top:8px;min-height:40px\}/, 'The retry action must remain comfortably tappable in the chat dialog.');
   } else {
     assert.match(html, /id="editor-price"[^>]*min="0"/, 'A zero-price draft must pass browser validation.');
     assert.match(code, /editorDraft\.status === 'active' && !editorDraft\.variants\.length && Number\(editorDraft\.price\) < \.01/, 'A simple active listing must still require a positive unit price.');
@@ -121,13 +134,13 @@ const temporary = await mkdtemp(join(tmpdir(), 'tradeweave-check-'));
 await writeFile(join(temporary, 'store-data.json'), await readFile(new URL('../store-data.json', import.meta.url)));
 Object.assign(process.env, { ENV_FILE: join(temporary, 'absent.env'), DISABLE_LOCAL_EDITOR: '0', PORT: '0', HOST: '127.0.0.1', DATA_DIR: temporary, STORE_FILE: join(temporary, 'store-data.json'), MEDIA_DIR: join(temporary, 'media'), PAYPAL_CLIENT_ID: 'check-client', PAYPAL_CLIENT_SECRET: 'check-secret', AI_API_KEY: 'check-key', AI_MODEL: 'check-model', AI_API_URL: 'https://test.invalid/ai' });
 const realFetch = globalThis.fetch, remoteOrders = new Map(), captured = new Map(), requestIds = new Map(), captureRequestHistory = new Map();
-let created = 0, captureCalls = 0, captureMode = 'COMPLETED', createMode = 'OK', aiMode = 'OK', approvalMode = 'APPROVED', lastAiPayload, fxMode = 'INVALID';
+let created = 0, captureCalls = 0, captureMode = 'COMPLETED', createMode = 'OK', aiMode = 'OK', approvalMode = 'APPROVED', lastAiPayload, fxMode = 'INVALID', aiConnectAttempts = 0;
 let heldOrderId = null, heldStarted = null, releaseHeld = null;
-const remoteJson = data => new Response(JSON.stringify(data), { status: 200, headers: { 'content-type': 'application/json' } });
+const remoteJson = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
 globalThis.fetch = async (url, options = {}) => {
   const target = String(url);
   if (target === 'https://api.frankfurter.dev/v2/providers/ecb/rate/usd/cny') return remoteJson({ date: '2026-10-23', base: 'USD', quote: 'CNY', rate: fxMode === 'INVALID' ? -6.67 : 6.67 });
-  if (target === 'https://test.invalid/ai' || target === 'https://openrouter.ai/api/v1/chat/completions') { lastAiPayload = JSON.parse(options.body); if (aiMode === 'TIMEOUT') throw new DOMException('Simulated timeout', 'TimeoutError'); if (aiMode === 'EMPTY') return remoteJson({ choices: [] }); return remoteJson({ choices: [{ message: { content: 'Spot clean with a damp cloth.' } }] }); }
+  if (target === 'https://test.invalid/ai' || target === 'https://openrouter.ai/api/v1/chat/completions') { lastAiPayload = JSON.parse(options.body); if (aiMode === 'TIMEOUT') throw new DOMException('Simulated timeout', 'TimeoutError'); if (aiMode === 'CONNECT_TIMEOUT_ONCE' && aiConnectAttempts++ === 0) { const error = new TypeError('fetch failed'); error.cause = Object.assign(new Error('connect timeout'), { code: 'UND_ERR_CONNECT_TIMEOUT' }); throw error; } if (aiMode === 'HTTP_ERROR') return remoteJson({ error: { message: 'SECRET_PROVIDER_DETAIL_MUST_NOT_LEAK' } }, 429); if (aiMode === 'EMPTY') return remoteJson({ choices: [] }); return remoteJson({ choices: [{ message: { content: 'Spot clean with a damp cloth.' } }] }); }
   if (!target.startsWith('https://api-m.sandbox.paypal.com/')) throw new Error('Unexpected provider request');
   if (target.endsWith('/v1/oauth2/token')) return remoteJson({ access_token: 'stub-token' });
   if (target.endsWith('/v2/checkout/orders')) {
@@ -160,6 +173,9 @@ async function request(path, body, extra = {}, other = false) {
 }
 try {
   await start();
+  const health = await request('/healthz');
+  assert.equal(health.status, 200, 'The Render health check route must be available.');
+  assert.deepEqual(health.data, { status: 'ok' }, 'The health check must return only a minimal status.');
   for (const path of ['/.env', '/server.mjs', '/storage.mjs', '/store-data.json', '/data/tradeweave.sqlite', '/fixture-paypal.js', '/scripts/fixtures/paypal-ui.js']) assert.equal((await request(path)).status, 404);
   for (const path of ['/api/config', '/api/workspace/store', '/api/workspace/orders', '/%2Findex.html']) assert.equal(await publicStatus(path), 403);
   assert.equal((await request('/api/shop/config')).data.editorToken, undefined);
@@ -336,6 +352,20 @@ try {
   const beforeReconcile = captureCalls; captured.get(pending.id).purchase_units[0].payments.captures[0].status = 'COMPLETED';
   assert.equal((await request('/api/workspace/order', { orderId: pending.id, action: 'reconcile' }, freshLocal)).data.status, 'COMPLETED'); assert.equal(captureCalls, beforeReconcile);
   assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 6); // 4 earlier paid units + 1 transient-retry capture + 1 unresolved mismatched capture reservation.
+  captureMode = 'UNRECOGNIZED';
+  const unknownStatus = (await request('/api/paypal/order', { productId: tote.id, quantity: 1 })).data;
+  assert.equal((await request('/api/paypal/capture', { orderId: unknownStatus.id, checkoutToken: unknownStatus.checkoutToken })).status, 502);
+  const retainedUnknown = (await request('/api/buyer/orders')).data.orders.find(order => order.localId === unknownStatus.localId);
+  assert.equal(retainedUnknown.status, 'CAPTURE_PENDING'); assert.equal(retainedUnknown.checkoutToken, unknownStatus.checkoutToken);
+  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 7, 'An unknown capture status must keep its reservation until reconciliation.');
+  captured.get(unknownStatus.id).purchase_units[0].payments.captures[0].status = 'PARTIALLY_REFUNDED';
+  assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'reconcile' }, freshLocal)).data.status, 'PARTIALLY_REFUNDED');
+  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 7);
+  assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'fulfill', tracking: '' }, freshLocal)).status, 409);
+  captured.get(unknownStatus.id).purchase_units[0].payments.captures[0].status = 'REFUNDED';
+  assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'reconcile' }, freshLocal)).data.status, 'REFUNDED');
+  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 7, 'A refund status refresh must not deduct stock twice.');
+  assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'fulfill', tracking: '' }, freshLocal)).status, 409);
   captureMode = 'COMPLETED';
   const expiring = (await request('/api/paypal/order', { items: [{ productId: selected.id, variantId: selected.variants[0].id, quantity: 2 }] })).data;
   const fixtureDb = new DatabaseSync(join(temporary, 'tradeweave.sqlite'));
@@ -346,12 +376,14 @@ try {
   await request('/api/paypal/cancel', { orderId: replacement.id, checkoutToken: replacement.checkoutToken });
   assert.equal((await request('/api/paypal/capture', { orderId: expiring.id, checkoutToken: expiring.checkoutToken })).data.status, 'COMPLETED');
   aiMode = 'TIMEOUT'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 502);
+  aiMode = 'CONNECT_TIMEOUT_ONCE'; aiConnectAttempts = 0; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200); assert.equal(aiConnectAttempts, 2, 'Only a pre-connect timeout is retried once.');
   aiMode = 'EMPTY'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 502);
+  aiMode = 'HTTP_ERROR'; const providerFailure = await request('/api/assistant', { productId: tote.id, question: 'Care?' }); assert.equal(providerFailure.status, 502); assert.doesNotMatch(JSON.stringify(providerFailure.data), /SECRET_PROVIDER_DETAIL_MUST_NOT_LEAK/); assert.match(providerFailure.data.error, /temporarily unavailable/i);
   aiMode = 'OK'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200);
   process.env.AI_API_URL = 'https://openrouter.ai/api/v1/chat/completions'; process.env.AI_MODEL = 'openrouter/free';
   assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200);
-  assert.equal(lastAiPayload.model, 'openrouter/free'); assert.deepEqual(lastAiPayload.provider.max_price, { prompt: 0, completion: 0 });
-  process.env.AI_MODEL = 'sample/model:free'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200);
+  assert.equal(lastAiPayload.model, 'openrouter/free'); assert.deepEqual(lastAiPayload.provider.max_price, { prompt: 0, completion: 0 }); assert.equal(lastAiPayload.reasoning_effort, 'none');
+  process.env.AI_MODEL = 'sample/model:free'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200); assert.equal(lastAiPayload.reasoning_effort, 'none');
   lastAiPayload = null; process.env.AI_MODEL = 'sample/paid-model';
   assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 503); assert.equal(lastAiPayload, null, 'A paid OpenRouter model must be rejected before making a provider call.');
   process.env.AI_MODEL = 'openrouter/free'; process.env.AI_API_URL = 'http://openrouter.ai/api/v1/chat/completions';
@@ -442,7 +474,7 @@ try {
   assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 429);
   delete process.env.AI_API_KEY; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 503);
   delete process.env.PAYPAL_CLIENT_SECRET; assert.equal((await request('/api/paypal/order', { productId: tote.id, quantity: 1 })).status, 503);
-  console.log('PASS: DOM/private routes; disabled merchant boundary; catalog lifecycle/conflicts; browser ownership; orders/restart/backup restore; immutable checkout snapshots across catalog price edits; create/capture idempotency and lost responses; pending/declined captures; stock reservations/expiry plus independent-process serialization and request-key convergence; cart/variants; fulfillment; shop policies; questions/replies; media visibility/limits; AI context/errors; rate limits; backup integrity; missing setup.');
+  console.log('PASS: DOM/private routes; disabled merchant boundary; catalog lifecycle/conflicts; browser ownership; orders/restart/backup restore; immutable checkout snapshots across catalog price edits; create/capture idempotency and lost responses; pending/declined and unknown/refund capture recovery; stock reservations/expiry plus independent-process serialization and request-key convergence; cart/variants; fulfillment; shop policies; questions/replies; media visibility/limits; AI context/errors; rate limits; backup integrity; missing setup.');
   console.log('Provider responses were simulated. No live provider traffic. Only an isolated temporary catalog and database were used.');
 } finally {
   await stop(); globalThis.fetch = realFetch;

@@ -44,8 +44,13 @@ if (process.argv[2] === '--worker') {
   assert.equal((await storage.metrics()).completed, 1);
   assert.equal((await storage.getMedia('a'.repeat(64))).contentType, 'image/jpeg');
   assert.deepEqual((await storage.getMedia('a'.repeat(64))).bytes, imageBytes, 'Product image bytes must survive a database connection restart.');
+  await storage.complete(order.id, { status: 'PARTIALLY_REFUNDED', captureId: 'sandbox-capture' });
+  assert.equal((await storage.publicStore()).products[0].stock, 2, 'A refund status refresh must not deduct remote inventory a second time.');
+  await storage.complete(order.id, { status: 'REFUNDED', captureId: 'sandbox-capture' });
+  assert.equal((await storage.publicStore()).products[0].stock, 2);
+  await assert.rejects(() => storage.fulfill(order.id, ''), /Only a completed payment/);
   storage.db.close();
-  console.log('PASS: optional libSQL adapter preserves checkout, inventory, uploaded product images and buyer questions across database reopen.');
+  console.log('PASS: optional libSQL adapter preserves checkout, inventory and images across reopen; refund reconciliation does not deduct inventory twice or allow fulfillment.');
 } else {
   const directory = await mkdtemp(join(tmpdir(), 'tradeweave-libsql-check-'));
   const database = join(directory, 'remote.sqlite');

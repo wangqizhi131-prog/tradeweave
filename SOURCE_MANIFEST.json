@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-02T07:56:27.189Z",
+  "createdAt": "2026-11-02T09:34:38.856Z",
   "files": [
     {
       "path": ".env.example",
@@ -9,18 +9,18 @@
     },
     {
       "path": ".gitignore",
-      "bytes": 169,
-      "sha256": "26ed0e5b23ae16ceee49b91aa139af413e0867e41ad66cc9895de19a4693801f"
+      "bytes": 212,
+      "sha256": "bfc9ad2f368958b8ce99b43436c168e0bffee11e073b86b4f4c1f5c7be454829"
     },
     {
       "path": "app.js",
-      "bytes": 58380,
-      "sha256": "3fe160cfb23e9dffac9eb29f5902df9bd43aaab90af19297b140167c425d7416"
+      "bytes": 58475,
+      "sha256": "b0d3f8302b074e7f180d3713e20154bce39bc2c7868beb7547ef84efd8f45dcf"
     },
     {
       "path": "buyer-locales.js",
-      "bytes": 54849,
-      "sha256": "09ba22586de27712021b5663d7a5e3deea0d9c58aa2197a4af157db78aac5ab7"
+      "bytes": 55861,
+      "sha256": "4f02eb52b7a538700c0144dbb05b35bf230d1b1ff36aff7ff5569df0850735ed"
     },
     {
       "path": "catalog.mjs",
@@ -34,8 +34,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 5880,
-      "sha256": "5a9d8b8f2a8c8ed30cfdd75bbf768efb438c68c51ae508b0603650321a391064"
+      "bytes": 5873,
+      "sha256": "2c3092b827d35d3ef7162364c7a88b36e24edc1fae7c48ad216c172623b0d62a"
     },
     {
       "path": "docs/notices-and-ai-use.md",
@@ -45,7 +45,7 @@
     {
       "path": "index.html",
       "bytes": 29222,
-      "sha256": "d53202d20d4bb5f58c10578a62148824042a6f6655ccc689b75a3a134612880e"
+      "sha256": "eeaaf49aa0f5ce3c075ccf0e2598b09729f0a044f64798fc1569ebae7ef680ae"
     },
     {
       "path": "integrations/astropods/agent/bridge.mjs",
@@ -59,23 +59,23 @@
     },
     {
       "path": "package-lock.json",
-      "bytes": 9588,
-      "sha256": "84e08c5b6f12db8c12b7518490b0316007efce090437135b487665aeaf03663f"
+      "bytes": 9596,
+      "sha256": "ac65fc5f8d409459ffb1a3969eb9166ab074d243bf50776319eb683ff4423fa7"
     },
     {
       "path": "package.json",
-      "bytes": 390,
-      "sha256": "7f544d4f3b455ca1ad1e7b8d59eec76b1192b57dd6a0951a66982d97954c0764"
+      "bytes": 398,
+      "sha256": "a628d0d6325c64c1953cc5268d09298a272bdedfa193b64e9cb0b79d336a1b89"
     },
     {
       "path": "README.md",
-      "bytes": 5084,
-      "sha256": "d03132833a60b236dc31047ea7db6920735f316f46489058e29fd1577d9b5128"
+      "bytes": 5077,
+      "sha256": "fec4b491f502c13d84da476142830ce12c5f8b18503c6f04a29febab37b2766f"
     },
     {
       "path": "render.yaml",
-      "bytes": 823,
-      "sha256": "1c9e9ed3722a63c06ad0b176f2c16c470f35c8a6c98dc52ebd1ea074b99d6fdd"
+      "bytes": 872,
+      "sha256": "8afdf582c29552f4718bd9795d3fdf308d4eddab20573623056b192b60b4ff1f"
     },
     {
       "path": "scripts/astropods-check.mjs",
@@ -89,8 +89,8 @@
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 62773,
-      "sha256": "c6b7f1e2359c8503aa645888751deaca7f438b7f749f284e78a6d797177a3fbb"
+      "bytes": 68251,
+      "sha256": "3c6683b3ca6aeffa1b793a4060e2c78958a4cbd9bf6848a8bca21ba2042f1720"
     },
     {
       "path": "scripts/check.mjs",
@@ -114,13 +114,13 @@
     },
     {
       "path": "scripts/remote-storage-check.mjs",
-      "bytes": 9817,
-      "sha256": "a38deae86dac4549bf52f5b2056b3420d54356949c47588b96de557b32524634"
+      "bytes": 10340,
+      "sha256": "05c30d58036f03a88c55d50b6e8bc0acfc63e31065fbd49386813cb81316f094"
     },
     {
       "path": "scripts/ui-fixture.mjs",
-      "bytes": 11203,
-      "sha256": "f85e2a9ff9096aafd90aa9cca73e7ffcd7e90ef46df228a5466745a37150b3ed"
+      "bytes": 11571,
+      "sha256": "2aee6bc7317c4a482d0b151a8d6c3fefafeab6d082e3f8f1574d1fe6692eaeb5"
     },
     {
       "path": "seed-media/31b028a799280fca5b064307f246c39973e47e83e4ef62381201256fbed4a655.jpg",
@@ -154,18 +154,18 @@
     },
     {
       "path": "server.mjs",
-      "bytes": 40223,
-      "sha256": "e71e546f1b90ec3c04a7d898dbe5e4e4ce9118991077594be0a6ed64462f320f"
+      "bytes": 41410,
+      "sha256": "996612757c3892c3c59664b3022285d18c0e9481978b9834ef656423b40a65ad"
     },
     {
       "path": "storage-remote.mjs",
-      "bytes": 13243,
-      "sha256": "7aab3b4f8d59ac4b61a6e64be8758cb7804fca35de948362c7c870cd86f6a56f"
+      "bytes": 13319,
+      "sha256": "2830f19e71993152ddf44f3691b0def97b7bac1938cd60cae2a833240d3769aa"
     },
     {
       "path": "storage.mjs",
-      "bytes": 12215,
-      "sha256": "b67166ed7035060f76fe58414822ea3b5346f917fc61c8985e5df5bab9bbda9c"
+      "bytes": 12291,
+      "sha256": "e50f077821a2adb1671e196002dbf8d09edc97baf2b94e162870a40dbc5b58d3"
     },
     {
       "path": "store-data.json",
@@ -174,18 +174,18 @@
     },
     {
       "path": "storefront.css",
-      "bytes": 22744,
-      "sha256": "b1e622ead277285a441bf2e606333e39b9ff582d8fac3fc4710949b7da923c23"
+      "bytes": 22807,
+      "sha256": "9f985a49b411159d1427f456cb5f6d4f5cd837824b1e986441524767f0ecd5f8"
     },
     {
       "path": "storefront.html",
       "bytes": 15429,
-      "sha256": "8909cbab1ccfd3e369d134609279fe67ddebe968ef3230df8ec7752ef3879a75"
+      "sha256": "a76897a048c9dfc9350766cd7c8fc84643542e5ab0ff5aa400beba12d1dd1aa8"
     },
     {
       "path": "storefront.js",
-      "bytes": 58008,
-      "sha256": "e44612083d47b290c6dfc2d4ec58169c4f56ac53fa6a3626188cbc3ea9e104fe"
+      "bytes": 59014,
+      "sha256": "73e259f1754102a8f82487c57da53722e2f4d6e956d668f63bfab9e666f15d1a"
     },
     {
       "path": "styles.css",

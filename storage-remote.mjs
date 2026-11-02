@@ -81,13 +81,13 @@ export async function openRemoteStorage(url, authToken, seed) {
     async prepareCapture(id) { return transaction(async tx => { const order = await get(id, tx); if (!order) fail(404, 'Order not found.'); if (order.status === 'COMPLETED') return order; if (['CANCELLED', 'FAILED', 'DECLINED', 'DENIED'].includes(order.status)) fail(409, 'This checkout is closed. Start a new checkout.'); await reserve(tx, order, true); order.status = 'CAPTURE_PENDING'; order.updatedAt = new Date().toISOString(); await put(tx, order); return order; }); },
     async complete(id, result) { return transaction(async tx => {
       const order = await get(id, tx); if (!order) fail(404, 'Order not found.');
-      if (result.status === 'COMPLETED' && !order.inventoryApplied) {
+      if (['COMPLETED', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(result.status) && !order.inventoryApplied) {
         const value = (await catalog(tx)).store;
         for (const item of order.items) { const product = value.products.find(p => p.id === item.productId), variant = product?.variants.find(v => v.id === item.variantId); if (variant) { variant.stock = Math.max(0, variant.stock - item.quantity); product.stock = product.variants.reduce((sum, v) => sum + v.stock, 0); } else if (product && !item.variantId) product.stock = Math.max(0, product.stock - item.quantity); }
         await writeCatalog(tx, value); order.inventoryApplied = true;
       }
       Object.assign(order, result, { updatedAt: new Date().toISOString() });
-      if (['COMPLETED', 'DECLINED', 'DENIED', 'FAILED', 'CANCELLED'].includes(order.status)) await tx.execute({ sql: 'DELETE FROM holds WHERE order_id=?', args: [order.id] });
+      if (['COMPLETED', 'DECLINED', 'DENIED', 'FAILED', 'CANCELLED', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(order.status)) await tx.execute({ sql: 'DELETE FROM holds WHERE order_id=?', args: [order.id] });
       if (order.events.at(-1)?.text !== 'PayPal returned ' + result.status + '.') order.events.push({ at: order.updatedAt, text: 'PayPal returned ' + result.status + '.' });
       await put(tx, order); return order;
     }); },

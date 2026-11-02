@@ -52,7 +52,7 @@ function timeLabel(at) {
   const date = new Date(at);
   return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(date);
 }
-function statusLabel(status) { return ({ CREATING: 'Creating checkout', CREATED: 'Awaiting approval', APPROVED: 'Approved', CAPTURE_PENDING: 'Confirmation needed', COMPLETED: 'Completed', PENDING: 'Pending', DECLINED: 'Declined', DENIED: 'Denied', CANCELLED: 'Cancelled', FAILED: 'Failed' })[status] || status || 'Unconfirmed'; }
+function statusLabel(status) { return ({ CREATING: 'Creating checkout', CREATED: 'Awaiting approval', APPROVED: 'Approved', CAPTURE_PENDING: 'Confirmation needed', COMPLETED: 'Completed', PENDING: 'Pending', DECLINED: 'Declined', DENIED: 'Denied', CANCELLED: 'Cancelled', FAILED: 'Failed', PARTIALLY_REFUNDED: 'Partially refunded', REFUNDED: 'Refunded' })[status] || status || 'Unconfirmed'; }
 function openDialog(id) { $$('dialog[open]').forEach(dialog => dialog.close()); const dialog = $('#' + id); dialog.showModal(); const body = dialog.querySelector('.editor-body'); if (body) body.scrollTop = 0; const orderContent = dialog.querySelector('.order-dialog-content'); if (orderContent) orderContent.scrollTop = 0; }
 async function api(path, options = {}) {
   let response;
@@ -403,7 +403,7 @@ function showOrderDetails(order) {
   $('#order-dialog-copy').textContent = order.status === 'COMPLETED' ? 'PayPal returned a completed sandbox capture. No real money moved.' : 'PayPal has not returned a completed capture. This order is not shown as paid.';
   const root = $('#order-receipt'); root.replaceChildren();
   for (const [label, value] of [['Order ID', order.orderId], ['Capture ID', order.captureId || 'Not returned'], ['Product', order.productName], ['Quantity', order.quantity], ['Amount', money(order.amount, order.currency) + ' ' + order.currency], ['Status', statusLabel(order.status)]]) root.append(element('dt', '', label), element('dd', '', value));
-  $('#merchant-tracking').value = order.tracking || ''; $('#merchant-fulfill').disabled = order.status !== 'COMPLETED'; $('#merchant-reconcile').disabled = !order.paypalOrderId || ['COMPLETED','CANCELLED','FAILED'].includes(order.status); $('#merchant-order-message').textContent = '';
+  $('#merchant-tracking').value = order.tracking || ''; $('#merchant-fulfill').disabled = order.status !== 'COMPLETED'; $('#merchant-reconcile').disabled = !order.paypalOrderId || ['COMPLETED','CANCELLED','FAILED','DECLINED','DENIED','REFUNDED'].includes(order.status); $('#merchant-order-message').textContent = '';
   if (order.status === 'COMPLETED') root.append(element('dt', '', 'Fulfillment'), element('dd', '', order.fulfillment || 'UNFULFILLED'));
   root.append(element('dt', '', 'Ship to · sandbox'), element('dd', '', order.shipping ? [order.shipping.name, ...Object.values(order.shipping.address)].filter(Boolean).join(', ') : 'Not returned by PayPal. Confirm before dispatch.'));
   for (const item of order.items || []) root.append(element('dt', '', item.name), element('dd', '', item.quantity + ' × ' + money(item.price)));

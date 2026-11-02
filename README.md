@@ -16,7 +16,7 @@ The included shop and products are fictional examples. The checkout amount is US
 
 ## Run
 
-Requires Node.js 24 or later. Install the locked dependencies before running the checks or enabling the optional remote database.
+Requires Node.js 24.x. Install the locked dependencies before running the checks or enabling the optional remote database.
 
 ```sh
 npm ci

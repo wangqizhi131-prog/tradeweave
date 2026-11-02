@@ -12,7 +12,7 @@ The Blueprint requests `AI_API_KEY`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECR
 
 ## Requirements
 
-- Node.js 24 or later; run `npm ci` to install the locked dependency used by the optional remote storage path and its check.
+- Node.js 24.x; run `npm ci` to install the locked dependency used by the optional remote storage path and its check.
 - A desktop browser on the same computer as the local server. The maker workspace is loopback-only.
 - For live AI or checkout, provider credentials and network access are needed. No credentials or test account passwords are included.
 

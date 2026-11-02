@@ -10,6 +10,7 @@ data/
 media/
 backups/
 evidence/
+/evidence/user-validation-observations.csv
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal

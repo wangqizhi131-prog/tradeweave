@@ -64,7 +64,7 @@ export function openStorage(directory, seed) {
     prepareCapture(id) { return transaction(() => { const order = get(id); if (!order) fail(404, 'Order not found.'); if (order.status === 'COMPLETED') return order; if (['CANCELLED', 'FAILED', 'DECLINED', 'DENIED'].includes(order.status)) fail(409, 'This checkout is closed. Start a new checkout.'); reserve(order, true); order.status = 'CAPTURE_PENDING'; order.updatedAt = new Date().toISOString(); put(order); return order; }); },
     complete(id, result) { return transaction(() => {
       const order = get(id); if (!order) fail(404, 'Order not found.');
-      if (result.status === 'COMPLETED' && !order.inventoryApplied) {
+      if (['COMPLETED', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(result.status) && !order.inventoryApplied) {
         const value = catalog().store;
         for (const item of order.items) {
           const product = value.products.find(p => p.id === item.productId), variant = product?.variants.find(v => v.id === item.variantId);
@@ -74,7 +74,7 @@ export function openStorage(directory, seed) {
         writeCatalog(value); order.inventoryApplied = true;
       }
       Object.assign(order, result, { updatedAt: new Date().toISOString() });
-      if (['COMPLETED', 'DECLINED', 'DENIED', 'FAILED', 'CANCELLED'].includes(order.status)) db.prepare('DELETE FROM holds WHERE order_id=?').run(order.id);
+      if (['COMPLETED', 'DECLINED', 'DENIED', 'FAILED', 'CANCELLED', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(order.status)) db.prepare('DELETE FROM holds WHERE order_id=?').run(order.id);
       if (order.events.at(-1)?.text !== 'PayPal returned ' + result.status + '.') order.events.push({ at: order.updatedAt, text: 'PayPal returned ' + result.status + '.' });
       put(order); return order;
     }); },

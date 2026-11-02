@@ -10,6 +10,7 @@ import { openStorage } from '../storage.mjs';
 import { simulatedAssistantResponse } from './fixtures/simulated-ai.mjs';
 
 const payments = process.argv.includes('--payments'), renderSdk = process.argv.includes('--sdk-render');
+const failAiOnce = process.argv.includes('--ai-failure-once');
 if (payments && renderSdk) throw new Error('Choose the simulated adapter or official SDK render check, not both.');
 const portArguments = process.argv.filter(argument => argument.startsWith('--port='));
 if (portArguments.length > 1) throw new Error('Pass at most one --port=NUMBER option.');
@@ -17,7 +18,7 @@ const fixturePort = portArguments.length ? Number(portArguments[0].slice('--port
 if (!Number.isInteger(fixturePort) || fixturePort < 4174 || fixturePort > 65535) throw new Error('Fixture port must be an integer from 4174 through 65535.');
 const temporary = await mkdtemp(join(tmpdir(), 'tradeweave-ui-'));
 const orders = new Map(), requests = new Map();
-let orderCount = 0, captureCount = 0;
+let orderCount = 0, captureCount = 0, aiCount = 0;
 const seed = normalizeStore(JSON.parse(await readFile(new URL('../store-data.json', import.meta.url), 'utf8')));
 const second = structuredClone(seed.products[0]);
 second.id = 'fixture-options';
@@ -50,7 +51,7 @@ Object.assign(process.env, { ENV_FILE: join(temporary, 'absent.env'), DISABLE_LO
 const json = data => new Response(JSON.stringify(data), { headers: { 'content-type': 'application/json' } });
 globalThis.fetch = async (url, options = {}) => {
   const target = String(url);
-  if (target === 'https://fixture.invalid/ai') return json(simulatedAssistantResponse(options.body));
+  if (target === 'https://fixture.invalid/ai') { aiCount++; if (failAiOnce && aiCount === 1) return new Response(JSON.stringify({ error: { message: 'SECRET_FIXTURE_PROVIDER_DETAIL_MUST_NOT_LEAK' } }), { status: 429, headers: { 'content-type': 'application/json' } }); return json(simulatedAssistantResponse(options.body)); }
   if (!payments || !target.startsWith('https://api-m.sandbox.paypal.com/')) throw new Error('Fixture blocks provider traffic.');
   if (target.endsWith('/v1/oauth2/token')) return json({ access_token: 'fixture-token' });
   if (target.endsWith('/v2/checkout/orders')) {
@@ -121,6 +122,6 @@ process.on('SIGINT', () => requestClose()); process.on('SIGTERM', () => requestC
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', input => { if (input.trim().toLowerCase() === 'q') requestClose(); });
 process.stdin.on('end', () => requestClose());
-console.log('Disposable UI fixture at http://127.0.0.1:' + fixturePort + ' — simulated AI; ' + (renderSdk ? 'official public sandbox SDK render only; REST payment routes disabled.' : payments ? 'simulated payment adapter (not PayPal SDK).' : 'PayPal disabled.'));
+console.log('Disposable UI fixture at http://127.0.0.1:' + fixturePort + ' — simulated AI' + (failAiOnce ? ' (first request fails, retry succeeds)' : '') + '; ' + (renderSdk ? 'official public sandbox SDK render only; REST payment routes disabled.' : payments ? 'simulated payment adapter (not PayPal SDK).' : 'PayPal disabled.'));
 console.log('Stop with Ctrl+C, type q and press Enter, or close the launcher input to close the server and remove its temporary data.');
 console.log('Fixture data: ' + temporary);

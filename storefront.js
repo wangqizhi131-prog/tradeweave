@@ -61,7 +61,7 @@ function updateFxNotes() {
 function node(tag, className, text) { const item = document.createElement(tag); if (className) item.className = className; if (text !== undefined) item.textContent = text; return item; }
 function persist() { try { sessionStorage.setItem(storageKey, JSON.stringify(state)); return true; } catch { return false; } }
 function toast(text) { $('#shop-toast').textContent = text; $('#shop-toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#shop-toast').classList.remove('show'), 4500); }
-function statusLabel(status) { const key = ({ CREATING: 'statusCreating', CREATED: 'statusCreated', APPROVED: 'statusApproved', CAPTURE_PENDING: 'statusCapturePending', COMPLETED: 'completed', PENDING: 'statusPending', DECLINED: 'statusDeclined', DENIED: 'statusDenied', CANCELLED: 'statusCancelled', FAILED: 'statusFailed' })[status] || 'statusUnconfirmed'; return t(key); }
+function statusLabel(status) { const key = ({ CREATING: 'statusCreating', CREATED: 'statusCreated', APPROVED: 'statusApproved', CAPTURE_PENDING: 'statusCapturePending', COMPLETED: 'completed', PENDING: 'statusPending', DECLINED: 'statusDeclined', DENIED: 'statusDenied', CANCELLED: 'statusCancelled', FAILED: 'statusFailed', PARTIALLY_REFUNDED: 'statusPartiallyRefunded', REFUNDED: 'statusRefunded' })[status] || 'statusUnconfirmed'; return t(key); }
 function localizedOrderItem(item) {
   const source = store?.products.find(entry => entry.id === item.productId);
   const variant = source?.variants.find(entry => entry.id === item.variantId);
@@ -220,7 +220,9 @@ function renderChat() {
   if (!chatHistory().length) root.append(node('p', 'shop-chat-welcome', t('chatWelcome')));
   chatHistory().forEach(message => {
     const item = node('div', 'shop-message ' + (message.isError ? 'notice' : message.role));
-    item.append(node('span', '', message.role === 'user' ? t('you') : message.isError ? t('connectionNotice') : t('assistant')), node('p', '', message.text)); root.append(item);
+    item.append(node('span', '', message.role === 'user' ? t('you') : message.isError ? t('connectionNotice') : t('assistant')), node('p', '', message.text));
+    if (message.retryQuestion) { const retry = node('button', 'quiet-button shop-retry-question', t('retry')); retry.type = 'button'; retry.dataset.retryIndex = chatHistory().indexOf(message); item.append(retry); }
+    root.append(item);
   });
   root.scrollTop = root.scrollHeight;
   $('#shop-new-chat').disabled = aiBusy || !chatHistory().length;
@@ -231,18 +233,26 @@ function aiStatus(text) {
   $('#shop-reply-language').disabled = aiBusy; $('#shop-chat-form').setAttribute('aria-busy', String(aiBusy));
 }
 function chatHistory(id = product?.id) { return state.histories[id] || []; }
-function addMessage(role, text, isError = false, id = product?.id) { state.histories[id] = [...chatHistory(id), { role, text, isError }].slice(-30); persist(); if (product?.id === id) renderChat(); }
+function addMessage(role, text, isError = false, id = product?.id, metadata = {}) { state.histories[id] = [...chatHistory(id), { role, text, isError, ...metadata }].slice(-30); persist(); if (product?.id === id) renderChat(); }
 async function ask(question) {
   if (aiBusy || !product || !config.aiReady || !question.trim()) return;
   const history = chatHistory().filter(m => !m.isError).slice(-10).map(m => ({ role: m.role, content: m.text.slice(0, 1800) }));
   const contextId = product.id, optionId = selectedVariant?.id;
   addMessage('user', question); aiBusy = true; aiStatus(t('readingFacts')); renderChat();
   try { const result = await api('/api/assistant', { method: 'POST', body: JSON.stringify({ productId: contextId, variantId: optionId, question, language: state.replyLanguage, history }) }); addMessage('assistant', result.answer, false, contextId); state.answers++; persist(); }
-  catch (error) { addMessage('assistant', t('questionErrorSaved', { error: error.message }), true, contextId); }
+  catch { addMessage('assistant', t('questionErrorSaved', { error: t('aiTemporaryError') }), true, contextId, { retryQuestion: question }); }
   finally { aiBusy = false; aiStatus(); renderChat(); if ($('#shop-chat').open) $('#shop-chat-input').focus(); }
 }
 $('#shop-ask').addEventListener('click', () => { renderChat(); aiStatus(); $('#shop-chat').showModal(); });
 $('#shop-chat-close').addEventListener('click', () => $('#shop-chat').close());
+$('#shop-conversation').addEventListener('click', event => {
+  const button = event.target.closest('[data-retry-index]'); if (!button || aiBusy || !product) return;
+  const failedAt = Number(button.dataset.retryIndex), history = chatHistory().slice(), failure = history[failedAt];
+  if (!failure?.isError || !failure.retryQuestion) return;
+  history.splice(failedAt, 1);
+  for (let index = failedAt - 1; index >= 0; index--) if (history[index].role === 'user' && history[index].text === failure.retryQuestion) { history.splice(index, 1); break; }
+  state.histories[product.id] = history; persist(); renderChat(); ask(failure.retryQuestion);
+});
 $('#shop-chat-form').addEventListener('submit', event => { event.preventDefault(); const question = $('#shop-chat-input').value.trim(); if (!question || aiBusy) return; $('#shop-chat-input').value = ''; ask(question); });
 $$('[data-question]').forEach(button => button.addEventListener('click', () => ask(button.dataset.question)));
 $('#shop-reply-language').addEventListener('change', event => { state.replyLanguage = event.target.value; state.replyLanguageTouched = true; persist(); });

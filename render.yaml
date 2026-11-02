@@ -6,6 +6,8 @@ services:
     healthCheckPath: /healthz
     startCommand: npm start
     envVars:
+      - key: NODE_VERSION
+        value: 24.22.1
       - key: HOST
         value: 0.0.0.0
       - key: DISABLE_LOCAL_EDITOR
