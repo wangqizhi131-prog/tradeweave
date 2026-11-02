@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-02T05:44:11.505Z",
+  "createdAt": "2026-11-02T05:44:46.740Z",
   "files": [
     {
       "path": ".env.example",
@@ -64,8 +64,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 4338,
-      "sha256": "d484db60a491389b3dc4801813bf4540670ea37cde7427ca46d57baaa40f8d91"
+      "bytes": 4381,
+      "sha256": "09eacc16df8a43bfed8bfb4febbc82de583256d829ec01f74dbcb733ec721607"
     },
     {
       "path": "render.yaml",

@@ -2,7 +2,7 @@
 
 **Commerce, with context.** TradeWeave is a prototype for independent makers. A seller maintains bilingual product facts; buyers can review product options, ask questions, and check out with PayPal Sandbox.
 
-> **Evaluation status:** This source bundle is a review candidate, not a submitted entry or a hosted demo. It contains no provider credentials. Without credentials, the storefront and maker workspace can be explored locally, while live AI and PayPal checkout report as unavailable. The free, unrestricted AI path for judging has not yet been established. Do not publish or submit this bundle until that requirement and the remaining review gates are resolved.
+> **Evaluation status:** This public source repository is a review candidate, not a submitted entry or a verified hosted demo. It contains no provider credentials. Without credentials, the storefront and maker workspace can be explored locally, while live AI and PayPal checkout report as unavailable. The free, unrestricted AI path for judging has not yet been established. Do not present it as a working evaluation demo or submit it until that requirement and the remaining review gates are resolved.
 
 ## What works in the local build
 
