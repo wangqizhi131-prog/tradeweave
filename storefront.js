@@ -481,6 +481,9 @@ function renderGallery() {
   galleryProductId = product.id;
   art.setAttribute('aria-label', product.id === 'coast-tote' ? t('illustration') : t('noImage'));
   image.hidden = !product.images.length; art.hidden = Boolean(product.images.length);
+  const imageNote = $('#shop-image-note');
+  imageNote.hidden = !product.isFictionalSample || !product.images.length;
+  imageNote.textContent = imageNote.hidden ? '' : t('generatedSampleImages');
   $('.shop-art .tote').toggleAttribute('hidden', product.id !== 'coast-tote'); $('#shop-no-image').hidden = product.id === 'coast-tote'; $('.shop-art>span').hidden = product.id !== 'coast-tote';
   if (product.images.length) { image.src = galleryImagePath; image.alt = localize(product.name); }
   const root = $('#shop-image-thumbs'); root.replaceChildren();

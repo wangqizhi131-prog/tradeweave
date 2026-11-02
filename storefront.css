@@ -22,6 +22,7 @@
 
 /* Respect the operating system reduced-motion preference. */
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+.shop-image-note{margin:10px 0 0;color:var(--muted);font-size:11px;line-height:1.5;text-align:center}
 @media(max-width:360px){.shop-catalog-toolbar{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:400px){.shop-art,.shop-product-image{aspect-ratio:1.55}.shop-visual{min-width:0}.shop-image-thumbs{width:100%;min-width:0;box-sizing:border-box;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;padding-bottom:4px}.shop-image-thumbs button{flex:0 0 60px;scroll-snap-align:start}}
 

@@ -62,7 +62,10 @@
         "shippingPrice": null,
         "arrivalDateGuarantee": null
       },
-      "images": [],
+      "images": [
+        "/media/f2a5707a8c2329fd9f764292a07600cebf3b4da18c32fd397bc433974e388611.jpg",
+        "/media/dd489ed45fdf2628c912c1fa8f804839fbaa51840deca522c9507d4fa56e6450.jpg"
+      ],
       "variants": [],
       "status": "active"
     },
