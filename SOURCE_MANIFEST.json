@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-02T07:06:03.734Z",
+  "createdAt": "2026-11-02T07:08:52.701Z",
   "files": [
     {
       "path": ".env.example",
@@ -109,8 +109,8 @@
     },
     {
       "path": "scripts/remote-storage-check.mjs",
-      "bytes": 5823,
-      "sha256": "9e317186d0f05e57eb115bf3b689e43023f498bbff1680d953c9a915bd669083"
+      "bytes": 6740,
+      "sha256": "e2d85a87e639561ee375a0e7d76bda6a56f65b24e2e093e70c13ac58063ac4a5"
     },
     {
       "path": "scripts/ui-fixture.mjs",

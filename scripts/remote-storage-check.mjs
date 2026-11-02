@@ -15,6 +15,15 @@ if (process.argv[2] === '--worker') {
   const order = await storage.begin('buyer-a', [{ productId: 'fixture-item', variantId: null, name: 'Fixture item', sku: '', price: '5.00', quantity: 2 }], 'request-12345678');
   assert.equal((await storage.publicStore()).products[0].stock, 2, 'An active checkout must reserve remote stock.');
   await storage.complete(order.id, { status: 'COMPLETED', captureId: 'sandbox-capture' });
+  const competing = await Promise.allSettled([
+    storage.begin('buyer-b', [{ productId: 'fixture-item', variantId: null, name: 'Fixture item', sku: '', price: '5.00', quantity: 2 }], 'race-request-b123'),
+    storage.begin('buyer-c', [{ productId: 'fixture-item', variantId: null, name: 'Fixture item', sku: '', price: '5.00', quantity: 2 }], 'race-request-c123')
+  ]);
+  assert.equal(competing.filter(result => result.status === 'fulfilled').length, 1, 'Concurrent checkout requests must not oversell remote stock.');
+  assert.equal(competing.filter(result => result.status === 'rejected').length, 1, 'The checkout that loses the final stock must be rejected.');
+  const winner = competing.find(result => result.status === 'fulfilled').value;
+  assert.equal((await storage.publicStore()).products[0].stock, 0, 'The winning checkout must hold the last available remote stock.');
+  await storage.release(winner.id);
   const ticket = await storage.addTicket('buyer-a', 'question-123456', 'When will this arrive?', { productId: 'fixture-item', orderId: null, history: [] });
   await storage.replyTicket(ticket.id, 'The maker has not specified a date.', 'ANSWERED');
   assert.equal((await storage.catalog()).store.products[0].stock, 2, 'A completed checkout must deduct remote stock exactly once.');
