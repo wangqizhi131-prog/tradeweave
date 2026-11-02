@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: tradeweave-demo
+    runtime: node
+    plan: free
+    healthCheckPath: /healthz
+    startCommand: npm start
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: DISABLE_LOCAL_EDITOR
+        value: "1"
+      - key: DATA_DIR
+        value: /tmp/tradeweave-data
+      - key: MEDIA_DIR
+        value: /tmp/tradeweave-media
+      - key: AI_API_URL
+        value: https://openrouter.ai/api/v1/chat/completions
+      - key: AI_MODEL
+        value: openrouter/free
+      - key: AI_TOKEN_PARAMETER
+        value: max_completion_tokens
+      - key: AI_API_KEY
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false

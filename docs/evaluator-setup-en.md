@@ -2,6 +2,12 @@
 
 This document describes the local candidate build. It is not a claim that the current project has a verified free-through-judging provider arrangement.
 
+## Hosted free preview
+
+The public repository includes a Render Blueprint (`render.yaml`). To create a hosted preview, import the public repository as a Blueprint and select the Free web service. Keep the account on the free tier and do not add a payment method. Render documents that Free web services stop instead of incurring overage charges when the account has no payment method and reaches its included bandwidth or build usage. A Free instance sleeps after 15 minutes without traffic and may take about one minute to wake. Its filesystem is ephemeral: sample edits, uploaded images, and order history reset after sleep, restart, or redeploy. The hosted configuration disables the maker workspace; use the local build to inspect product editing and fulfillment workflows.
+
+The Blueprint asks for `AI_API_KEY`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET`. Add them only through Render's private environment-variable fields. Use a free-only OpenRouter key/model and PayPal Sandbox credentials. The free OpenRouter router can be rate-limited or unavailable; no provider guarantees free capacity for the entire judging period. Do not represent the preview as available until the deployment is live and its AI and Sandbox flows have been checked.
+
 ## Requirements
 
 - Node.js 24 or later; no npm package installation is required.

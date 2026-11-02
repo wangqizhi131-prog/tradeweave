@@ -36,6 +36,12 @@ Provider credentials are optional for local browsing and editing. To test integr
 
 See [evaluator setup and limitations](docs/evaluator-setup-en.md) for exact boundaries.
 
+## Free hosted preview
+
+The repository includes a [Render Blueprint](render.yaml) for a public, free-tier preview. Import this public GitHub repository as a Blueprint and choose the Free web service. Keep the account on the free plan and do not add a payment method. Enter `AI_API_KEY`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET` as private environment variables in the Render setup screen; never commit them.
+
+The free instance sleeps after inactivity and takes about a minute to wake. Its filesystem is temporary, so sample edits, uploaded images, and order history reset whenever the instance sleeps, restarts, or redeploys. The hosted preview protects the maker workspace and exposes the buyer storefront only. The complete editable maker workspace remains available in the local build. See the [evaluator setup](docs/evaluator-setup-en.md) before relying on this preview.
+
 ## Checks
 
 ```sh
