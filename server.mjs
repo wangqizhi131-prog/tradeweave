@@ -198,7 +198,6 @@ export const server = createServer(async (req, res) => {
   try {
     ({ store, revision: storeRevision } = storage.catalog());
     const url = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
-    if (req.method === 'GET' && url.pathname === '/healthz') return send(res, 200, { status: 'ok' });
     if (req.method === 'POST' && req.headers.origin && new URL(req.headers.origin).host !== req.headers.host) throw new HttpError(403, 'Use this workspace to make the request.');
     if (req.method === 'GET' && url.pathname === '/api/store') {
       const value = storage.publicStore();

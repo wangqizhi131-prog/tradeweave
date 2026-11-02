@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-01T10:02:05.158Z",
+  "createdAt": "2026-11-02T05:44:11.505Z",
   "files": [
     {
       "path": ".env.example",
@@ -34,8 +34,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 2893,
-      "sha256": "f4d7ad1eb5d03bbfe90aa5b56a03e71752be6f745bbd1c6744024932209edb99"
+      "bytes": 4113,
+      "sha256": "a0032090e9f20dd91a4932a9cf33827d99ed6a9509f0eb4a3e130b07f7a29aa8"
     },
     {
       "path": "docs/notices-and-ai-use.md",
@@ -64,8 +64,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 3371,
-      "sha256": "5fedd4532e7c4d1a5a00a23e70fc0e17cfc798ab21bc9674fd1662f584def2e4"
+      "bytes": 4338,
+      "sha256": "d484db60a491389b3dc4801813bf4540670ea37cde7427ca46d57baaa40f8d91"
+    },
+    {
+      "path": "render.yaml",
+      "bytes": 721,
+      "sha256": "e9254f411e5a4143043fbfc9110ff1daafe852aaa2c288f242d0d8dee59446b4"
     },
     {
       "path": "scripts/astropods-check.mjs",

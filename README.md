@@ -38,9 +38,9 @@ See [evaluator setup and limitations](docs/evaluator-setup-en.md) for exact boun
 
 ## Free hosted preview
 
-The repository includes a [Render Blueprint](render.yaml) for a public, free-tier preview. Import this public GitHub repository as a Blueprint and choose the Free web service. Keep the account on the free plan and do not add a payment method. Enter `AI_API_KEY`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET` as private environment variables in the Render setup screen; never commit them.
+The repository includes a Render Blueprint (`render.yaml`) for an optional public preview. Import the public GitHub repository as a Blueprint and choose the Free web service. Do not add a payment method. Enter `AI_API_KEY`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET` only as private environment variables in Render; never commit them.
 
-The free instance sleeps after inactivity and takes about a minute to wake. Its filesystem is temporary, so sample edits, uploaded images, and order history reset whenever the instance sleeps, restarts, or redeploys. The hosted preview protects the maker workspace and exposes the buyer storefront only. The complete editable maker workspace remains available in the local build. See the [evaluator setup](docs/evaluator-setup-en.md) before relying on this preview.
+The Free service sleeps after 15 minutes without traffic and may take about a minute to wake. Its filesystem is temporary, so edits, uploaded images, and order history reset after sleep, restart, or redeploy. The hosted configuration disables the maker workspace and exposes the buyer storefront. Local SQLite persistence remains available in the local build. The OpenRouter free router may be rate-limited or unavailable; this Blueprint does not guarantee free model capacity for the judging period. Do not describe it as a working demo until the deployment and both provider flows have been checked.
 
 ## Checks
 

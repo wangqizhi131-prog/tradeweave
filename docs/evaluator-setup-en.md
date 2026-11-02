@@ -2,11 +2,11 @@
 
 This document describes the local candidate build. It is not a claim that the current project has a verified free-through-judging provider arrangement.
 
-## Hosted free preview
+## Optional hosted preview
 
-The public repository includes a Render Blueprint (`render.yaml`). To create a hosted preview, import the public repository as a Blueprint and select the Free web service. Keep the account on the free tier and do not add a payment method. Render documents that Free web services stop instead of incurring overage charges when the account has no payment method and reaches its included bandwidth or build usage. A Free instance sleeps after 15 minutes without traffic and may take about one minute to wake. Its filesystem is ephemeral: sample edits, uploaded images, and order history reset after sleep, restart, or redeploy. The hosted configuration disables the maker workspace; use the local build to inspect product editing and fulfillment workflows.
+The repository includes a Render Blueprint (`render.yaml`). Import the public repository as a Blueprint and select the Free web service. Keep the service on the free plan and do not add a payment method. Render documents that a Free service without a payment method is suspended when included bandwidth or build usage is exceeded instead of being billed for overages. The service sleeps after 15 minutes without traffic and can take about a minute to wake. Its filesystem is ephemeral: catalog edits, uploaded images, and order history reset after sleep, restart, or redeploy. The hosted configuration disables the maker workspace; use the local build for product editing and merchant fulfillment tasks.
 
-The Blueprint asks for `AI_API_KEY`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET`. Add them only through Render's private environment-variable fields. Use a free-only OpenRouter key/model and PayPal Sandbox credentials. The free OpenRouter router can be rate-limited or unavailable; no provider guarantees free capacity for the entire judging period. Do not represent the preview as available until the deployment is live and its AI and Sandbox flows have been checked.
+The Blueprint requests `AI_API_KEY`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET`. Enter them only in Render's private environment-variable fields. Use a free-only OpenRouter key/model and PayPal Sandbox credentials. The OpenRouter free router may be rate-limited or unavailable; no provider guarantee for continuous judging-period access has been established. A deployment counts as verified only after a live AI response and complete PayPal Sandbox browser flow have been observed.
 
 ## Requirements
 
