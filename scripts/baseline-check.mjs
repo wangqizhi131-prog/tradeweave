@@ -11,8 +11,10 @@ import { openStorage } from '../storage.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { runInNewContext } from 'node:vm';
+import { simulatedAssistantResponse } from './fixtures/simulated-ai.mjs';
 
 const uiFixture = await readFile(new URL('../scripts/ui-fixture.mjs', import.meta.url), 'utf8');
+const simulatedAi = await readFile(new URL('../scripts/fixtures/simulated-ai.mjs', import.meta.url), 'utf8');
 assert.match(uiFixture, /second\.name = \{ en: 'Nanjing Woven Market Tote', zh: '南京手织市集包' \}[\s\S]*?second\.subtitle = \{ en: 'A useful carryall, made slowly\.', zh: '慢慢织成，日常好用。' \}[\s\S]*?second\.description = \{ en: 'A handwoven cotton carryall for small everyday finds\.', zh: '手工编织棉布，适合收纳日常随身物品。' \}/, 'The option-test product copy must match its tote illustration and not borrow another seed product story.');
 const stylesheet = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
 const buyerStylesheet = await readFile(new URL('../storefront.css', import.meta.url), 'utf8');
@@ -70,8 +72,15 @@ assert.match(storefrontHtml, /<details class="shop-catalog-filters" id="shop-cat
 assert.match(storefrontApp, /matchMedia\('\(max-width:700px\)'\)[\s\S]*?catalogFilterPanel\.open = !catalogFilterBreakpoint\.matches[\s\S]*?addEventListener\('change', setCatalogFilterDefault\)/, 'The filter panel must start collapsed on phones, expanded on desktop, and reset on breakpoint changes.');
 for (const phrase of ['Filters and sort', '筛选与排序', '絞り込み・並べ替え', 'Filtros y orden', 'Filtres et tri']) assert.ok(buyerLocales.includes(phrase), 'Filter disclosure must be translated for every supported buyer language: ' + phrase);
 assert.match(storefrontApp, /remove\.setAttribute\('aria-label', t\('remove'\) \+ ' ' \+ item\.name\)/, 'Cart removal buttons must name the product they remove.');
-for (const [code, phrase] of [['en', 'Simulated response'], ['zh-CN', '模拟回复'], ['ja', '模擬回答'], ['es', 'Respuesta simulada'], ['fr', 'Réponse simulée']]) assert.ok(uiFixture.includes(phrase), 'The isolated AI fixture must provide an explicitly simulated ' + code + ' answer.');
-assert.match(uiFixture, /hasUnknownDeliveryQuestion = \/shipping\|delivery\|arriv\|friday\|运费\|送达\|到货\|周五\|配送/i, 'The simulated UI answer must match unknown shipping and delivery questions instead of returning an unrelated care reply.');
+for (const [code, phrase] of [['en', 'Simulated response'], ['zh-CN', '模拟回复'], ['ja', '模擬回答'], ['es', 'Respuesta simulada'], ['fr', 'Réponse simulée']]) assert.ok(simulatedAi.includes(phrase), 'The isolated AI fixture must provide an explicitly simulated ' + code + ' answer.');
+assert.match(uiFixture, /simulatedAssistantResponse\(options\.body\)/, 'The browser fixture must use the tested response selector.');
+const simulatedPrompt = (question, language = 'English') => JSON.stringify({ messages: [
+  { role: 'system', content: `Answer in ${language}.` },
+  { role: 'user', content: JSON.stringify({ SELLER_REFERENCE_DATA: { shippingPrice: 'Not supplied by the seller.', arrivalDateGuarantee: 'Not supplied by the seller.' }, BUYER_QUESTION: question }) }
+] });
+assert.equal(simulatedAssistantResponse(simulatedPrompt('How should I care for this tote?')).choices[0].message.content, '[Simulated response] Spot clean with a damp cloth.', 'Seller facts about unknown shipping must not make an unrelated care question receive the delivery answer.');
+assert.match(simulatedAssistantResponse(simulatedPrompt('Can you guarantee it arrives by Friday?')).choices[0].message.content, /not supplied a shipping price or promised Friday delivery/i, 'The fixture must retain the unknown-delivery answer when the buyer asks about arrival.');
+assert.match(simulatedAssistantResponse(simulatedPrompt('运费是多少？', 'Chinese')).choices[0].message.content, /尚未提供运费金额/, 'The fixture must answer a Chinese delivery question in Chinese.');
 
 for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.html', 'storefront.js']]) {
   const html = await readFile(new URL('../' + htmlName, import.meta.url), 'utf8'), code = await readFile(new URL('../' + scriptName, import.meta.url), 'utf8');

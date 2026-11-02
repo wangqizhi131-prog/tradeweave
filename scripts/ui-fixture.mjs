@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { deflateSync } from 'node:zlib';
 import { mkdir } from 'node:fs/promises';
 import { openStorage } from '../storage.mjs';
+import { simulatedAssistantResponse } from './fixtures/simulated-ai.mjs';
 
 const payments = process.argv.includes('--payments'), renderSdk = process.argv.includes('--sdk-render');
 if (payments && renderSdk) throw new Error('Choose the simulated adapter or official SDK render check, not both.');
@@ -49,34 +50,7 @@ Object.assign(process.env, { ENV_FILE: join(temporary, 'absent.env'), DISABLE_LO
 const json = data => new Response(JSON.stringify(data), { headers: { 'content-type': 'application/json' } });
 globalThis.fetch = async (url, options = {}) => {
   const target = String(url);
-  if (target === 'https://fixture.invalid/ai') {
-    let language = 'en', userQuestion = '';
-    try {
-      const payload = JSON.parse(options.body || '{}'), messages = payload.messages || [];
-      const requested = messages[0]?.content?.match(/Answer in (English|Chinese|Japanese|Spanish|French)\./i)?.[1];
-      language = ({ English: 'en', Chinese: 'zh-CN', Japanese: 'ja', Spanish: 'es', French: 'fr' })[requested] || 'en';
-      userQuestion = String([...messages].reverse().find(message => message.role === 'user')?.content || '');
-    } catch {}
-    const hasUnknownDeliveryQuestion = /shipping|delivery|arriv|friday|运费|送达|到货|周五|配送/i.test(userQuestion);
-    const answers = {
-      care: {
-        en: '[Simulated response] Spot clean with a damp cloth.',
-        'zh-CN': '【模拟回复】请用湿布局部清洁。',
-        ja: '【模擬回答】湿らせた布で部分的に拭いてください。',
-        es: '[Respuesta simulada] Limpia las manchas con un paño húmedo.',
-        fr: '[Réponse simulée] Nettoyez les taches avec un chiffon humide.'
-      },
-      delivery: {
-        en: '[Simulated response] The seller has not supplied a shipping price or promised Friday delivery. Please ask the maker to confirm the delivery details.',
-        'zh-CN': '【模拟回复】卖家尚未提供运费金额，也未承诺周五前送达。请向店主确认配送信息。',
-        ja: '【模擬回答】販売者から送料は提示されておらず、金曜日までの配達も保証されていません。配送情報を販売者にご確認ください。',
-        es: '[Respuesta simulada] El vendedor no ha indicado el coste del envío ni garantizado la entrega para el viernes. Confirma los detalles con el vendedor.',
-        fr: '[Réponse simulée] Le vendeur n’a pas indiqué le prix de livraison ni garanti une arrivée vendredi. Demandez-lui de confirmer les détails.'
-      }
-    };
-    const response = answers[hasUnknownDeliveryQuestion ? 'delivery' : 'care'][language] || answers.care.en;
-    return json({ choices: [{ message: { content: response } }] });
-  }
+  if (target === 'https://fixture.invalid/ai') return json(simulatedAssistantResponse(options.body));
   if (!payments || !target.startsWith('https://api-m.sandbox.paypal.com/')) throw new Error('Fixture blocks provider traffic.');
   if (target.endsWith('/v1/oauth2/token')) return json({ access_token: 'fixture-token' });
   if (target.endsWith('/v2/checkout/orders')) {

@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-02T07:08:52.701Z",
+  "createdAt": "2026-11-02T07:46:05.459Z",
   "files": [
     {
       "path": ".env.example",
@@ -89,8 +89,8 @@
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 60857,
-      "sha256": "912c158013e7f0bd17e03d1cc264f93d4dfb217064e8435e58405047dd416b00"
+      "bytes": 62499,
+      "sha256": "a3f5802d941595d3855029ac8bf8f481d5b3c67052d93404df390c5d658d567c"
     },
     {
       "path": "scripts/check.mjs",
@@ -101,6 +101,11 @@
       "path": "scripts/fixtures/paypal-ui.js",
       "bytes": 3275,
       "sha256": "4d25eeb52fddbc4b950ec6f16f3fbefc01509ad3355092e73e3d4fdea1d2ce97"
+    },
+    {
+      "path": "scripts/fixtures/simulated-ai.mjs",
+      "bytes": 2216,
+      "sha256": "90e0abbd0f885d96f7351a1424d23296fd8815019b9cc258d1332b5b143a16e4"
     },
     {
       "path": "scripts/fixtures/upload-check.png",
@@ -114,8 +119,8 @@
     },
     {
       "path": "scripts/ui-fixture.mjs",
-      "bytes": 13034,
-      "sha256": "07da6ab25c0ee1a576a4503eb04771f6a76edbd5915f2a112579e9c55aafc341"
+      "bytes": 11203,
+      "sha256": "f85e2a9ff9096aafd90aa9cca73e7ffcd7e90ef46df228a5466745a37150b3ed"
     },
     {
       "path": "seed-media/31b028a799280fca5b064307f246c39973e47e83e4ef62381201256fbed4a655.jpg",
