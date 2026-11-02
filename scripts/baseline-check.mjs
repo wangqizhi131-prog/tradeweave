@@ -96,7 +96,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
   assert.match(await readFile(new URL('../styles.css', import.meta.url), 'utf8'), /html:has\(dialog\[open\]\),body:has\(dialog\[open\]\)\{overflow:hidden\}/, 'An open workspace dialog must lock document and body scrolling so background copy cannot move into view.');
   if (scriptName === 'app.js') { assert.ok(html.includes('/app.js?v=workspace-6.9'), 'Merchant payment status labels and refund controls must bypass cached JavaScript.'); assert.ok(html.includes('class="live-dot pending"'), 'The workspace must default to an unverified provider indicator before credentials load.'); }
   if (scriptName === 'storefront.js') {
-    assert.ok(html.includes('/storefront.js?v=6.22'), 'Buyer payment status labels must bypass cached storefront JavaScript.');
+    assert.ok(html.includes('/storefront.js?v=6.23'), 'Buyer payment recovery updates must bypass cached storefront JavaScript.');
     assert.ok(html.includes('/buyer-locales.js?v=5'), 'Localized refund statuses must bypass cached locale bundles.');
     assert.ok(html.includes('/storefront.css?v=6.8'), 'Buyer responsive improvements must bypass cached storefront CSS.');
     assert.match(code, /shop-pending'\)\.scrollIntoView\(\{ block: 'start', behavior: reducedMotion \? 'auto' : 'smooth' \}\);[\s\S]*?recoveryButton\.focus\(\{ preventScroll: true \}\)/, 'Payment recovery must bring its retry action into view and keyboard focus.');
@@ -114,6 +114,8 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
   if (scriptName === 'storefront.js') {
     assert.match(html, /storefront\.css\?v=6\.8/, 'The latest narrow-screen catalog, gallery and buyer modal layout must bypass cached CSS.');
     assert.match(code, /statusPartiallyRefunded/); assert.match(code, /statusRefunded/);
+    assert.match(code, /const captureResponseStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'A PayPal refund result must be handled as a terminal capture response, not an unresolvable capture error.');
+    assert.match(code, /const terminalCheckoutStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'Saved refunded orders must clear the local pending checkout during order refresh or reload.');
     assert.match(code, /if \(order\.status === 'COMPLETED'\) info\.append\(node\('small', '', t\('fulfillment'\)/, 'Buyer order list must not show fulfillment for orders without completed payment.');
     assert.match(code, /if \(order\.status === 'COMPLETED'\) root\.append\(node\('dt', '', t\('fulfillment'\)/, 'Buyer receipt must not show fulfillment for orders without completed payment.');
     assert.match(code, /replyLanguageTouched === true \? normalizeLanguage\(saved\.replyLanguage\) : normalizeLanguage\(saved\.language\)/, 'Reply language defaults to the selected storefront language unless the buyer changed it manually.');
@@ -121,7 +123,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /state\.replyLanguageTouched = true/, 'A manual reply-language selection remains explicit.');
     assert.match(code, /const summary = \(order\.items \|\| \[\]\)\.map\(item => item\.quantity \+ ' × ' \+ \(localizedOrderItem\(item\)/, 'Pending checkout recovery shows localized item names from its immutable snapshot.');
     assert.match(code, /\$\('#shop-contact-history'\)\.checked = false/, 'Conversation history is shared with the maker only after an explicit opt-in.');
-    assert.match(html, /storefront\.js\?v=6\.22/, 'The browser must load the updated buyer payment status labels.');
+    assert.match(html, /storefront\.js\?v=6\.23/, 'The browser must load the updated buyer payment recovery handling.');
     assert.match(code, /catch \{ addMessage\('assistant', t\('questionErrorSaved', \{ error: t\('aiTemporaryError'\) \}\), true, contextId, \{ retryQuestion: question \}\); \}/, 'Assistant failures must show localized recovery copy and preserve a one-click retry.');
     assert.match(code, /state\.histories\[product\.id\] = history; persist\(\); renderChat\(\); ask\(failure\.retryQuestion\)/, 'Retry must reuse the failed question without duplicating it in conversation context.');
     assert.match(await readFile(new URL('../storefront.css', import.meta.url), 'utf8'), /\.shop-retry-question\{margin-top:8px;min-height:40px\}/, 'The retry action must remain comfortably tappable in the chat dialog.');
@@ -360,10 +362,14 @@ try {
   assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 7, 'An unknown capture status must keep its reservation until reconciliation.');
   captured.get(unknownStatus.id).purchase_units[0].payments.captures[0].status = 'PARTIALLY_REFUNDED';
   assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'reconcile' }, freshLocal)).data.status, 'PARTIALLY_REFUNDED');
+  assert.equal((await request('/api/paypal/cancel', { orderId: unknownStatus.id, checkoutToken: unknownStatus.checkoutToken })).status, 409, 'A stale buyer cancel request must not overwrite a partial refund status.');
+  assert.equal((await request('/api/buyer/orders')).data.orders.find(item => item.localId === unknownStatus.localId).status, 'PARTIALLY_REFUNDED');
   assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 7);
   assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'fulfill', tracking: '' }, freshLocal)).status, 409);
   captured.get(unknownStatus.id).purchase_units[0].payments.captures[0].status = 'REFUNDED';
   assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'reconcile' }, freshLocal)).data.status, 'REFUNDED');
+  assert.equal((await request('/api/paypal/cancel', { orderId: unknownStatus.id, checkoutToken: unknownStatus.checkoutToken })).status, 409, 'A stale buyer cancel request must not overwrite a full refund status.');
+  assert.equal((await request('/api/buyer/orders')).data.orders.find(item => item.localId === unknownStatus.localId).status, 'REFUNDED');
   assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 7, 'A refund status refresh must not deduct stock twice.');
   assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'fulfill', tracking: '' }, freshLocal)).status, 409);
   captureMode = 'COMPLETED';
@@ -385,8 +391,8 @@ try {
   assert.equal(suppliedFacts.material, 'Handwoven cotton', 'The AI context must carry the selected product material as an explicit fact.');
   process.env.AI_API_URL = 'https://openrouter.ai/api/v1/chat/completions'; process.env.AI_MODEL = 'openrouter/free';
   assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200);
-  assert.equal(lastAiPayload.model, 'openrouter/free'); assert.deepEqual(lastAiPayload.provider.max_price, { prompt: 0, completion: 0 }); assert.equal(lastAiPayload.reasoning_effort, 'none');
-  process.env.AI_MODEL = 'sample/model:free'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200); assert.equal(lastAiPayload.reasoning_effort, 'none');
+  assert.equal(lastAiPayload.model, 'openrouter/free'); assert.deepEqual(lastAiPayload.provider.max_price, { prompt: 0, completion: 0 }); assert.equal(Object.hasOwn(lastAiPayload, 'reasoning_effort'), false, 'The dynamic free router must not force a reasoning mode that some providers reject.');
+  process.env.AI_MODEL = 'sample/model:free'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200); assert.equal(Object.hasOwn(lastAiPayload, 'reasoning_effort'), false);
   lastAiPayload = null; process.env.AI_MODEL = 'sample/paid-model';
   assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 503); assert.equal(lastAiPayload, null, 'A paid OpenRouter model must be rejected before making a provider call.');
   process.env.AI_MODEL = 'openrouter/free'; process.env.AI_API_URL = 'http://openrouter.ai/api/v1/chat/completions';

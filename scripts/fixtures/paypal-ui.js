@@ -14,7 +14,7 @@ window.paypal = {
             const explanation = document.createElement('p'); explanation.textContent = 'Browser test fixture. No PayPal SDK, external provider or money is involved. Test order: ' + id;
             dialog.append(heading, explanation);
             const close = () => { dialog.close(); dialog.remove(); launch.disabled = false; };
-            for (const [mode, title] of [['COMPLETED', 'Approve test payment'], ['PENDING', 'Return test pending'], ['DECLINED', 'Return test declined'], ['LOST', 'Approve with lost response']]) {
+            for (const [mode, title] of [['COMPLETED', 'Approve test payment'], ['PENDING', 'Return test pending'], ['DECLINED', 'Return test declined'], ['LOST', 'Approve with lost response'], ['PARTIALLY_REFUNDED', 'Return partial-refund test state'], ['REFUNDED', 'Return refunded test state']]) {
               const button = document.createElement('button'); button.type = 'button'; button.className = 'quiet-button'; button.textContent = title; button.style.marginBottom = '12px';
               button.addEventListener('click', async () => { close(); await fetch('/fixture/payment', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, mode }) }); await options.onApprove({ orderID: id }); }); dialog.append(button);
             }

@@ -88,7 +88,7 @@ if (payments || renderSdk) {
       try {
         const input = JSON.parse(raw);
         if (input.completePending) for (const order of orders.values()) { const capture = order.purchase_units[0].payments?.captures?.[0]; if (capture?.status === 'PENDING') capture.status = 'COMPLETED'; }
-        else { const order = orders.get(input.id); if (!order || !['COMPLETED', 'PENDING', 'DECLINED', 'LOST'].includes(input.mode)) throw new Error('Invalid fixture input'); order.status = 'APPROVED'; order.mode = input.mode; order.purchase_units[0].shipping = { name: { full_name: 'Simulated Browser Buyer' }, address: { address_line_1: '1 Fixture Street', country_code: 'US' } }; }
+        else { const order = orders.get(input.id); if (!order || !['COMPLETED', 'PENDING', 'DECLINED', 'LOST', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(input.mode)) throw new Error('Invalid fixture input'); order.status = 'APPROVED'; order.mode = input.mode; order.purchase_units[0].shipping = { name: { full_name: 'Simulated Browser Buyer' }, address: { address_line_1: '1 Fixture Street', country_code: 'US' } }; }
         res.writeHead(200, { 'content-type': 'application/json' }); return res.end(JSON.stringify({ orders: orderCount, captureRequests: captureCount }));
       } catch { res.writeHead(400); return res.end(); }
     }

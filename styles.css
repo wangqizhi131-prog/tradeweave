@@ -115,5 +115,6 @@ body{overflow-wrap:anywhere}input,select,textarea{min-width:0}.inbox-row strong{
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
 .brand-dot{color:#80502d}
 @media(max-width:360px){.editor-sections{gap:2px}.editor-sections button{padding-inline:4px}}
+@media(max-width:360px){.catalog-toolbar>select{padding-inline:9px 22px;font-size:13px}.catalog-toolbar .primary-button{padding-inline:10px;font-size:12px}}
 
 .assistant-disclaimer.unavailable .status-ring{background:#ae644d;border-color:#ae644d}

@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-02T09:44:57.648Z",
+  "createdAt": "2026-11-02T15:58:35.439Z",
   "files": [
     {
       "path": ".env.example",
@@ -34,8 +34,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 5873,
-      "sha256": "2c3092b827d35d3ef7162364c7a88b36e24edc1fae7c48ad216c172623b0d62a"
+      "bytes": 6673,
+      "sha256": "4658362e4ad098a0587b3e7c59b45592ff19188ad9ad4b8a481f3566addebd33"
     },
     {
       "path": "docs/notices-and-ai-use.md",
@@ -89,8 +89,8 @@
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 68645,
-      "sha256": "5f7468370f1b01a1b811a8fc70a470fb417df255d7c1e8b3092080ffa5da31e8"
+      "bytes": 69929,
+      "sha256": "1acb396a1a23d39e6cd38284a7e73606c4c0388e8baa171e28faedb986862c7d"
     },
     {
       "path": "scripts/check.mjs",
@@ -99,8 +99,8 @@
     },
     {
       "path": "scripts/fixtures/paypal-ui.js",
-      "bytes": 3275,
-      "sha256": "4d25eeb52fddbc4b950ec6f16f3fbefc01509ad3355092e73e3d4fdea1d2ce97"
+      "bytes": 3379,
+      "sha256": "e6c492efa9a1a74a753f2873701c22f38941e987a93d67c65f6a950c6b164fee"
     },
     {
       "path": "scripts/fixtures/simulated-ai.mjs",
@@ -119,8 +119,8 @@
     },
     {
       "path": "scripts/ui-fixture.mjs",
-      "bytes": 11571,
-      "sha256": "2aee6bc7317c4a482d0b151a8d6c3fefafeab6d082e3f8f1574d1fe6692eaeb5"
+      "bytes": 11605,
+      "sha256": "77cbc861b8f6fb758152b5304ac4da366006ec46904475df1dea4a39543008b7"
     },
     {
       "path": "seed-media/31b028a799280fca5b064307f246c39973e47e83e4ef62381201256fbed4a655.jpg",
@@ -154,8 +154,8 @@
     },
     {
       "path": "server.mjs",
-      "bytes": 41618,
-      "sha256": "6cc39d8c357c4e848a376ca81880ab779433db3494fb7e888de9954fcf8501c7"
+      "bytes": 41592,
+      "sha256": "981805f2c27c976eeaf331d1ad58bbbfa6b751af9e206e0d7b89ef3a5154a9a6"
     },
     {
       "path": "storage-remote.mjs",
@@ -164,8 +164,8 @@
     },
     {
       "path": "storage.mjs",
-      "bytes": 12291,
-      "sha256": "e50f077821a2adb1671e196002dbf8d09edc97baf2b94e162870a40dbc5b58d3"
+      "bytes": 12294,
+      "sha256": "dc7f0426ecb8ffd7493394fce2e1e0e34c8e78c7dcfc050bfebcf8322cfbb9e2"
     },
     {
       "path": "store-data.json",
@@ -180,17 +180,17 @@
     {
       "path": "storefront.html",
       "bytes": 15429,
-      "sha256": "a76897a048c9dfc9350766cd7c8fc84643542e5ab0ff5aa400beba12d1dd1aa8"
+      "sha256": "ac386438b117ed34edd57befd08e07c32f2b2bee91e2251f601bece19cd73060"
     },
     {
       "path": "storefront.js",
-      "bytes": 59014,
-      "sha256": "73e259f1754102a8f82487c57da53722e2f4d6e956d668f63bfab9e666f15d1a"
+      "bytes": 59182,
+      "sha256": "31ec323e7c7bd0263c0f2f66cb5f8191b4aeb2652ddcfb62cf2c185eae073d25"
     },
     {
       "path": "styles.css",
-      "bytes": 63455,
-      "sha256": "445181b072c3e48a97efea762d6cfa9722747961a66fe1feaaceaae6d00ce3dd"
+      "bytes": 63613,
+      "sha256": "5e72e10b0755726cfb13d14d24dbe18c81e3795a23cfa64e0be5178ec7f9e037"
     }
   ]
 }

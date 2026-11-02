@@ -8,6 +8,8 @@ try { saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}') || {}; } ca
 if (typeof saved !== 'object' || Array.isArray(saved)) saved = {};
 const validOrder = order => order && typeof order.orderId === 'string' && typeof order.amount === 'string' && /^\d+\.\d{2}$/.test(order.amount) && order.currency === 'USD' && typeof order.status === 'string';
 const validCheckout = order => order && typeof order.id === 'string' && typeof order.checkoutToken === 'string' && /^\d+\.\d{2}$/.test(order.amount) && order.currency === 'USD' && Number.isInteger(order.quantity) && order.quantity >= 1 && order.quantity <= 100;
+const captureResponseStatuses = new Set(['COMPLETED', 'PENDING', 'DECLINED', 'DENIED', 'FAILED', 'PARTIALLY_REFUNDED', 'REFUNDED']);
+const terminalCheckoutStatuses = new Set(['COMPLETED', 'CANCELLED', 'FAILED', 'DECLINED', 'DENIED', 'PARTIALLY_REFUNDED', 'REFUNDED']);
 // Carry forward approved v0.3 checkouts so moving the UI does not strand confirmation.
 if (!saved.legacyMigrated && !saved.pendingCheckout) {
   try { const legacy = JSON.parse(sessionStorage.getItem('tradeweave-workspace-v2') || '{}'); if (validCheckout(legacy.pendingCheckout)) saved.pendingCheckout = legacy.pendingCheckout; } catch {}
@@ -331,7 +333,7 @@ async function capture(orderId) {
   $('#shop-retry-capture').disabled = true;
   try {
     const result = await api('/api/paypal/capture', { method: 'POST', body: JSON.stringify({ orderId, checkoutToken: activeCheckout.checkoutToken }) });
-    if (!['COMPLETED', 'PENDING', 'DECLINED', 'DENIED', 'FAILED'].includes(result.status)) throw new Error(t('checkoutRecover'));
+    if (!captureResponseStatuses.has(result.status)) throw new Error(t('checkoutRecover'));
     state.pendingCheckout = null; state.openCheckout = null; activeCheckout = null;
     if (['COMPLETED', 'PENDING'].includes(result.status)) state.cart = [];
     state.requestKey = null; cartQuote = null; persist();
@@ -573,11 +575,11 @@ async function refreshOrders() {
   $('#shop-refresh-orders').disabled = true;
   try {
     const result = await api('/api/buyer/orders'); state.orders = result.orders; persist(); renderOrders();
-    if (!activeCheckout && state.requestKey) { const attempt = result.orders.find(o => o.requestKey === state.requestKey); if (attempt && ['CANCELLED', 'FAILED', 'DECLINED', 'DENIED'].includes(attempt.status)) { state.requestKey = null; persist(); } }
+    if (!activeCheckout && state.requestKey) { const attempt = result.orders.find(o => o.requestKey === state.requestKey); if (attempt && terminalCheckoutStatuses.has(attempt.status)) { state.requestKey = null; persist(); } }
     $('#shop-orders-status').textContent = t('ordersLoaded');
     if (activeCheckout) {
       const saved = result.orders.find(o => o.paypalOrderId === activeCheckout.id);
-      if (saved && ['COMPLETED', 'CANCELLED', 'FAILED', 'DECLINED', 'DENIED'].includes(saved.status)) { if (saved.status === 'COMPLETED') state.cart = []; activeCheckout = null; state.pendingCheckout = null; state.openCheckout = null; state.requestKey = null; cartQuote = null; lockCheckout(false); persist(); renderCart(); }
+      if (saved && terminalCheckoutStatuses.has(saved.status)) { if (saved.status === 'COMPLETED') state.cart = []; activeCheckout = null; state.pendingCheckout = null; state.openCheckout = null; state.requestKey = null; cartQuote = null; lockCheckout(false); persist(); renderCart(); }
     }
   } catch (error) { $('#shop-orders-status').textContent = t('orderRefreshError') + ' ' + error.message; }
   finally { $('#shop-refresh-orders').disabled = false; renderPending(); }
