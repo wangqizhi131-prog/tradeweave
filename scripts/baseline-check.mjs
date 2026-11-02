@@ -380,6 +380,9 @@ try {
   aiMode = 'EMPTY'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 502);
   aiMode = 'HTTP_ERROR'; const providerFailure = await request('/api/assistant', { productId: tote.id, question: 'Care?' }); assert.equal(providerFailure.status, 502); assert.doesNotMatch(JSON.stringify(providerFailure.data), /SECRET_PROVIDER_DETAIL_MUST_NOT_LEAK/); assert.match(providerFailure.data.error, /temporarily unavailable/i);
   aiMode = 'OK'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200);
+  assert.match(lastAiPayload.messages[0].content, /Never state or imply that a requested fact is missing when its matching field has a non-empty value/);
+  const suppliedFacts = JSON.parse(lastAiPayload.messages.at(-1).content).SELLER_REFERENCE_DATA;
+  assert.equal(suppliedFacts.material, 'Handwoven cotton', 'The AI context must carry the selected product material as an explicit fact.');
   process.env.AI_API_URL = 'https://openrouter.ai/api/v1/chat/completions'; process.env.AI_MODEL = 'openrouter/free';
   assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200);
   assert.equal(lastAiPayload.model, 'openrouter/free'); assert.deepEqual(lastAiPayload.provider.max_price, { prompt: 0, completion: 0 }); assert.equal(lastAiPayload.reasoning_effort, 'none');
