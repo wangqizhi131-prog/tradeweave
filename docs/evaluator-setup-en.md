@@ -4,13 +4,15 @@ This document describes the local candidate build. It is not a claim that the cu
 
 ## Optional hosted preview
 
-The repository includes a Render Blueprint (`render.yaml`). Import the public repository as a Blueprint and select the Free web service. Keep the service on the free plan and do not add a payment method. Render documents that a Free service without a payment method is suspended when included bandwidth or build usage is exceeded instead of being billed for overages. The service sleeps after 15 minutes without traffic and can take about a minute to wake. Its filesystem is ephemeral: catalog edits, uploaded images, and order history reset after sleep, restart, or redeploy. The hosted configuration disables the maker workspace; use the local build for product editing and merchant fulfillment tasks.
+The repository includes a Render Blueprint (`render.yaml`). Import the public repository as a Blueprint and select the Free web service. Keep the service on the free plan and do not add a payment method. Render documents that a Free service without a payment method is suspended when included bandwidth or build usage is exceeded instead of being billed for overages. The service sleeps after 15 minutes without traffic and can take about a minute to wake. Its filesystem is ephemeral.
+
+For records that survive a host restart, create a Turso database on its Free plan and set both `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` as private Render environment variables. The app then stores the catalog, orders, inventory reservations, buyer questions, and replies in that database. If either value is missing, it uses local SQLite and records will be lost when the host clears its filesystem. Uploaded product images are still host-local; the fictional sample images are restored from the public source on startup. Turso currently lists a $0 Free plan with no credit card required, 5 GB storage, 500 million row reads and 10 million row writes per month. Stay on the Free plan, do not enable paid overages, and verify billing remains $0. Turso or Render must still be checked from the owner’s account before calling the route available to judges. The hosted configuration disables the maker workspace; use the local build for product editing and merchant fulfillment tasks.
 
 The Blueprint requests `AI_API_KEY`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET`. Enter them only in Render's private environment-variable fields. Use a free-only OpenRouter key/model and PayPal Sandbox credentials. OpenRouter currently documents 20 requests per minute and 50 per day for `:free` model variants; failed requests count toward the daily limit. The `openrouter/free` router can select different models, and neither availability nor continuous access through judging is guaranteed. Never add credits or a payment method to increase the quota. A deployment counts as verified only after a live AI response and complete PayPal Sandbox browser flow have been observed.
 
 ## Requirements
 
-- Node.js 24 or later; no npm package installation is required.
+- Node.js 24 or later; run `npm ci` to install the locked dependency used by the optional remote storage path and its check.
 - A desktop browser on the same computer as the local server. The maker workspace is loopback-only.
 - For live AI or checkout, provider credentials and network access are needed. No credentials or test account passwords are included.
 
@@ -41,4 +43,4 @@ Run `npm run check`. Provider interactions in this suite are simulated and test 
 
 The final submission must provide a tested, free evaluator access route for the whole judging period. The current free-model cap means continuous AI availability cannot be promised; a live hosted route must be checked from a clean browser, including its behavior when the model is rate-limited. If that cannot be established, this candidate is not ready for evaluation as a working PayPal-plus-AI demo. The official rules allow complete repository setup instructions instead of a hosted URL, but judges still need a working build and free access to the integrations; a no-credential local start alone does not demonstrate live AI or PayPal.
 
-References checked 2026-11-02: [OpenRouter free model limits](https://openrouter.ai/collections/free-models), [Render free service limits](https://render.com/docs/free), [PayPal AI Hackathon rules](https://paypalaihackathon.devpost.com/rules).
+References checked 2026-11-02: [Turso pricing](https://turso.tech/pricing), [OpenRouter free model limits](https://openrouter.ai/collections/free-models), [Render free service limits](https://render.com/docs/free), [PayPal AI Hackathon rules](https://paypalaihackathon.devpost.com/rules).

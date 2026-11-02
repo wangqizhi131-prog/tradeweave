@@ -9,16 +9,17 @@
 - A local maker workspace for product drafts, bilingual facts, options, images, buyer questions, orders, and sandbox fulfillment.
 - A separate buyer storefront with product search and filters, options, cart, product questions, and My orders.
 - Five interface languages: English, Simplified Chinese, Japanese, Spanish, and French. Product source content is currently English and Chinese; other languages display a clear fallback notice.
-- SQLite-backed catalog, checkout snapshots, inventory reservations, orders, questions, and maker replies.
+- SQLite-backed catalog, checkout snapshots, inventory reservations, orders, questions, and maker replies. A hosted instance can use the optional Turso/libSQL database so records survive Render restarts.
 - A configurable OpenAI-compatible chat-completions interface and PayPal JavaScript SDK plus Orders API integration fixed to PayPal Sandbox.
 
 The included shop and products are fictional examples. The checkout amount is USD and excludes shipping and tax. No production payment or shipping service is implemented.
 
 ## Run
 
-Requires Node.js 24 or later. There are no npm dependencies.
+Requires Node.js 24 or later. Install the locked dependencies before running the checks or enabling the optional remote database.
 
 ```sh
+npm ci
 npm start
 ```
 
@@ -40,7 +41,9 @@ See [evaluator setup and limitations](docs/evaluator-setup-en.md) for exact boun
 
 The repository includes a Render Blueprint (`render.yaml`) for an optional public preview. Import the public GitHub repository as a Blueprint and choose the Free web service. Do not add a payment method. Enter `AI_API_KEY`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET` only as private environment variables in Render; never commit them.
 
-The Free service sleeps after 15 minutes without traffic and may take about a minute to wake. Its filesystem is temporary, so edits, uploaded images, and order history reset after sleep, restart, or redeploy. The hosted configuration disables the maker workspace and exposes the buyer storefront. Local SQLite persistence remains available in the local build. The OpenRouter free router may be rate-limited or unavailable; this Blueprint does not guarantee free model capacity for the judging period. Do not describe it as a working demo until the deployment and both provider flows have been checked.
+The Free service sleeps after 15 minutes without traffic and may take about a minute to wake. Its filesystem is temporary. Configure both `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` to store the catalog, orders, inventory reservations, buyer questions, and replies in a remote SQLite-compatible database; without both values, the app falls back to local SQLite, which resets when the host filesystem is cleared. Uploaded images remain on the temporary host filesystem, while the included fictional sample images are restored from the repository at startup. The hosted configuration disables the maker workspace and exposes the buyer storefront. The OpenRouter free router may be rate-limited or unavailable; this Blueprint does not guarantee free model capacity for the judging period. Do not describe it as a working demo until the deployment and both provider flows have been checked.
+
+Turso currently lists a $0 Free plan with no credit card required. Keep the account on that plan, do not enable paid overages, and check its billing page before and after judge access. Limits and account policies can change; this project has not created or tested a hosted Turso database.
 
 ## Checks
 

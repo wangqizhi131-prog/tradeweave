@@ -46,8 +46,12 @@ try {
   }
 } catch (error) { if (error.code !== 'ENOENT') throw error; }
 let store = normalizeStore(JSON.parse(await readFile(storePath, 'utf8'))), storeRevision, savingStore = false;
-const storage = openStorage(process.env.DATA_DIR || join(root, 'data'), store);
-({ store, revision: storeRevision } = storage.catalog());
+const remoteDatabaseUrl = process.env.TURSO_DATABASE_URL, remoteDatabaseToken = process.env.TURSO_AUTH_TOKEN;
+if (Boolean(remoteDatabaseUrl) !== Boolean(remoteDatabaseToken)) throw new Error('Set both TURSO_DATABASE_URL and TURSO_AUTH_TOKEN, or leave both unset.');
+const storage = remoteDatabaseUrl
+  ? await (await import('./storage-remote.mjs')).openRemoteStorage(remoteDatabaseUrl, remoteDatabaseToken, store)
+  : openStorage(process.env.DATA_DIR || join(root, 'data'), store);
+({ store, revision: storeRevision } = await storage.catalog());
 
 class HttpError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -126,11 +130,11 @@ function receiptView(order) {
     ...(order.shipping ? { shipping: { name: order.shipping.name, address: pick(order.shipping.address, ['address_line_1', 'address_line_2', 'admin_area_1', 'admin_area_2', 'postal_code', 'country_code']) } } : {})
   };
 }
-function quoteCart(input) {
+async function quoteCart(input) {
   const lines = input.items || [{ productId: input.productId, variantId: input.variantId, quantity: input.quantity }];
   if (!Array.isArray(lines) || !lines.length || lines.length > 20) throw new HttpError(400, 'Choose between 1 and 20 cart items.');
   const seen = new Set();
-  const current = storage.publicStore();
+  const current = await storage.publicStore();
   return lines.map(line => {
     if (!line || typeof line !== 'object') throw new HttpError(400, 'Choose a valid cart item.');
     const product = current.products.find(p => p.id === line.productId);
@@ -160,7 +164,7 @@ async function captureOrder(order, reconcileOnly = false) {
   if (destination?.address) {
     const shipping = { name: typeof destination.name?.full_name === 'string' ? destination.name.full_name.slice(0, 300) : '', address: {} };
     for (const field of ['address_line_1', 'address_line_2', 'admin_area_2', 'admin_area_1', 'postal_code', 'country_code']) if (typeof destination.address[field] === 'string') shipping.address[field] = destination.address[field].slice(0, 300);
-    if (Object.keys(shipping.address).length && JSON.stringify(shipping) !== JSON.stringify(order.shipping)) storage.update(order.id, { shipping }, 'Sandbox shipping details returned by PayPal.');
+    if (Object.keys(shipping.address).length && JSON.stringify(shipping) !== JSON.stringify(order.shipping)) await storage.update(order.id, { shipping }, 'Sandbox shipping details returned by PayPal.');
   }
   let result = captureResult(data, order);
   if (result) return storage.complete(order.id, result);
@@ -169,14 +173,14 @@ async function captureOrder(order, reconcileOnly = false) {
     return storage.get(order.id);
   }
   if (data.status !== 'APPROVED') throw new HttpError(409, 'This checkout is waiting for buyer approval. Resume PayPal approval before confirming.');
-  storage.prepareCapture(order.id);
+  await storage.prepareCapture(order.id);
   try {
     data = await remoteJson(paypalBase + '/v2/checkout/orders/' + encodeURIComponent(order.orderId) + '/capture', { method: 'POST', headers: { ...headers, 'paypal-request-id': 'tw-capture-' + order.id } });
     result = captureResult(data, order);
     if (!result) throw new HttpError(502, 'PayPal has not returned a capture confirmation. Retry confirmation to reconcile it.');
     return storage.complete(order.id, result);
   } catch (error) {
-    storage.update(order.id, { lastError: error.message }, 'Payment confirmation requires reconciliation.'); throw error;
+    await storage.update(order.id, { lastError: error.message }, 'Payment confirmation requires reconciliation.'); throw error;
   }
 }
 async function createOrder(order) {
@@ -189,18 +193,18 @@ async function createOrder(order) {
       items: order.items.map(item => ({ name: item.name.slice(0, 127), sku: item.sku || undefined, unit_amount: { currency_code: 'USD', value: item.price }, quantity: String(item.quantity), category: 'PHYSICAL_GOODS' }))
     }], application_context: { brand_name: store.shop.name, shipping_preference: 'GET_FROM_FILE', user_action: 'PAY_NOW' } }) });
     if (typeof data.id !== 'string' || !/^[A-Za-z0-9_-]{8,40}$/.test(data.id)) throw new HttpError(502, 'PayPal did not return a valid sandbox order reference.');
-    if (['CANCELLED', 'FAILED'].includes(storage.get(order.id).status)) throw new HttpError(409, 'This checkout was closed while the request was running. Start a new checkout.');
+    if (['CANCELLED', 'FAILED'].includes((await storage.get(order.id)).status)) throw new HttpError(409, 'This checkout was closed while the request was running. Start a new checkout.');
     return storage.update(order.id, { orderId: data.id, status: 'CREATED' }, 'PayPal sandbox order created.');
-  } catch (error) { if (error.status === 503) storage.release(order.id, 'FAILED'); else storage.update(order.id, { lastError: error.message }, 'Order creation needs another try.'); throw error; }
+  } catch (error) { if (error.status === 503) await storage.release(order.id, 'FAILED'); else await storage.update(order.id, { lastError: error.message }, 'Order creation needs another try.'); throw error; }
 }
 
 export const server = createServer(async (req, res) => {
   try {
-    ({ store, revision: storeRevision } = storage.catalog());
+    ({ store, revision: storeRevision } = await storage.catalog());
     const url = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
     if (req.method === 'POST' && req.headers.origin && new URL(req.headers.origin).host !== req.headers.host) throw new HttpError(403, 'Use this workspace to make the request.');
     if (req.method === 'GET' && url.pathname === '/api/store') {
-      const value = storage.publicStore();
+      const value = await storage.publicStore();
       return send(res, 200, { ...value, product: value.products[0] || null });
     }
     if (req.method === 'GET' && url.pathname === '/api/workspace/store') {
@@ -219,32 +223,32 @@ export const server = createServer(async (req, res) => {
         if (Boolean(value.en.trim()) !== Boolean(value.zh.trim())) throw new HttpError(400, 'Supply both languages for a policy, or leave both blank.');
         policies[key] = value.en.trim() ? { en: value.en.trim(), zh: value.zh.trim() } : null;
       }
-      const result = storage.saveCatalog({ ...store, shop: { ...store.shop, name: shop.name.trim(), location: shop.location.trim(), regionLabel: shop.regionLabel.trim(), policies } }, input.revision);
+      const result = await storage.saveCatalog({ ...store, shop: { ...store.shop, name: shop.name.trim(), location: shop.location.trim(), regionLabel: shop.regionLabel.trim(), policies } }, input.revision);
       ({ store, revision: storeRevision } = result); return send(res, 200, { ...store, revision: storeRevision });
     }
     if (req.method === 'GET' && ['/api/buyer/tickets', '/api/workspace/tickets'].includes(url.pathname)) {
       const merchant = url.pathname.startsWith('/api/workspace/');
       if (merchant && !localEditor(req)) throw new HttpError(403, 'Open the maker workspace to read buyer questions.');
-      return send(res, 200, { tickets: storage.tickets(merchant ? null : buyerOwner(req, res)).map(({ owner, ...ticket }) => ticket) });
+      return send(res, 200, { tickets: (await storage.tickets(merchant ? null : buyerOwner(req, res))).map(({ owner, ...ticket }) => ticket) });
     }
     if (req.method === 'POST' && url.pathname === '/api/buyer/ticket') {
       const input = await bodyJson(req), owner = buyerOwner(req, res);
       if (typeof input.question !== 'string' || !input.question.trim() || input.question.length > 2000 || typeof input.requestKey !== 'string' || !/^[a-zA-Z0-9_-]{8,80}$/.test(input.requestKey)) throw new HttpError(400, 'Write a question under 2,000 characters.');
-      const order = input.orderId ? storage.get(input.orderId) : null;
+      const order = input.orderId ? await storage.get(input.orderId) : null;
       if (input.orderId && (!order || order.owner !== owner)) throw new HttpError(403, 'Choose an order from this browser.');
       const product = input.productId ? store.products.find(p => p.id === input.productId) : null;
       if (input.productId && (!product || product.status !== 'active' && !order?.items.some(i => i.productId === product.id))) throw new HttpError(400, 'Choose an available product or your own order.');
       const history = input.history || [];
       if (!Array.isArray(history) || history.length > 6 || history.some(m => !m || !['user', 'assistant'].includes(m.role) || typeof m.content !== 'string' || m.content.length > 1800)) throw new HttpError(400, 'Share up to six product conversation messages, under 1,800 characters each.');
       limitRequests(req, 'questions', 10);
-      const { owner: hidden, ...ticket } = storage.addTicket(owner, input.requestKey, input.question.trim(), { productId: product?.id || null, productName: product?.name.en || null, orderId: order?.orderId || null, history: history.map(({ role, content }) => ({ role, content })), contextRevision: storeRevision });
+      const { owner: hidden, ...ticket } = await storage.addTicket(owner, input.requestKey, input.question.trim(), { productId: product?.id || null, productName: product?.name.en || null, orderId: order?.orderId || null, history: history.map(({ role, content }) => ({ role, content })), contextRevision: storeRevision });
       return send(res, 200, ticket);
     }
     if (req.method === 'POST' && url.pathname === '/api/workspace/ticket') {
       if (!localEditor(req) || req.headers['x-editor-token'] !== editorToken || !req.headers.origin) throw new HttpError(403, 'Open the maker workspace to reply.');
       const input = await bodyJson(req);
       if (typeof input.id !== 'string' || typeof input.reply !== 'string' || input.reply.length > 3000 || !['ANSWERED', 'CLOSED'].includes(input.status) || input.status === 'ANSWERED' && !input.reply.trim()) throw new HttpError(400, 'Write a reply under 3,000 characters and choose a valid status.');
-      const { owner, ...ticket } = storage.replyTicket(input.id, input.reply.trim(), input.status); return send(res, 200, ticket);
+      const { owner, ...ticket } = await storage.replyTicket(input.id, input.reply.trim(), input.status); return send(res, 200, ticket);
     }
     if (['GET', 'HEAD'].includes(req.method) && /^\/media\/[a-f0-9]{64}\.(jpg|png|webp)$/.test(url.pathname)) {
       const visible = localEditor(req) || store.products.some(p => p.status === 'active' && p.images.includes(url.pathname));
@@ -302,7 +306,7 @@ export const server = createServer(async (req, res) => {
       const previousCatalog = JSON.stringify(store, null, 2);
       try {
         const nextStore = { ...store, products: input.create === true ? [...store.products, nextProduct] : store.products.map(p => p.id === nextProduct.id ? nextProduct : p) };
-        ({ store, revision: storeRevision } = storage.saveCatalog(nextStore, input.revision));
+        ({ store, revision: storeRevision } = await storage.saveCatalog(nextStore, input.revision));
         let warning;
         const temporaryPath = storePath + '.' + randomUUID() + '.tmp';
         try { await writeFile(join(dirname(storePath), 'store-data.previous.json'), previousCatalog, 'utf8'); await writeFile(temporaryPath, JSON.stringify(store, null, 2) + '\n', 'utf8'); await rename(temporaryPath, storePath); }
@@ -330,7 +334,7 @@ export const server = createServer(async (req, res) => {
       const languageNames = { 'zh-CN': 'Chinese', Chinese: 'Chinese', ja: 'Japanese', es: 'Spanish', fr: 'French', en: 'English', English: 'English' };
       const answerLanguage = languageNames[language] || 'English', locale = answerLanguage === 'Chinese' ? 'zh' : 'en';
       const missing = locale === 'zh' ? '卖家尚未提供此信息。' : 'Not supplied by the seller.';
-      const availableProduct = storage.publicStore().products.find(p => p.id === product.id) || product;
+      const availableProduct = (await storage.publicStore()).products.find(p => p.id === product.id) || product;
       const availableStock = variant ? availableProduct.variants.find(v => v.id === variant.id)?.stock ?? variant.stock : availableProduct.stock;
       const facts = {
         shopPolicies: store.shop.policies || {},
@@ -352,36 +356,36 @@ export const server = createServer(async (req, res) => {
       }); } finally { aiInFlight--; }
       const answer = data.choices?.[0]?.message?.content;
       if (typeof answer !== 'string' || !answer.trim()) throw new HttpError(502, 'The model did not return an answer. Please try again.');
-      storage.bump(localEditor(req) && req.headers['x-editor-token'] === editorToken ? 'previewAnswers' : 'buyerAnswers');
+      await storage.bump(localEditor(req) && req.headers['x-editor-token'] === editorToken ? 'previewAnswers' : 'buyerAnswers');
       return send(res, 200, { answer: answer.trim() });
     }
     if (req.method === 'POST' && url.pathname === '/api/cart/quote') {
-      const items = quoteCart(await bodyJson(req));
+      const items = await quoteCart(await bodyJson(req));
       return send(res, 200, { items, amount: (items.reduce((sum, i) => sum + Math.round(Number(i.price) * 100) * i.quantity, 0) / 100).toFixed(2), currency: 'USD' });
     }
-    if (req.method === 'GET' && url.pathname === '/api/buyer/orders') return send(res, 200, { orders: storage.list(buyerOwner(req, res)).map(o => orderView(o, true)) });
+    if (req.method === 'GET' && url.pathname === '/api/buyer/orders') return send(res, 200, { orders: (await storage.list(buyerOwner(req, res))).map(o => orderView(o, true)) });
     if (req.method === 'GET' && url.pathname === '/api/buyer/receipt') {
       const reference = url.searchParams.get('orderId');
       if (!reference || reference.length > 80) throw new HttpError(400, 'Choose a valid order reference.');
-      const order = storage.get(reference.startsWith('local-') ? reference.slice(6) : reference);
+      const order = await storage.get(reference.startsWith('local-') ? reference.slice(6) : reference);
       if (!order || order.owner !== buyerOwner(req, res, false)) throw new HttpError(404, 'This order is not available in this browser.');
       return send(res, 200, receiptView(order));
     }
     if (req.method === 'GET' && url.pathname === '/api/workspace/orders') {
       if (!localEditor(req)) throw new HttpError(403, 'Open the maker workspace to view store orders.');
-      return send(res, 200, { orders: storage.list().map(o => orderView(o)), metrics: storage.metrics() });
+      return send(res, 200, { orders: (await storage.list()).map(o => orderView(o)), metrics: await storage.metrics() });
     }
     if (req.method === 'POST' && url.pathname === '/api/paypal/order') {
       const input = await bodyJson(req), owner = buyerOwner(req, res);
       if (input.requestKey !== undefined && (typeof input.requestKey !== 'string' || !/^[a-zA-Z0-9_-]{8,80}$/.test(input.requestKey))) throw new HttpError(400, 'Use a valid checkout request reference.');
-      const previous = input.requestKey ? storage.findRequest(owner, input.requestKey) : null;
+      const previous = input.requestKey ? await storage.findRequest(owner, input.requestKey) : null;
       if (previous) {
         const requested = input.items || [{ productId: input.productId, variantId: input.variantId, quantity: input.quantity }];
         if (!Array.isArray(requested) || JSON.stringify(requested.map(i => [i?.productId, i?.variantId || null, i?.quantity])) !== JSON.stringify(previous.items.map(i => [i.productId, i.variantId || null, i.quantity]))) throw new HttpError(409, 'Use a new checkout reference for a changed cart.');
       }
-      const items = previous ? null : quoteCart(input);
+      const items = previous ? null : await quoteCart(input);
       if (!previous?.orderId) limitRequests(req, 'checkout', 30);
-      const order = previous || storage.begin(owner, items, input.requestKey || randomUUID());
+      const order = previous || await storage.begin(owner, items, input.requestKey || randomUUID());
       if (!createPromises.has(order.id)) createPromises.set(order.id, createOrder(order));
       try { const saved = await createPromises.get(order.id); return send(res, 200, { ...orderView(saved, true), id: saved.orderId }); }
       finally { createPromises.delete(order.id); }
@@ -391,17 +395,17 @@ export const server = createServer(async (req, res) => {
       if (merchant && (!localEditor(req) || req.headers['x-editor-token'] !== editorToken)) throw new HttpError(403, 'Open the maker workspace to manage orders.');
       const input = await bodyJson(req), reference = input.orderId || input.localId;
       if (typeof reference !== 'string' || reference.length > 80 || !reference.length) throw new HttpError(400, 'Choose a valid order reference.');
-      const order = storage.get(reference);
+      const order = await storage.get(reference);
       if (!order) throw new HttpError(404, 'This checkout is unavailable. Refresh your orders.');
       if (!merchant && (order.owner !== buyerOwner(req, res, false) || order.checkoutToken !== input.checkoutToken)) throw new HttpError(403, 'This checkout does not belong to this browser.');
       if (merchant && !['fulfill', 'reconcile'].includes(input.action)) throw new HttpError(400, 'Choose refresh payment or mark fulfilled.');
       if (merchant && input.action === 'fulfill') {
         if (typeof input.tracking !== 'string' || input.tracking.length > 200) throw new HttpError(400, 'Use a tracking reference under 200 characters.');
-        return send(res, 200, orderView(storage.fulfill(order.id, input.tracking.trim())));
+        return send(res, 200, orderView(await storage.fulfill(order.id, input.tracking.trim())));
       }
       if (url.pathname === '/api/paypal/cancel') {
         if (createPromises.has(order.id) || capturePromises.has(order.id)) throw new HttpError(409, 'A payment request is still running. Refresh its status before cancelling.');
-        return send(res, 200, orderView(storage.release(order.id), true));
+        return send(res, 200, orderView(await storage.release(order.id), true));
       }
       if (!order.orderId) throw new HttpError(409, 'PayPal has not returned an order reference yet. Resume checkout creation.');
       if (order.status === 'COMPLETED') return send(res, 200, orderView(order, !merchant));
@@ -414,7 +418,7 @@ export const server = createServer(async (req, res) => {
           if (capturePromises.get(order.id) === pending) capturePromises.delete(order.id);
           continue;
         }
-        const entry = { reconcileOnly, promise: captureOrder(storage.get(order.id), reconcileOnly) };
+        const entry = { reconcileOnly, promise: Promise.resolve(storage.get(order.id)).then(current => captureOrder(current, reconcileOnly)) };
         capturePromises.set(order.id, entry);
         try { return send(res, 200, orderView(await entry.promise, !merchant)); }
         finally { if (capturePromises.get(order.id) === entry) capturePromises.delete(order.id); }
