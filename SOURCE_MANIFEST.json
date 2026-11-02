@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-02T05:52:19.113Z",
+  "createdAt": "2026-11-02T06:35:58.540Z",
   "files": [
     {
       "path": ".env.example",
@@ -144,8 +144,8 @@
     },
     {
       "path": "storefront.js",
-      "bytes": 57736,
-      "sha256": "b5564ea744caffc92b7044a5bd703a2ac1e9529c766ec53cbc811a6a35fac3b2"
+      "bytes": 57809,
+      "sha256": "1453db8d6423e0874aa6fccfed2ce92cb8f1a5ff941d4afd8ffb249e6b08691e"
     },
     {
       "path": "styles.css",

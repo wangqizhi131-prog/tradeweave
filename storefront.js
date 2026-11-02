@@ -533,7 +533,7 @@ function changeCart(index, difference) {
   state.cart[index].quantity += difference; state.requestKey = null; cartQuote = null; recoveringCreation = null; persist(); renderCart();
 }
 function renderCart() {
-  const root = $('#shop-cart-list'), items = cartItems(); root.replaceChildren();
+  const root = $('#shop-cart-list'), items = cartItems(); root.replaceChildren(); $('#shop-cart-message').textContent = '';
   if (!items.length) root.append(node('p', 'shop-order-empty', t('emptyCart')));
   items.forEach((item, index) => {
     const row = node('article', 'shop-cart-row'), details = node('div', 'shop-cart-item-info');
@@ -554,7 +554,7 @@ $('#shop-add-cart').addEventListener('click', () => {
   if (found && found.quantity + quantity > Math.min(5, selectedVariant ? selectedVariant.stock : product.stock)) { toast(t('maxCartQty')); return; }
   if (!found && state.cart.length >= 20) { toast(t('cartLimit')); return; }
   if (found) found.quantity += quantity; else state.cart.push({ productId: product.id, variantId: selectedVariant?.id || null, quantity });
-  state.requestKey = null; cartQuote = null; persist(); renderCart(); history.pushState(null, '', '#cart'); showPage(true); toast(t('toastAdded'));
+  state.requestKey = null; cartQuote = null; persist(); renderCart(); history.pushState(null, '', '#cart'); showPage(true); $('#shop-cart-message').textContent = t('toastAdded');
 });
 async function refreshOrders() {
   $('#shop-refresh-orders').disabled = true;
