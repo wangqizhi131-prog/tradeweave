@@ -1,0 +1,15 @@
+.env
+node_modules/
+.local-ai/
+release/
+*.log
+.DS_Store
+store-data.previous.json
+store-data.json.*.tmp
+data/
+media/
+backups/
+evidence/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

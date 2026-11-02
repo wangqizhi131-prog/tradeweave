@@ -1,0 +1,215 @@
+{
+  "shop": {
+    "name": "Coastline Market",
+    "location": "Nanjing, China",
+    "regionLabel": "Selling worldwide",
+    "isFictionalSample": true
+  },
+  "products": [
+    {
+      "id": "coast-tote",
+      "name": {
+        "en": "Coastline Market Tote",
+        "zh": "海岸线手织托特包"
+      },
+      "subtitle": {
+        "en": "Everyday utility, woven slowly.",
+        "zh": "日常所需，慢慢织成。"
+      },
+      "description": {
+        "en": "A sturdy cotton carryall, handwoven in small batches by our Nanjing studio. Room for the market, a book, and the long way home.",
+        "zh": "南京工作室小批量手织棉布包。装下市集收获、一本书，也装下回家路上多绕的一段风景。"
+      },
+      "tags": [
+        {
+          "en": "Handwoven",
+          "zh": "手工编织"
+        },
+        {
+          "en": "Small batch",
+          "zh": "小批量制作"
+        }
+      ],
+      "price": "68.00",
+      "currency": "USD",
+      "stock": 12,
+      "isFictionalSample": true,
+      "facts": {
+        "material": {
+          "en": "Handwoven cotton",
+          "zh": "手工编织棉布"
+        },
+        "production": {
+          "en": "Made in small batches",
+          "zh": "小批量制作"
+        },
+        "madeIn": {
+          "en": "Nanjing, China",
+          "zh": "中国南京"
+        },
+        "dimensions": {
+          "en": "38 × 34 × 10 cm",
+          "zh": "38 × 34 × 10 厘米"
+        },
+        "care": {
+          "en": "Spot clean with a damp cloth.",
+          "zh": "使用湿布局部清洁。"
+        },
+        "dispatch": {
+          "en": "3–5 business days before dispatch",
+          "zh": "下单后 3–5 个工作日发出"
+        },
+        "shippingPrice": null,
+        "arrivalDateGuarantee": null
+      },
+      "images": [],
+      "variants": [],
+      "status": "active"
+    },
+    {
+      "id": "riverbank-cup",
+      "name": {
+        "en": "Riverbank Stoneware Cup",
+        "zh": "河岸手作陶杯"
+      },
+      "subtitle": {
+        "en": "A quiet ritual for the first pour.",
+        "zh": "为清晨第一杯，留一点安静。"
+      },
+      "description": {
+        "en": "A small-batch stoneware cup with a speckled sand glaze and deep green rim. Made for tea, coffee, and slow mornings.",
+        "zh": "小批量烧制的炻器杯，砂色斑点釉面搭配深绿色杯沿。适合茶、咖啡，也适合慢一点的早晨。"
+      },
+      "tags": [
+        {
+          "en": "Small batch",
+          "zh": "小批量制作"
+        },
+        {
+          "en": "Stoneware",
+          "zh": "炻器"
+        }
+      ],
+      "price": "32.00",
+      "currency": "USD",
+      "stock": 9,
+      "status": "active",
+      "images": [
+        "/media/31b028a799280fca5b064307f246c39973e47e83e4ef62381201256fbed4a655.jpg"
+      ],
+      "isFictionalSample": true,
+      "variants": [
+        {
+          "id": "cup-300ml",
+          "name": {
+            "en": "300 ml",
+            "zh": "300 毫升"
+          },
+          "sku": "RB-CUP-300",
+          "price": "32.00",
+          "stock": 5
+        },
+        {
+          "id": "cup-420ml",
+          "name": {
+            "en": "420 ml",
+            "zh": "420 毫升"
+          },
+          "sku": "RB-CUP-420",
+          "price": "38.00",
+          "stock": 4
+        }
+      ],
+      "facts": {
+        "material": {
+          "en": "Glazed stoneware",
+          "zh": "施釉炻器"
+        },
+        "production": {
+          "en": "Hand-finished in small batches",
+          "zh": "小批量手工修整"
+        },
+        "madeIn": {
+          "en": "Nanjing, China",
+          "zh": "中国南京"
+        },
+        "dimensions": {
+          "en": "300 ml or 420 ml",
+          "zh": "300 毫升或 420 毫升"
+        },
+        "care": {
+          "en": "Hand wash recommended.",
+          "zh": "建议手洗。"
+        },
+        "dispatch": {
+          "en": "3–5 business days before dispatch",
+          "zh": "下单后 3–5 个工作日发出"
+        },
+        "shippingPrice": null,
+        "arrivalDateGuarantee": null
+      }
+    },
+    {
+      "id": "field-notes-towel",
+      "name": {
+        "en": "Field Notes Linen Towel",
+        "zh": "田野笔记亚麻餐巾"
+      },
+      "subtitle": {
+        "en": "Washed linen, finished with a botanical border.",
+        "zh": "水洗亚麻，配以植物色织边。"
+      },
+      "description": {
+        "en": "A soft, absorbent linen towel with a restrained green and clay border. Each piece is sewn in a small studio run.",
+        "zh": "柔软吸水的亚麻餐巾，以克制的苔绿与陶土色织边收尾。每批均由小型工作室缝制。"
+      },
+      "tags": [
+        {
+          "en": "Washed linen",
+          "zh": "水洗亚麻"
+        },
+        {
+          "en": "Studio-made",
+          "zh": "工作室制作"
+        }
+      ],
+      "price": "24.00",
+      "currency": "USD",
+      "stock": 8,
+      "status": "active",
+      "images": [
+        "/media/b03338f5b49004cd5fa495b1b8c66d12226283fa87c112cd428920a811802d52.jpg"
+      ],
+      "isFictionalSample": true,
+      "variants": [],
+      "facts": {
+        "material": {
+          "en": "Linen",
+          "zh": "亚麻"
+        },
+        "production": {
+          "en": "Small studio run",
+          "zh": "小型工作室制作"
+        },
+        "madeIn": {
+          "en": "Nanjing, China",
+          "zh": "中国南京"
+        },
+        "dimensions": {
+          "en": "45 × 65 cm",
+          "zh": "45 × 65 厘米"
+        },
+        "care": {
+          "en": "Machine wash cold; line dry.",
+          "zh": "冷水机洗，自然晾干。"
+        },
+        "dispatch": {
+          "en": "3–5 business days before dispatch",
+          "zh": "下单后 3–5 个工作日发出"
+        },
+        "shippingPrice": null,
+        "arrivalDateGuarantee": null
+      }
+    }
+  ]
+}

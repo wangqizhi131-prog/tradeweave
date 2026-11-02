@@ -1,0 +1,14 @@
+{
+  "name": "tradeweave",
+  "version": "0.6.17",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node scripts/check.mjs",
+    "backup": "node scripts/backup.mjs",
+    "ui:fixture": "node scripts/ui-fixture.mjs"
+  }
+}
