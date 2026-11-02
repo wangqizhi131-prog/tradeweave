@@ -253,9 +253,11 @@ export const server = createServer(async (req, res) => {
     if (['GET', 'HEAD'].includes(req.method) && /^\/media\/[a-f0-9]{64}\.(jpg|png|webp)$/.test(url.pathname)) {
       const visible = localEditor(req) || store.products.some(p => p.status === 'active' && p.images.includes(url.pathname));
       if (!visible) throw new HttpError(404, 'Image not found.');
-      const bytes = await readFile(join(mediaPath, url.pathname.split('/').at(-1)));
-      res.writeHead(200, { 'content-type': { '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' }[extname(url.pathname)], 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
-      return res.end(req.method === 'HEAD' ? '' : bytes);
+      const filename = url.pathname.split('/').at(-1);
+      let media = await storage.getMedia(filename.slice(0, 64));
+      if (!media) media = { contentType: { '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' }[extname(url.pathname)], bytes: await readFile(join(mediaPath, filename)) };
+      res.writeHead(200, { 'content-type': media.contentType, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+      return res.end(req.method === 'HEAD' ? '' : media.bytes);
     }
     if (req.method === 'POST' && url.pathname === '/api/workspace/image') {
       if (!localEditor(req) || req.headers['x-editor-token'] !== editorToken || !req.headers.origin) throw new HttpError(403, 'Open the local maker workspace to upload images.');
@@ -265,8 +267,7 @@ export const server = createServer(async (req, res) => {
       const extension = bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10])) ? 'png' : bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255 ? 'jpg' : bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP' ? 'webp' : '';
       if (!extension || bytes.length < 32) throw new HttpError(400, 'Upload a JPEG, PNG or WebP image.');
       const path = '/media/' + createHash('sha256').update(bytes).digest('hex') + '.' + extension;
-      await mkdir(mediaPath, { recursive: true });
-      await writeFile(join(mediaPath, path.split('/').at(-1)), bytes);
+      await storage.putMedia(path.split('/').at(-1).slice(0, 64), { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[extension], bytes);
       return send(res, 200, { path });
     }
     if (req.method === 'GET' && ['/api/config', '/api/shop/config'].includes(url.pathname)) {
@@ -300,7 +301,10 @@ export const server = createServer(async (req, res) => {
       if (input.create !== true && !existing) throw new HttpError(404, 'This product is no longer in the catalog. Reload the latest catalog.');
       if (input.create === true && existing) throw new HttpError(400, 'Create a new product without an existing product ID.');
       const nextProduct = validateProduct(input.product, input.create === true ? null : existing);
-      for (const image of nextProduct.images) await access(join(mediaPath, image.split('/').at(-1)));
+      for (const image of nextProduct.images) {
+        const filename = image.split('/').at(-1);
+        if (!await storage.getMedia(filename.slice(0, 64))) await access(join(mediaPath, filename));
+      }
       if (savingStore || input.revision !== storeRevision) throw new HttpError(409, 'Product details changed. Reload the latest details before saving.');
       savingStore = true;
       const previousCatalog = JSON.stringify(store, null, 2);

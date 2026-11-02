@@ -415,8 +415,11 @@ try {
   assert.deepEqual((await readdir(join(backupFolder, 'media'))).sort(), [...manifest.mediaFiles].sort());
   await assert.rejects(promisify(execFile)(process.execPath, [fileURLToPath(new URL('./backup.mjs', import.meta.url))], { env: { ...process.env, MEDIA_DIR: join(temporary, 'missing-media'), BACKUP_DIR: join(temporary, 'incomplete-backups') } }), /ENOENT/);
   const incompleteFolder = join(temporary, 'incomplete-backups', (await readdir(join(temporary, 'incomplete-backups')))[0]); assert.equal((await readdir(incompleteFolder)).includes('manifest.json'), false);
-  const changedMedia = join(temporary, 'changed-media'); await mkdir(changedMedia); await writeFile(join(changedMedia, manifest.mediaFiles[0]), 'Changed fixture bytes');
-  await assert.rejects(promisify(execFile)(process.execPath, [fileURLToPath(new URL('./backup.mjs', import.meta.url))], { env: { ...process.env, MEDIA_DIR: changedMedia, BACKUP_DIR: join(temporary, 'changed-image-backups') } }), /referenced image changed on disk/);
+  const changedMedia = join(temporary, 'changed-media'); await cp(join(temporary, 'media'), changedMedia, { recursive: true });
+  const filesystemImage = manifest.mediaFiles.find(filename => filename !== uploaded.data.path.split('/').at(-1));
+  assert.ok(filesystemImage, 'The backup fixture must contain at least one repository-seeded image stored on disk.');
+  await writeFile(join(changedMedia, filesystemImage), 'Changed fixture bytes');
+  await assert.rejects(promisify(execFile)(process.execPath, [fileURLToPath(new URL('./backup.mjs', import.meta.url))], { env: { ...process.env, MEDIA_DIR: changedMedia, BACKUP_DIR: join(temporary, 'changed-image-backups') } }), /does not match its content hash/);
   assert.equal((await readdir(backupFolder)).includes('.env'), false);
   const restoreFolder = join(temporary, 'restored'); await mkdir(restoreFolder); await copyFile(join(backupFolder, 'tradeweave.sqlite'), join(restoreFolder, 'tradeweave.sqlite')); await cp(join(backupFolder, 'media'), join(restoreFolder, 'media'), { recursive: true });
   const ordersBeforeRestore = (await request('/api/buyer/orders')).data.orders;

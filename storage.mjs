@@ -14,6 +14,7 @@ export function openStorage(directory, seed) {
     CREATE TABLE IF NOT EXISTS holds (order_id TEXT NOT NULL REFERENCES orders(id), product_id TEXT NOT NULL, variant_id TEXT NOT NULL, quantity INTEGER NOT NULL, expires_at INTEGER NOT NULL, PRIMARY KEY(order_id,product_id,variant_id));
     CREATE TABLE IF NOT EXISTS metrics (key TEXT PRIMARY KEY, count INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, owner TEXT NOT NULL, request_key TEXT NOT NULL, data TEXT NOT NULL, created_at INTEGER NOT NULL, UNIQUE(owner,request_key));
+    CREATE TABLE IF NOT EXISTS media (hash TEXT PRIMARY KEY, content_type TEXT NOT NULL, bytes BLOB NOT NULL);
     CREATE INDEX IF NOT EXISTS orders_owner ON orders(owner,created_at);`);
   if (!db.prepare('SELECT id FROM catalog WHERE id=1').get()) db.prepare('INSERT INTO catalog VALUES (1,?,?)').run(JSON.stringify(seed), revision(seed));
   const transaction = fn => { db.exec('BEGIN IMMEDIATE'); try { const value = fn(); db.exec('COMMIT'); return value; } catch (error) { db.exec('ROLLBACK'); throw error; } };
@@ -34,6 +35,8 @@ export function openStorage(directory, seed) {
   }
   return {
     db, catalog, get, held,
+    putMedia(hash, contentType, bytes) { db.prepare('INSERT INTO media VALUES (?,?,?) ON CONFLICT(hash) DO NOTHING').run(hash, contentType, bytes); },
+    getMedia(hash) { const row = db.prepare('SELECT content_type,bytes FROM media WHERE hash=?').get(hash); return row ? { contentType: row.content_type, bytes: Buffer.from(row.bytes) } : null; },
     bump(key) { db.prepare('INSERT INTO metrics VALUES (?,1) ON CONFLICT(key) DO UPDATE SET count=count+1').run(key); },
     metrics() { return { answers: Number(db.prepare("SELECT count FROM metrics WHERE key='buyerAnswers'").get()?.count || 0), checkouts: Number(db.prepare('SELECT COUNT(*) AS count FROM orders WHERE paypal_id IS NOT NULL').get().count), completed: Number(db.prepare("SELECT COUNT(*) AS count FROM orders WHERE state='COMPLETED'").get().count) }; },
     tickets(owner) { return db.prepare(owner ? 'SELECT data FROM tickets WHERE owner=? ORDER BY created_at DESC LIMIT 100' : 'SELECT data FROM tickets ORDER BY created_at DESC LIMIT 500').all(...(owner ? [owner] : [])).map(row => JSON.parse(row.data)); },

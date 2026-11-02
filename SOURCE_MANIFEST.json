@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-02T07:46:05.459Z",
+  "createdAt": "2026-11-02T07:56:27.189Z",
   "files": [
     {
       "path": ".env.example",
@@ -34,8 +34,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 5903,
-      "sha256": "bb9ff9d056d06d34f88705c01faa6d73a9ef1b6d8df058496014ac7a0c12d474"
+      "bytes": 5880,
+      "sha256": "5a9d8b8f2a8c8ed30cfdd75bbf768efb438c68c51ae508b0603650321a391064"
     },
     {
       "path": "docs/notices-and-ai-use.md",
@@ -69,8 +69,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5129,
-      "sha256": "984aa583852b06c37262a525b4c241f953eea501ed98d13251f127a00e29ce0d"
+      "bytes": 5084,
+      "sha256": "d03132833a60b236dc31047ea7db6920735f316f46489058e29fd1577d9b5128"
     },
     {
       "path": "render.yaml",
@@ -84,13 +84,13 @@
     },
     {
       "path": "scripts/backup.mjs",
-      "bytes": 2674,
-      "sha256": "64b138a5c2c86f0a3999384ec9ac2af11f4706c98279bc6ad3720ea8a08ef514"
+      "bytes": 2855,
+      "sha256": "e6f5ba12df451e4ab866ffbb4e303a29d498513f26b0ac889f856a3e2c62751d"
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 62499,
-      "sha256": "a3f5802d941595d3855029ac8bf8f481d5b3c67052d93404df390c5d658d567c"
+      "bytes": 62773,
+      "sha256": "c6b7f1e2359c8503aa645888751deaca7f438b7f749f284e78a6d797177a3fbb"
     },
     {
       "path": "scripts/check.mjs",
@@ -114,8 +114,8 @@
     },
     {
       "path": "scripts/remote-storage-check.mjs",
-      "bytes": 6740,
-      "sha256": "e2d85a87e639561ee375a0e7d76bda6a56f65b24e2e093e70c13ac58063ac4a5"
+      "bytes": 9817,
+      "sha256": "a38deae86dac4549bf52f5b2056b3420d54356949c47588b96de557b32524634"
     },
     {
       "path": "scripts/ui-fixture.mjs",
@@ -154,18 +154,18 @@
     },
     {
       "path": "server.mjs",
-      "bytes": 39937,
-      "sha256": "ac4378718fb9ca139a5eff5342cba1f070f4fc730ff186a54783559bcdf47a07"
+      "bytes": 40223,
+      "sha256": "e71e546f1b90ec3c04a7d898dbe5e4e4ce9118991077594be0a6ed64462f320f"
     },
     {
       "path": "storage-remote.mjs",
-      "bytes": 12746,
-      "sha256": "4401265d33b794a2670671bd3301dcf630a214a37e6cd217572342094742bf47"
+      "bytes": 13243,
+      "sha256": "7aab3b4f8d59ac4b61a6e64be8758cb7804fca35de948362c7c870cd86f6a56f"
     },
     {
       "path": "storage.mjs",
-      "bytes": 11756,
-      "sha256": "45abf9ebf20c45b7035d5aad2dcdca75bbb280959bc64431c61adb97bf413e4c"
+      "bytes": 12215,
+      "sha256": "b67166ed7035060f76fe58414822ea3b5346f917fc61c8985e5df5bab9bbda9c"
     },
     {
       "path": "store-data.json",

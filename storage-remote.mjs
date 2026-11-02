@@ -14,6 +14,7 @@ export async function openRemoteStorage(url, authToken, seed) {
     CREATE TABLE IF NOT EXISTS holds (order_id TEXT NOT NULL REFERENCES orders(id), product_id TEXT NOT NULL, variant_id TEXT NOT NULL, quantity INTEGER NOT NULL, expires_at INTEGER NOT NULL, PRIMARY KEY(order_id,product_id,variant_id));
     CREATE TABLE IF NOT EXISTS metrics (key TEXT PRIMARY KEY, count INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, owner TEXT NOT NULL, request_key TEXT NOT NULL, data TEXT NOT NULL, created_at INTEGER NOT NULL, UNIQUE(owner,request_key));
+    CREATE TABLE IF NOT EXISTS media (hash TEXT PRIMARY KEY, content_type TEXT NOT NULL, bytes BLOB NOT NULL);
     CREATE INDEX IF NOT EXISTS orders_owner ON orders(owner,created_at);
   `);
   if (!(await db.execute('SELECT id FROM catalog WHERE id=1')).rows.length) {
@@ -49,6 +50,8 @@ export async function openRemoteStorage(url, authToken, seed) {
   }
   return {
     db, catalog,
+    async putMedia(hash, contentType, bytes) { await db.execute({ sql: 'INSERT INTO media VALUES (?,?,?) ON CONFLICT(hash) DO NOTHING', args: [hash, contentType, bytes] }); },
+    async getMedia(hash) { const row = (await rows(db, 'SELECT content_type,bytes FROM media WHERE hash=?', [hash]))[0]; return row ? { contentType: row.content_type, bytes: Buffer.from(row.bytes) } : null; },
     get,
     held,
     async bump(key) { await db.execute({ sql: 'INSERT INTO metrics VALUES (?,1) ON CONFLICT(key) DO UPDATE SET count=count+1', args: [key] }); },

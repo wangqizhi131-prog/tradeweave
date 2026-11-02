@@ -18,17 +18,21 @@ try {
   const snapshot = join(destination, 'tradeweave.sqlite');
   await backup(database, snapshot);
   const snapshotDb = new DatabaseSync(snapshot, { readOnly: true });
-  let catalog;
-  try { catalog = JSON.parse(snapshotDb.prepare('SELECT data FROM catalog WHERE id=1').get().data); } finally { snapshotDb.close(); }
-  const references = [...new Set(catalog.products.flatMap(product => product.images))], mediaFiles = [];
-  if (references.length) await mkdir(join(destination, 'media'));
-  for (const reference of references) {
-    const match = reference.match(/^\/media\/([a-f0-9]{64})\.(jpg|png|webp)$/);
-    if (!match) throw new Error('The snapshot has an unsupported image reference. Backup is incomplete.');
-    const filename = reference.slice('/media/'.length), bytes = await readFile(join(process.env.MEDIA_DIR || join(root, 'media'), filename));
-    if (createHash('sha256').update(bytes).digest('hex') !== match[1]) throw new Error('A referenced image changed on disk. Backup is incomplete: ' + filename);
-    await writeFile(join(destination, 'media', filename), bytes, { flag: 'wx' }); mediaFiles.push(filename);
-  }
+  let mediaFiles = [];
+  try {
+    const catalog = JSON.parse(snapshotDb.prepare('SELECT data FROM catalog WHERE id=1').get().data);
+    const references = [...new Set(catalog.products.flatMap(product => product.images))];
+    if (references.length) await mkdir(join(destination, 'media'));
+    for (const reference of references) {
+      const match = reference.match(/^\/media\/([a-f0-9]{64})\.(jpg|png|webp)$/);
+      if (!match) throw new Error('The snapshot has an unsupported image reference. Backup is incomplete.');
+      const filename = reference.slice('/media/'.length);
+      const stored = snapshotDb.prepare('SELECT bytes FROM media WHERE hash=?').get(match[1]);
+      const bytes = stored ? Buffer.from(stored.bytes) : await readFile(join(process.env.MEDIA_DIR || join(root, 'media'), filename));
+      if (createHash('sha256').update(bytes).digest('hex') !== match[1]) throw new Error('A referenced image does not match its content hash. Backup is incomplete: ' + filename);
+      await writeFile(join(destination, 'media', filename), bytes, { flag: 'wx' }); mediaFiles.push(filename);
+    }
+  } finally { snapshotDb.close(); }
   await writeFile(join(destination, 'manifest.json'), JSON.stringify({ createdAt: new Date().toISOString(), format: 'TradeWeave SQLite + referenced media', databaseSha256: createHash('sha256').update(await readFile(snapshot)).digest('hex'), mediaFiles, providerCredentialsIncluded: false }, null, 2));
   console.log('Backup saved: ' + destination);
   console.log('Includes catalog, orders, buyer question records and ' + mediaFiles.length + ' referenced images. Keep it private. No provider credentials were copied.');
