@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-03T08:26:28.829Z",
+  "createdAt": "2026-11-03T10:44:56.580Z",
   "files": [
     {
       "path": ".env.example",
@@ -34,8 +34,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 6919,
-      "sha256": "f2874ace98d531a7e1b511314f36aa793bb183feea881161681bf30aef232d54"
+      "bytes": 6850,
+      "sha256": "e0f771aca466a382c7b60e6d76eca5b58bbb9b998aedd5d6b640dc22529ef628"
     },
     {
       "path": "docs/notices-and-ai-use.md",
@@ -60,12 +60,12 @@
     {
       "path": "package-lock.json",
       "bytes": 9596,
-      "sha256": "6d54dfb4db205dd1e343f1e6d672a65e5a74fd2e0373f667d878d2cff5e6374f"
+      "sha256": "d19abf0495b6b37c85c4ba9db5e1a0264436a6cc715205d3ae4a2d1cdabc271b"
     },
     {
       "path": "package.json",
       "bytes": 398,
-      "sha256": "e0ee15e02b00e9c7265c307aabaf68297434a17fa9f08cdc8d9fc4bf66cbabd9"
+      "sha256": "6296b6c5f57519d3eef3c6e579fffe0a257df019a1923621ebe90d0ddc3fc605"
     },
     {
       "path": "README.md",
@@ -89,8 +89,8 @@
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 82836,
-      "sha256": "3d3deeb9b9dccb54d73315975e2aefe6a479db4c9b46e1171a5c1ee828ff28ba"
+      "bytes": 83408,
+      "sha256": "fa910a7951b1121c5c98ce119c397cd04ec24099ce5044895abee12e262c7e02"
     },
     {
       "path": "scripts/check.mjs",
@@ -154,8 +154,8 @@
     },
     {
       "path": "server.mjs",
-      "bytes": 42077,
-      "sha256": "987aa8aa326d1550e7505125feb97e1db18f2fd0bcce0b1883f92df06b63b441"
+      "bytes": 42209,
+      "sha256": "a008eb256ba570896bca0b482811ca9d4a8835b8339a6457ec201ab16ea8b4e5"
     },
     {
       "path": "storage-remote.mjs",
@@ -184,8 +184,8 @@
     },
     {
       "path": "storefront.js",
-      "bytes": 59987,
-      "sha256": "67c1b3e082f0c33953dc9066b9be9a4d248c90c737ba65911954188d845f35e4"
+      "bytes": 60019,
+      "sha256": "fbf236f1bbcd07f57e9efc6131391668909ed071da2ee7c8f5e473218b39c821"
     },
     {
       "path": "styles.css",

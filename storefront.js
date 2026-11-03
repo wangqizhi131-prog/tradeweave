@@ -349,7 +349,7 @@ async function capture(orderId) {
     state.requestKey = null; cartQuote = null; persist();
     await refreshOrders(); lockCheckout(false); renderPending(); renderCart();
     history.pushState(null, '', '#orders'); showPage(true);
-    toast(t('paymentReturned', { status: statusLabel(result.status) }));
+    $('#shop-orders-status').textContent = t('paymentReturned', { status: statusLabel(result.status) });
   } catch (error) {
     $('#shop-checkout-note').textContent = error.message;
     renderPending();
