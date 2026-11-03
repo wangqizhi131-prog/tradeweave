@@ -9,9 +9,14 @@ export function validateProduct(input, existing) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) fail('Send product details to save.');
   if (!['draft', 'active', 'archived'].includes(input.status)) fail('Choose draft, active or archived.');
   const active = input.status === 'active';
+  const languages = ['en', 'zh', 'ja', 'es', 'fr'];
   const bilingual = (value, label, max, required = false) => {
     if (!value || typeof value.en !== 'string' || typeof value.zh !== 'string') fail(label + ' needs English and Chinese fields.');
-    const text = { en: value.en.trim(), zh: value.zh.trim() };
+    const text = Object.fromEntries(languages.map(language => {
+      const source = value[language] ?? '';
+      if (typeof source !== 'string') fail(label + ' fields must be text.');
+      return [language, source.trim()];
+    }));
     if (Object.values(text).some(v => v.length > max)) fail(label + ' must be under ' + max + ' characters per language.');
     if (active && (required || text.en || text.zh) && (!text.en || !text.zh)) fail('Complete both languages for ' + label.toLowerCase() + ' before setting this product active.');
     return text;
@@ -27,7 +32,7 @@ export function validateProduct(input, existing) {
   const facts = {};
   for (const key of ['material', 'production', 'madeIn', 'dimensions', 'care', 'dispatch', 'shippingPrice', 'arrivalDateGuarantee']) {
     const value = input.facts?.[key] === null ? { en: '', zh: '' } : bilingual(input.facts?.[key], key, 300);
-    facts[key] = value.en || value.zh ? value : null;
+    facts[key] = Object.values(value).some(Boolean) ? value : null;
   }
   if (!Array.isArray(input.images) || input.images.length > 6 || input.images.some(path => typeof path !== 'string' || !/^\/media\/[a-f0-9]{64}\.(jpg|png|webp)$/.test(path)) || new Set(input.images).size !== input.images.length) fail('Choose up to six uploaded product images.');
   if (!Array.isArray(input.variants) || input.variants.length > 12) fail('Use up to twelve product variants.');

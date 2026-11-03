@@ -8,7 +8,7 @@
 
 - A local maker workspace for product drafts, bilingual facts, options, images, buyer questions, orders, and sandbox fulfillment.
 - A separate buyer storefront with product search and filters, options, cart, product questions, and My orders.
-- Five interface languages: English, Simplified Chinese, Japanese, Spanish, and French. Product source content is currently English and Chinese; other languages display a clear fallback notice.
+- Five interface languages: English, Simplified Chinese, Japanese, Spanish, and French. The fictional sample listings include translated product copy and supplied facts in all five. Makers must supply English and Simplified Chinese for an active listing; Japanese, Spanish, and French copy is optional and missing translations show a clear fallback notice.
 - SQLite-backed catalog, checkout snapshots, inventory reservations, orders, questions, and maker replies. A hosted instance can use the optional Turso/libSQL database so records survive Render restarts.
 - A configurable OpenAI-compatible chat-completions interface and PayPal JavaScript SDK plus Orders API integration fixed to PayPal Sandbox.
 

@@ -26,6 +26,7 @@ const state = { legacyMigrated: true, language: normalizeLanguage(saved.language
   pendingCheckout: validCheckout(saved.pendingCheckout) ? saved.pendingCheckout : null };
 if (!saved.histories && Array.isArray(saved.history)) state.histories['coast-tote'] = saved.history.filter(m => m && ['user', 'assistant'].includes(m.role) && typeof m.text === 'string').slice(-30);
 let selectedVariant = null;
+let addedToCart = false;
 let galleryProductId = null, galleryImagePath = null;
 let store = null, product = null, config = {}, quantity = 1, busy = false, aiBusy = false, loading = false;
 let cartQuote = null, recoveringCreation = null;
@@ -35,6 +36,11 @@ busy = Boolean(state.pendingCheckout);
 const t = (key, values) => i18n.get(state.language, key, values);
 const currentLanguage = () => i18n.language(state.language);
 const localize = value => value?.[currentLanguage().product] || value?.en || value?.zh || '';
+const needsFallback = value => Boolean(value && Object.values(value).some(text => typeof text === 'string' && text.trim()) && !value[currentLanguage().product]?.trim());
+function productNeedsFallback(item) {
+  if (!item) return false;
+  return [item.name, item.subtitle, item.description, ...item.tags, ...item.variants.map(variant => variant.name), ...Object.values(item.facts)].some(needsFallback);
+}
 function usd(value) {
   const options = { style: 'currency', currency: 'USD', ...( ['es', 'fr'].includes(state.language) ? { currencyDisplay: 'code' } : {}) };
   const formatted = new Intl.NumberFormat(currentLanguage().intl, options).format(Number(value));
@@ -56,9 +62,9 @@ function updateFxNotes() {
   globalFxNote.hidden = state.language !== 'zh-CN';
   globalFxNote.textContent = state.language !== 'zh-CN' ? '' : fxRate?.rate ? t('fxGlobal', { date: fxRate.date, rate: fxRate.rate.toFixed(4) }) : t('fxUnavailable');
   const contentNote = $('#shop-content-note');
-  contentNote.hidden = ['en', 'zh-CN'].includes(state.language); contentNote.textContent = contentNote.hidden ? '' : t('contentFallback');
+  contentNote.hidden = !store?.products?.some(productNeedsFallback); contentNote.textContent = contentNote.hidden ? '' : t('contentFallback');
   const productContentNote = $('#shop-product-content-note');
-  productContentNote.hidden = ['en', 'zh-CN'].includes(state.language); productContentNote.textContent = productContentNote.hidden ? '' : t('contentFallback');
+  productContentNote.hidden = !productNeedsFallback(product); productContentNote.textContent = productContentNote.hidden ? '' : t('contentFallback');
 }
 function node(tag, className, text) { const item = document.createElement(tag); if (className) item.className = className; if (text !== undefined) item.textContent = text; return item; }
 function persist() { try { sessionStorage.setItem(storageKey, JSON.stringify(state)); return true; } catch { return false; } }
@@ -84,7 +90,7 @@ function translateStatic() {
     '#shop-catalog-title':'catalogTitle','#shop-catalog-filters-label':'catalogFilters','.shop-catalog-heading>p':'catalogIntro','#shop-cart-title':'cartTitle','#shop-orders-title':'ordersTitle',
     '#shop-product-missing h1':'unavailable','#shop-product-missing p':'removed','#shop-product-missing a':'browseShop',
     '.shop-back-link':'backProducts','#shop-no-image':'noImage','.shop-art>span':'illustration',
-    '#shop-subtotal-label':'subtotal','#shop-product-note':'reviewCart',
+    '#shop-subtotal-label':'subtotal','#shop-product-note':'reviewCart','#shop-added-cart-link':'viewCart','#shop-added-continue-link':'continueShopping',
     '.shop-total-note':'itemOnly','#shop-ask-label':'askProduct','#shop-confirmation a':'viewOrder','#shop-facts-label':'facts','#shop-facts-note':'factsNote',
     '#shop-cart-view .shop-orders-heading p':'cartIntro','#shop-cart-view .shop-cart-summary>h2':'orderSummary','.cart-summary-line span':'subtotal',
     '#shop-cart-view .shop-total-note':'sandboxOnly','#shop-cart-view .shop-cart-summary>a':'continueShopping',
@@ -98,6 +104,7 @@ function translateStatic() {
     '#shop-contact-send':'sendToMaker','#shop-contact .section-heading h3':'yourQuestions','#shop-refresh-questions':'refreshReplies'
   };
   for (const [selector, key] of Object.entries(map)) { const element = $(selector); if (!element || ['#shop-chat-input'].includes(selector)) continue; if (selector === '#shop-contact-form label[for="shop-contact-order"]') element.firstChild.textContent = t(key); else if (selector === '#shop-contact-form label[for="shop-contact-question"]') element.firstChild.textContent = t(key); else if (selector === '#shop-contact-form .shop-share-context') element.lastChild.textContent = t(key); else element.textContent = t(key); }
+  ['questionMaterials', 'questionCare', 'questionDelivery'].forEach((key, index) => { const prompt = $$('.shop-prompts button')[index]; if (prompt) prompt.dataset.question = t(key); });
   const variantLabel = $('#shop-variant-label'); if (variantLabel.firstChild.nodeType === Node.TEXT_NODE) variantLabel.firstChild.textContent = t('chooseOption');
   const searchLabel = $('.shop-catalog-search'); if (searchLabel) searchLabel.firstChild.textContent = t('findProduct');
   const availability = $('#shop-catalog-availability')?.parentElement, sort = $('#shop-catalog-sort')?.parentElement;
@@ -117,7 +124,7 @@ function translateStatic() {
   const contactSelect = $('#shop-contact-order'); if (contactSelect?.options.length) contactSelect.options[0].textContent = t('generalQuestion');
   const languageSelect = $('#shop-language'); languageSelect.setAttribute('aria-label', t('language'));
   if ($('.shop-catalog-heading>p')) $('.shop-catalog-heading>p').textContent = t('catalogIntro');
-  $('#shop-content-note').textContent = currentLanguage().product === 'en' ? t('contentFallback') : '';
+  updateFxNotes();
 }
 function setupLanguageSelect() {
   const select = $('#shop-language'); select.replaceChildren();
@@ -193,14 +200,17 @@ function renderProduct() {
   const location = chinese && store.shop.location === 'Nanjing, China' ? '中国南京' : store.shop.location;
   $('#shop-origin').textContent = location + ' · ' + t('sampleStudio');
   const stock = selectedVariant ? selectedVariant.stock : product.stock;
-  $('#shop-stock').textContent = stock ? `${t('sampleStock')} ${stock} ${t('itemsAvailable')}` : t('soldOut');
+  $('#shop-stock').textContent = stock ? `${t(selectedVariant ? 'optionStock' : 'sampleStock')} ${stock} ${t('itemsAvailable')}` : t('soldOut');
   $('#shop-tags').replaceChildren(...product.tags.map(tag => node('span', '', localize(tag))));
   $('#shop-facts-label').textContent = t('facts'); $('#shop-facts-note').textContent = t('factsNote');
   $('#shop-facts').replaceChildren();
   factFields.forEach(([key, en, zh]) => $('#shop-facts').append(node('dt', '', t('fact_' + key)), node('dd', '', localize(product.facts[key]) || t('notProvided'))));
   $('#shop-chat-product').textContent = localize(product.name); $('#shop-ask-label').textContent = t('askProduct');
   renderGallery(); renderVariants();
-  $('#shop-subtotal-label').textContent = t('subtotal'); updateQuantity(quantity); showPage();
+  $('#shop-subtotal-label').textContent = t('subtotal');
+  $('#shop-product-note').textContent = t(addedToCart ? 'toastAdded' : 'reviewCart');
+  $('#shop-add-confirmation').hidden = !addedToCart;
+  updateQuantity(quantity); showPage();
 }
 function updateQuantity(next) {
   const limit = product ? Math.min(5, selectedVariant ? selectedVariant.stock : product.stock) : 0;
@@ -425,7 +435,7 @@ function syncProduct() {
   const id = new URLSearchParams(location.search).get('item');
   const next = id ? store.products.find(p => p.id === id) : store.products[0];
   if (product?.id === next?.id && product === next) return;
-  product = next || null; selectedVariant = product?.variants.find(v => v.stock > 0) || product?.variants[0] || null; quantity = 1;
+  product = next || null; selectedVariant = product?.variants.find(v => v.stock > 0) || product?.variants[0] || null; quantity = 1; addedToCart = false;
   $('#shop-confirmation').hidden = true;
   if (product) renderProduct(); renderChat(); aiStatus();
 }
@@ -438,7 +448,7 @@ function renderShopCatalog() {
   const maximum = $('#shop-price-max').value === '' ? null : Number($('#shop-price-max').value);
   const tag = $('#shop-catalog-tag').value;
   const items = store.products.filter(p => {
-    const searchable = [p.name.en, p.name.zh, p.subtitle.en, p.subtitle.zh, p.description.en, p.description.zh, ...p.variants.flatMap(v => [v.name.en, v.name.zh, v.sku]), ...Object.values(p.facts).flatMap(value => value ? [value.en, value.zh] : [])].join(' ').toLowerCase();
+    const searchable = [p.name, p.subtitle, p.description, ...p.tags, ...p.variants.flatMap(v => [v.name, { en: v.sku }]), ...Object.values(p.facts)].flatMap(value => value && typeof value === 'object' ? Object.values(value) : []).join(' ').toLowerCase();
     const price = Number(p.price);
     const matchesPrice = Number.isFinite(price) && (minimum === null || price >= minimum) && (maximum === null || price <= maximum);
     const matchesTag = tag === 'all' || p.tags.some(item => item.en.trim() === tag);
@@ -569,7 +579,8 @@ $('#shop-add-cart').addEventListener('click', () => {
   if (found && found.quantity + quantity > Math.min(5, selectedVariant ? selectedVariant.stock : product.stock)) { toast(t('maxCartQty')); return; }
   if (!found && state.cart.length >= 20) { toast(t('cartLimit')); return; }
   if (found) found.quantity += quantity; else state.cart.push({ productId: product.id, variantId: selectedVariant?.id || null, quantity });
-  state.requestKey = null; cartQuote = null; persist(); renderCart(); history.pushState(null, '', '#cart'); showPage(true); $('#shop-cart-message').textContent = t('toastAdded');
+  state.requestKey = null; cartQuote = null; persist(); renderCart(); addedToCart = true;
+  $('#shop-product-note').textContent = t('toastAdded'); $('#shop-add-confirmation').hidden = false;
 });
 async function refreshOrders() {
   $('#shop-refresh-orders').disabled = true;

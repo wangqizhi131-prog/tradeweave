@@ -9,6 +9,7 @@ const factFields = [
   ['care', 'Care', '保养'], ['dispatch', 'Dispatch', '发货时间'],
   ['shippingPrice', 'Shipping price', '运费'], ['arrivalDateGuarantee', 'Arrival guarantee', '送达日期承诺']
 ];
+const productLanguages = [['en', 'English', 'en'], ['zh', '中文', 'zh-CN'], ['ja', '日本語', 'ja'], ['es', 'Español', 'es'], ['fr', 'Français', 'fr']];
 let saved = {};
 try { saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}') || {}; } catch {}
 const state = {
@@ -215,7 +216,7 @@ function setEditorValue(path, value) {
 function editorDirty() { return editorDraft && JSON.stringify(editorDraft) !== editorOriginal; }
 function updateEditorStatus() {
   $('#editor-save').disabled = editorSaving || editorUploading || !editorDirty();
-  $('#editor-status').textContent = editorUploading ? 'Uploading product images…' : editorSaving ? 'Saving product details…' : editorDirty() ? 'Unsaved changes · both languages are saved together.' : editorDraft?.id ? 'Saved locally · fictional sample product.' : 'New draft · not saved or visible to buyers.';
+  $('#editor-status').textContent = editorUploading ? 'Uploading product images…' : editorSaving ? 'Saving product details…' : editorDirty() ? 'Unsaved changes · translations are saved together.' : editorDraft?.id ? 'Saved locally · fictional sample product.' : 'New draft · not saved or visible to buyers.';
 }
 function renderEditorFields() {
   const language = $('#editor-language').value, root = $('#editor-fields'); root.replaceChildren();
@@ -223,24 +224,24 @@ function renderEditorFields() {
   if (editorSection === 'media') { $('#editor-section-copy').textContent = 'Use your own product images and define the options buyers can choose.'; renderEditorMedia(); }
   $$('[data-editor-section]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.editorSection === editorSection)));
   if (editorSection === 'media') return;
-  $('#editor-section-copy').textContent = editorSection === 'story' ? (editorDraft.status === 'draft' ? 'Drafts can be incomplete. Add an English name to save; complete both languages before setting the product active.' : 'Write a clear story in both languages. Buyers see the matching version on the product page.') : 'Only add details you can support. Leave a fact blank in both languages to keep it unknown to the assistant.';
+  $('#editor-section-copy').textContent = editorSection === 'story' ? (editorDraft.status === 'draft' ? 'Drafts can be incomplete. Add an English name to save; English and Chinese are required before publishing. Other translations are optional.' : 'Write a clear story in English and Chinese, then add Japanese, Spanish or French where available.') : 'Only add details you can support. Blank facts stay unknown; optional language fields fall back to English or Chinese.';
   $$('[data-editor-section]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.editorSection === editorSection)));
   const fields = editorSection === 'story' ? storyFields : factFields.map(([key, en, zh]) => ['facts.' + key, language === 'zh' ? zh : en, 300]);
   fields.forEach(([path, title, max]) => {
     const label = element('label', path === 'description' ? 'editor-wide' : '', title);
     const input = element(path === 'description' || ['facts.care', 'facts.dispatch', 'facts.arrivalDateGuarantee'].includes(path) ? 'textarea' : 'input');
     input.id = 'editor-field-' + path.replaceAll('.', '-'); label.htmlFor = input.id; input.name = path + '.' + language;
-    input.lang = language === 'zh' ? 'zh-CN' : 'en'; input.maxLength = max; input.value = editorValue(input.name) || '';
+    input.lang = productLanguages.find(item => item[0] === language)?.[2] || 'en'; input.maxLength = max; input.value = editorValue(input.name) || '';
     if (input.tagName === 'TEXTAREA') input.rows = path === 'description' ? 3 : 2;
-    if (editorSection === 'story') input.required = editorDraft.status === 'active' && !path.startsWith('tags.') || path === 'name' && language === 'en';
-    else input.placeholder = language === 'zh' ? '尚未提供' : 'Not supplied';
+    if (editorSection === 'story') input.required = ['en', 'zh'].includes(language) && (editorDraft.status === 'active' && !path.startsWith('tags.') || path === 'name' && language === 'en');
+    else input.placeholder = language === 'zh' ? '尚未提供' : ['en', 'zh'].includes(language) ? 'Not supplied' : 'Optional translation';
     input.addEventListener('input', () => { setEditorValue(input.name, input.value); updateEditorStatus(); });
     label.append(input); root.append(label);
   });
 }
 function resetEditor(candidate = product) {
   editorDraft = structuredClone(candidate);
-  for (const [key] of factFields) editorDraft.facts[key] ||= { en: '', zh: '' };
+  for (const [key] of factFields) editorDraft.facts[key] ||= Object.fromEntries(productLanguages.map(([language]) => [language, '']));
   editorOriginal = JSON.stringify(editorDraft); editorRevision = store.revision;
   $('#editor-price').value = editorDraft.price; $('#editor-stock').value = editorDraft.stock; $('#editor-sale-status').value = editorDraft.status; updateEditorCommerce();
   $('#editor-error').hidden = true; $('#editor-reload').hidden = true; $('#editor-discard').hidden = true;
@@ -485,7 +486,7 @@ $('#catalog-back').addEventListener('click', () => { catalogDetail = false; rend
 $$('.workspace-product-select').forEach(select => select.addEventListener('change', () => selectProduct(select.value)));
 $('#catalog-add').addEventListener('click', () => {
   if (!config.editorReady || !store || assistantBusy || editorUploading) return;
-  const blank = () => ({ en: '', zh: '' });
+  const blank = () => Object.fromEntries(productLanguages.map(([language]) => [language, '']));
   const draft = { id: null, status: 'draft', name: blank(), subtitle: blank(), description: blank(), tags: [blank(), blank()], price: '0.00', currency: 'USD', stock: 0, images: [], variants: [], facts: Object.fromEntries(factFields.map(([key]) => [key, null])), isFictionalSample: true };
   editorSection = 'story'; $('#editor-language').value = 'en'; resetEditor(draft); openDialog('product-editor');
 });
@@ -510,11 +511,13 @@ function renderEditorMedia() {
   if (!editorDraft.variants.length) root.append(element('p', 'muted', 'No variants. The product uses the unit price and stock above.'));
   editorDraft.variants.forEach((variant, index) => {
     const row = element('fieldset', 'editor-variant'); row.append(element('legend', '', 'Option ' + (index + 1)));
-    for (const [path, label, type] of [['name.en', 'English option name', 'text'], ['name.zh', '中文规格名称', 'text'], ['sku', 'SKU (optional)', 'text'], ['price', 'Price · USD', 'number'], ['stock', 'Stock', 'number']]) {
+    const selectedLanguage = $('#editor-language').value;
+    const selectedLabel = productLanguages.find(([language]) => language === selectedLanguage)?.[1] || 'English';
+    for (const [path, label, type] of [['name.' + selectedLanguage, selectedLabel + ' option name', 'text'], ['sku', 'SKU (optional)', 'text'], ['price', 'Price · USD', 'number'], ['stock', 'Stock', 'number']]) {
       const wrapper = element('label', '', label), input = element('input'); input.type = type;
-      input.value = path.startsWith('name.') ? variant.name[path.split('.')[1]] : variant[path]; input.setAttribute('aria-label', label + ' ' + (index + 1));
+      input.value = path.startsWith('name.') ? (variant.name[path.split('.')[1]] ?? '') : variant[path]; input.setAttribute('aria-label', label + ' ' + (index + 1));
       if (type === 'number') { input.min = path === 'price' && editorDraft.status === 'active' ? '.01' : '0'; input.max = path === 'price' ? '999999.99' : '9999'; input.step = path === 'price' ? '.01' : '1'; input.required = true; }
-      else input.maxLength = 60;
+      else { input.maxLength = 60; if (path === 'name.en') input.required = true; }
       input.addEventListener('input', () => { if (path.startsWith('name.')) variant.name[path.split('.')[1]] = input.value; else variant[path] = path === 'stock' ? input.value === '' ? null : Number(input.value) : input.value; updateEditorCommerce(); updateEditorStatus(); });
       wrapper.append(input); row.append(wrapper);
     }
@@ -522,7 +525,7 @@ function renderEditorMedia() {
   });
   $('#editor-add-variant').disabled = editorDraft.variants.length >= 12;
 }
-$('#editor-add-variant').addEventListener('click', () => { if (editorDraft.variants.length >= 12) return; editorDraft.variants.push({ id: 'new-' + crypto.randomUUID(), name: { en: '', zh: '' }, sku: '', price: editorDraft.price, stock: 0 }); updateEditorCommerce(); renderEditorMedia(); updateEditorStatus(); });
+$('#editor-add-variant').addEventListener('click', () => { if (editorDraft.variants.length >= 12) return; editorDraft.variants.push({ id: 'new-' + crypto.randomUUID(), name: Object.fromEntries(productLanguages.map(([language]) => [language, ''])), sku: '', price: editorDraft.price, stock: 0 }); updateEditorCommerce(); renderEditorMedia(); updateEditorStatus(); });
 $('#editor-image-upload').addEventListener('change', async event => {
   const files = [...event.target.files]; if (!files.length) return;
   editorUploading = true; event.target.disabled = true; updateEditorStatus(); $('#editor-error').hidden = true;

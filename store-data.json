@@ -10,24 +10,39 @@
       "id": "coast-tote",
       "name": {
         "en": "Coastline Market Tote",
-        "zh": "海岸线手织托特包"
+        "zh": "海岸线手织托特包",
+        "ja": "コーストライン・マーケットのトートバッグ",
+        "es": "Bolso tote de Coastline Market",
+        "fr": "Cabas Coastline Market"
       },
       "subtitle": {
         "en": "Everyday utility, woven slowly.",
-        "zh": "日常所需，慢慢织成。"
+        "zh": "日常所需，慢慢织成。",
+        "ja": "毎日に役立つ、ゆっくり織り上げた一品。",
+        "es": "Utilidad para cada día, tejido sin prisa.",
+        "fr": "L’utile au quotidien, tissé avec patience."
       },
       "description": {
         "en": "A sturdy cotton carryall, handwoven in small batches by our Nanjing studio. Room for the market, a book, and the long way home.",
-        "zh": "南京工作室小批量手织棉布包。装下市集收获、一本书，也装下回家路上多绕的一段风景。"
+        "zh": "南京工作室小批量手织棉布包。装下市集收获、一本书，也装下回家路上多绕的一段风景。",
+        "ja": "南京の工房で少量ずつ手織りした、丈夫なコットンのバッグ。市場での買い物や本を入れて、帰り道にも使えます。",
+        "es": "Un resistente bolso de algodón, tejido a mano en pequeñas tandas en nuestro taller de Nanjing. Tiene espacio para la compra del mercado, un libro y el camino de vuelta.",
+        "fr": "Un cabas en coton résistant, tissé à la main en petites séries dans notre atelier de Nankin. De la place pour les courses du marché, un livre et le chemin du retour."
       },
       "tags": [
         {
           "en": "Handwoven",
-          "zh": "手工编织"
+          "zh": "手工编织",
+          "ja": "手織り",
+          "es": "Tejido a mano",
+          "fr": "Tissé à la main"
         },
         {
           "en": "Small batch",
-          "zh": "小批量制作"
+          "zh": "小批量制作",
+          "ja": "少量生産",
+          "es": "Pequeña serie",
+          "fr": "Petite série"
         }
       ],
       "price": "68.00",
@@ -37,27 +52,45 @@
       "facts": {
         "material": {
           "en": "Handwoven cotton",
-          "zh": "手工编织棉布"
+          "zh": "手工编织棉布",
+          "ja": "手織りコットン",
+          "es": "Algodón tejido a mano",
+          "fr": "Coton tissé à la main"
         },
         "production": {
           "en": "Made in small batches",
-          "zh": "小批量制作"
+          "zh": "小批量制作",
+          "ja": "少量生産",
+          "es": "Fabricado en pequeñas tandas",
+          "fr": "Fabriqué en petites séries"
         },
         "madeIn": {
           "en": "Nanjing, China",
-          "zh": "中国南京"
+          "zh": "中国南京",
+          "ja": "中国・南京",
+          "es": "Nanjing, China",
+          "fr": "Nankin, Chine"
         },
         "dimensions": {
           "en": "38 × 34 × 10 cm",
-          "zh": "38 × 34 × 10 厘米"
+          "zh": "38 × 34 × 10 厘米",
+          "ja": "38 × 34 × 10 cm",
+          "es": "38 × 34 × 10 cm",
+          "fr": "38 × 34 × 10 cm"
         },
         "care": {
           "en": "Spot clean with a damp cloth.",
-          "zh": "使用湿布局部清洁。"
+          "zh": "使用湿布局部清洁。",
+          "ja": "湿らせた布で部分洗いしてください。",
+          "es": "Limpia las manchas con un paño húmedo.",
+          "fr": "Nettoyer les taches avec un chiffon humide."
         },
         "dispatch": {
           "en": "3–5 business days before dispatch",
-          "zh": "下单后 3–5 个工作日发出"
+          "zh": "下单后 3–5 个工作日发出",
+          "ja": "発送まで3～5営業日",
+          "es": "Envío en un plazo de 3 a 5 días laborables",
+          "fr": "Expédition sous 3 à 5 jours ouvrés"
         },
         "shippingPrice": null,
         "arrivalDateGuarantee": null
@@ -75,24 +108,39 @@
       "id": "riverbank-cup",
       "name": {
         "en": "Riverbank Stoneware Cup",
-        "zh": "河岸手作陶杯"
+        "zh": "河岸手作陶杯",
+        "ja": "リバーバンクのストーンウェアカップ",
+        "es": "Taza de gres Riverbank",
+        "fr": "Tasse en grès Riverbank"
       },
       "subtitle": {
         "en": "A quiet ritual for the first pour.",
-        "zh": "为清晨第一杯，留一点安静。"
+        "zh": "为清晨第一杯，留一点安静。",
+        "ja": "最初の一杯を、静かなひとときに。",
+        "es": "Un ritual tranquilo para el primer sorbo.",
+        "fr": "Un rituel paisible pour la première gorgée."
       },
       "description": {
         "en": "A small-batch stoneware cup with a speckled sand glaze and deep green rim. Made for tea, coffee, and slow mornings.",
-        "zh": "小批量烧制的炻器杯，砂色斑点釉面搭配深绿色杯沿。适合茶、咖啡，也适合慢一点的早晨。"
+        "zh": "小批量烧制的炻器杯，砂色斑点釉面搭配深绿色杯沿。适合茶、咖啡，也适合慢一点的早晨。",
+        "ja": "砂色の斑点釉と深緑の縁が特徴の、少量生産のストーンウェアカップ。お茶やコーヒー、ゆっくり過ごす朝に。",
+        "es": "Una taza de gres de pequeña serie, con esmalte arena moteado y borde verde oscuro. Para té, café y mañanas sin prisa.",
+        "fr": "Une tasse en grès fabriquée en petite série, avec un émail sable moucheté et un bord vert profond. Pour le thé, le café et les matins tranquilles."
       },
       "tags": [
         {
           "en": "Small batch",
-          "zh": "小批量制作"
+          "zh": "小批量制作",
+          "ja": "少量生産",
+          "es": "Pequeña serie",
+          "fr": "Petite série"
         },
         {
           "en": "Stoneware",
-          "zh": "炻器"
+          "zh": "炻器",
+          "ja": "ストーンウェア",
+          "es": "Gres",
+          "fr": "Grès"
         }
       ],
       "price": "32.00",
@@ -108,7 +156,10 @@
           "id": "cup-300ml",
           "name": {
             "en": "300 ml",
-            "zh": "300 毫升"
+            "zh": "300 毫升",
+            "ja": "300 ml",
+            "es": "300 ml",
+            "fr": "300 ml"
           },
           "sku": "RB-CUP-300",
           "price": "32.00",
@@ -118,7 +169,10 @@
           "id": "cup-420ml",
           "name": {
             "en": "420 ml",
-            "zh": "420 毫升"
+            "zh": "420 毫升",
+            "ja": "420 ml",
+            "es": "420 ml",
+            "fr": "420 ml"
           },
           "sku": "RB-CUP-420",
           "price": "38.00",
@@ -128,27 +182,45 @@
       "facts": {
         "material": {
           "en": "Glazed stoneware",
-          "zh": "施釉炻器"
+          "zh": "施釉炻器",
+          "ja": "釉薬をかけたストーンウェア",
+          "es": "Gres esmaltado",
+          "fr": "Grès émaillé"
         },
         "production": {
           "en": "Hand-finished in small batches",
-          "zh": "小批量手工修整"
+          "zh": "小批量手工修整",
+          "ja": "少量ずつ手作業で仕上げ",
+          "es": "Acabado a mano en pequeñas tandas",
+          "fr": "Finition à la main en petites séries"
         },
         "madeIn": {
           "en": "Nanjing, China",
-          "zh": "中国南京"
+          "zh": "中国南京",
+          "ja": "中国・南京",
+          "es": "Nanjing, China",
+          "fr": "Nankin, Chine"
         },
         "dimensions": {
           "en": "300 ml or 420 ml",
-          "zh": "300 毫升或 420 毫升"
+          "zh": "300 毫升或 420 毫升",
+          "ja": "300 ml または 420 ml",
+          "es": "300 ml o 420 ml",
+          "fr": "300 ml ou 420 ml"
         },
         "care": {
           "en": "Hand wash recommended.",
-          "zh": "建议手洗。"
+          "zh": "建议手洗。",
+          "ja": "手洗いをおすすめします。",
+          "es": "Se recomienda lavar a mano.",
+          "fr": "Lavage à la main recommandé."
         },
         "dispatch": {
           "en": "3–5 business days before dispatch",
-          "zh": "下单后 3–5 个工作日发出"
+          "zh": "下单后 3–5 个工作日发出",
+          "ja": "発送まで3～5営業日",
+          "es": "Envío en un plazo de 3 a 5 días laborables",
+          "fr": "Expédition sous 3 à 5 jours ouvrés"
         },
         "shippingPrice": null,
         "arrivalDateGuarantee": null
@@ -158,24 +230,39 @@
       "id": "field-notes-towel",
       "name": {
         "en": "Field Notes Linen Towel",
-        "zh": "田野笔记亚麻餐巾"
+        "zh": "田野笔记亚麻餐巾",
+        "ja": "フィールドノーツのリネンタオル",
+        "es": "Paño de lino Field Notes",
+        "fr": "Serviette en lin Field Notes"
       },
       "subtitle": {
         "en": "Washed linen, finished with a botanical border.",
-        "zh": "水洗亚麻，配以植物色织边。"
+        "zh": "水洗亚麻，配以植物色织边。",
+        "ja": "洗いをかけたリネンに、植物柄の縁取り。",
+        "es": "Lino lavado con un borde de inspiración botánica.",
+        "fr": "Lin lavé, fini par une bordure botanique."
       },
       "description": {
         "en": "A soft, absorbent linen towel with a restrained green and clay border. Each piece is sewn in a small studio run.",
-        "zh": "柔软吸水的亚麻餐巾，以克制的苔绿与陶土色织边收尾。每批均由小型工作室缝制。"
+        "zh": "柔软吸水的亚麻餐巾，以克制的苔绿与陶土色织边收尾。每批均由小型工作室缝制。",
+        "ja": "柔らかく吸水性のあるリネンタオル。落ち着いた苔色とテラコッタ色の縁取りがあり、小さな工房で少量ずつ縫製しています。",
+        "es": "Un paño de lino suave y absorbente, con un discreto borde verde y color arcilla. Cada pieza se cose en pequeñas tandas en un taller.",
+        "fr": "Une serviette en lin douce et absorbante, avec une bordure discrète vert mousse et terre cuite. Chaque pièce est cousue en petite série dans un atelier."
       },
       "tags": [
         {
           "en": "Washed linen",
-          "zh": "水洗亚麻"
+          "zh": "水洗亚麻",
+          "ja": "洗い加工リネン",
+          "es": "Lino lavado",
+          "fr": "Lin lavé"
         },
         {
           "en": "Studio-made",
-          "zh": "工作室制作"
+          "zh": "工作室制作",
+          "ja": "工房制作",
+          "es": "Hecho en taller",
+          "fr": "Fabriqué en atelier"
         }
       ],
       "price": "24.00",
@@ -190,27 +277,45 @@
       "facts": {
         "material": {
           "en": "Linen",
-          "zh": "亚麻"
+          "zh": "亚麻",
+          "ja": "リネン",
+          "es": "Lino",
+          "fr": "Lin"
         },
         "production": {
           "en": "Small studio run",
-          "zh": "小型工作室制作"
+          "zh": "小型工作室制作",
+          "ja": "小さな工房で少量生産",
+          "es": "Pequeña serie de taller",
+          "fr": "Petite série en atelier"
         },
         "madeIn": {
           "en": "Nanjing, China",
-          "zh": "中国南京"
+          "zh": "中国南京",
+          "ja": "中国・南京",
+          "es": "Nanjing, China",
+          "fr": "Nankin, Chine"
         },
         "dimensions": {
           "en": "45 × 65 cm",
-          "zh": "45 × 65 厘米"
+          "zh": "45 × 65 厘米",
+          "ja": "45 × 65 cm",
+          "es": "45 × 65 cm",
+          "fr": "45 × 65 cm"
         },
         "care": {
           "en": "Machine wash cold; line dry.",
-          "zh": "冷水机洗，自然晾干。"
+          "zh": "冷水机洗，自然晾干。",
+          "ja": "冷水で洗濯機洗いし、吊り干ししてください。",
+          "es": "Lavar a máquina con agua fría; secar tendido.",
+          "fr": "Lavage en machine à froid ; séchage sur fil."
         },
         "dispatch": {
           "en": "3–5 business days before dispatch",
-          "zh": "下单后 3–5 个工作日发出"
+          "zh": "下单后 3–5 个工作日发出",
+          "ja": "発送まで3～5営業日",
+          "es": "Envío en un plazo de 3 a 5 días laborables",
+          "fr": "Expédition sous 3 à 5 jours ouvrés"
         },
         "shippingPrice": null,
         "arrivalDateGuarantee": null

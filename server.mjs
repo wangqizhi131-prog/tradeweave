@@ -351,16 +351,19 @@ export const server = createServer(async (req, res) => {
       limitRequests(req, 'assistant', 20);
       if (aiInFlight >= 4) throw new HttpError(429, 'The assistant is helping other buyers. Try again shortly.');
       const languageNames = { 'zh-CN': 'Chinese', Chinese: 'Chinese', ja: 'Japanese', es: 'Spanish', fr: 'French', en: 'English', English: 'English' };
-      const answerLanguage = languageNames[language] || 'English', locale = answerLanguage === 'Chinese' ? 'zh' : 'en';
+      const answerLanguage = languageNames[language] || 'English', locale = ({ Chinese: 'zh', Japanese: 'ja', Spanish: 'es', French: 'fr' })[answerLanguage] || 'en';
       const missing = locale === 'zh' ? '卖家尚未提供此信息。' : 'Not supplied by the seller.';
+      const sellerText = value => value?.[locale] || value?.en || value?.zh || missing;
       const availableProduct = (await storage.publicStore()).products.find(p => p.id === product.id) || product;
-      const availableStock = variant ? availableProduct.variants.find(v => v.id === variant.id)?.stock ?? variant.stock : availableProduct.stock;
+      const availableVariant = variant ? availableProduct.variants.find(v => v.id === variant.id) || variant : null;
+      const availableStock = availableVariant ? availableVariant.stock : availableProduct.stock;
+      const shopPolicies = Object.fromEntries(Object.entries(store.shop.policies || {}).map(([key, value]) => [key, sellerText(value)]));
       const facts = {
-        shopPolicies: store.shop.policies || {},
-        productId: product.id, selectedVariant: variant ? { ...variant, stock: availableStock } : null, variants: availableProduct.variants, product: product.name[locale], description: product.description[locale], stock: availableStock, fictionalSample: product.isFictionalSample, price: (variant?.price || product.price) + ' ' + product.currency,
-        material: product.facts.material?.[locale] || missing, production: product.facts.production?.[locale] || missing,
-        madeIn: product.facts.madeIn?.[locale] || missing, dimensions: product.facts.dimensions?.[locale] || missing,
-        care: product.facts.care?.[locale] || missing, dispatch: product.facts.dispatch?.[locale] || missing,
+        shopPolicies,
+        productId: product.id, selectedVariant: availableVariant ? { name: sellerText(availableVariant.name), price: availableVariant.price, stock: availableStock } : null, variants: availableProduct.variants.map(item => ({ name: sellerText(item.name), price: item.price, stock: item.id === availableVariant?.id ? availableStock : item.stock })), product: sellerText(product.name), description: sellerText(product.description), stock: availableStock, fictionalSample: product.isFictionalSample, price: (availableVariant?.price || product.price) + ' ' + product.currency,
+        material: sellerText(product.facts.material), production: sellerText(product.facts.production),
+        madeIn: sellerText(product.facts.madeIn), dimensions: sellerText(product.facts.dimensions),
+        care: sellerText(product.facts.care), dispatch: sellerText(product.facts.dispatch),
         shippingPrice: product.facts.shippingPrice?.[locale] || missing, arrivalDateGuarantee: product.facts.arrivalDateGuarantee?.[locale] || missing
       };
       let data;

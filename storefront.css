@@ -20,6 +20,15 @@
 .shop-catalog-facets{display:grid;grid-template-columns:minmax(250px,360px) minmax(180px,230px);align-items:end;gap:18px;margin:0 0 19px}.shop-price-filter{min-width:0;margin:0;padding:0;border:0}.shop-price-filter legend,.shop-tag-filter>span{display:block;margin:0 0 8px;color:var(--muted);font-size:12px}.shop-price-range{display:grid;grid-template-columns:minmax(0,1fr) 12px minmax(0,1fr);align-items:center;gap:8px}.shop-price-range label{min-width:0}.shop-price-range input,.shop-tag-filter select{display:block;width:100%;min-height:44px;padding:9px 11px;border:1px solid #bdcbb5;border-radius:9px;background:transparent;color:var(--ink);font:400 14px/1.4 var(--sans);font-variant-numeric:tabular-nums}.shop-price-range input:focus-visible,.shop-tag-filter select:focus-visible{outline:2px solid var(--green);outline-offset:2px}.shop-price-range>span{text-align:center;color:var(--muted)}.shop-tag-filter{display:block;min-width:0;margin:0;color:var(--muted);font-size:12px}@media(max-width:700px){.shop-catalog-facets{grid-template-columns:1fr;gap:13px;margin-bottom:18px}.shop-price-range input,.shop-tag-filter select{font-size:16px}}
 .shop-chat-links{display:flex;align-items:center;gap:2px 16px;flex-wrap:wrap;margin-top:4px}.shop-chat-links>.text-button{min-height:40px;padding:6px 0;font-size:12px;line-height:1.6;text-align:left}
 
+.shop-add-confirmation{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;margin:0 0 14px;animation:shop-add-in 160ms ease-out}
+.shop-add-confirmation[hidden]{display:none}
+.shop-add-confirmation a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;transition:background-color 140ms,color 140ms,transform 140ms}
+.shop-add-confirmation .shop-view-cart{background:var(--green);color:#fff;text-decoration:none}
+.shop-add-confirmation .shop-view-cart:hover{background:#1c4f3e;transform:translateY(-1px)}
+.shop-add-confirmation .shop-continue-shopping{color:var(--green);text-underline-offset:3px}
+.shop-add-confirmation a:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+@keyframes shop-add-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
 /* Respect the operating system reduced-motion preference. */
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
 .shop-image-note{margin:10px 0 0;color:var(--muted);font-size:11px;line-height:1.5;text-align:center}
