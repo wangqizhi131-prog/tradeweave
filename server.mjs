@@ -215,6 +215,8 @@ async function createOrder(order) {
 }
 
 export const server = createServer(async (req, res) => {
+  res.setHeader('x-frame-options', 'DENY');
+  res.setHeader('content-security-policy', "frame-ancestors 'none'");
   try {
     ({ store, revision: storeRevision } = await storage.catalog());
     const url = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));

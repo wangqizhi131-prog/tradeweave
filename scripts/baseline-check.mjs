@@ -278,6 +278,8 @@ try {
   assert.deepEqual(health.data, { status: 'ok' }, 'The health check must return only a minimal status.');
   const moneyScript = await realFetch(base + '/money-format.js');
   assert.equal(moneyScript.status, 200, 'The shared browser currency formatter must be served as a static asset.');
+  assert.equal(moneyScript.headers.get('x-frame-options'), 'DENY', 'Static assets must not be embeddable in a third-party frame.');
+  assert.equal(moneyScript.headers.get('content-security-policy'), "frame-ancestors 'none'", 'Every response must prevent clickjacking through frame embedding.');
   assert.match(await moneyScript.text(), /window\.TradeWeaveMoney = Object\.freeze/, 'The browser currency formatter asset must initialize before both page apps.');
   for (const path of ['/.env', '/server.mjs', '/storage.mjs', '/store-data.json', '/data/tradeweave.sqlite', '/fixture-paypal.js', '/scripts/fixtures/paypal-ui.js']) assert.equal((await request(path)).status, 404);
   for (const path of ['/api/config', '/api/workspace/store', '/api/workspace/orders', '/%2Findex.html']) assert.equal(await publicStatus(path), 403);
