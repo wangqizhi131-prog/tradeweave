@@ -80,6 +80,9 @@ if (process.argv[2] === '--worker') {
       return { server, base: 'http://127.0.0.1:' + port, stop: async () => { if (server.exitCode === null && server.signalCode === null) { server.kill(); await once(server, 'exit'); } } };
     };
     running = await startServer();
+    const publicConfig = await fetch(running.base + '/api/shop/config');
+    assert.equal(publicConfig.status, 200, 'Public setup status should be available with remote storage.');
+    assert.equal((await publicConfig.json()).persistenceMode, 'remote', 'A server configured with the remote SQLite-compatible adapter must disclose only that backend mode.');
     const configResponse = await fetch(running.base + '/api/config');
     assert.equal(configResponse.status, 200, 'The local workspace configuration should provide a test-only editor token.');
     const { editorToken } = await configResponse.json();

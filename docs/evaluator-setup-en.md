@@ -4,7 +4,7 @@ This document describes the local build and the currently deployed hosted buyer 
 
 ## Hosted buyer preview
 
-Open <https://tradeweave-demo.onrender.com/shop#catalog> for the hosted buyer storefront. The live host returned HTTP 200 for `/healthz`, `/shop`, `/api/shop/config`, and `/api/store`; its public config response reported `aiReady=true`, `paypalReady=true`, and `workspaceReady=false`. This verifies buyer-side reachability and the presence of provider configuration flags only. It does not verify a hosted AI response now, PayPal approval/capture, Turso use, persistence across restart, current billing/overage controls, or availability through the judging period.
+Open <https://tradeweave-demo.onrender.com/shop#catalog> for the hosted buyer storefront. The live host returned HTTP 200 for `/healthz`, `/shop`, `/api/shop/config`, and `/api/store`; its public config response reported `aiReady=true`, `paypalReady=true`, and `workspaceReady=false`. The current build also reports `persistenceMode` as `local` or `remote`, based on the storage adapter selected at startup. A `remote` value is useful configuration evidence but still does not prove a write/read roundtrip or persistence across restart. These responses do not verify a hosted AI response now, PayPal approval/capture, current billing/overage controls, or availability through the judging period.
 
 The hosted maker workspace is disabled because the project has no hosted maker account or role system. Use the local build for product editing, maker inbox and fulfillment demonstrations. Do not expose the local editor to the public host: it has no authentication for remote merchants.
 

@@ -254,7 +254,9 @@ try {
   assert.deepEqual(health.data, { status: 'ok' }, 'The health check must return only a minimal status.');
   for (const path of ['/.env', '/server.mjs', '/storage.mjs', '/store-data.json', '/data/tradeweave.sqlite', '/fixture-paypal.js', '/scripts/fixtures/paypal-ui.js']) assert.equal((await request(path)).status, 404);
   for (const path of ['/api/config', '/api/workspace/store', '/api/workspace/orders', '/%2Findex.html']) assert.equal(await publicStatus(path), 403);
-  assert.equal((await request('/api/shop/config')).data.editorToken, undefined);
+  const publicConfig = (await request('/api/shop/config')).data;
+  assert.equal(publicConfig.editorToken, undefined);
+  assert.equal(publicConfig.persistenceMode, 'local', 'A no-Turso development fixture must identify its local persistence backend.');
   assert.equal(await publicStatus('/dialog-focus.js'), 200);
   assert.equal(await publicStatus('/buyer-locales.js'), 200, 'The buyer locale bundle must be served as a public asset.');
   await request('/api/buyer/orders'); await request('/api/buyer/orders', undefined, {}, true); assert.notEqual(cookie, otherCookie);
@@ -610,7 +612,7 @@ try {
   process.env.DISABLE_LOCAL_EDITOR = '1';
   const publicRoot = await realFetch(base + '/'); assert.equal(publicRoot.status, 200); const publicHtml = await publicRoot.text(); assert.ok(publicHtml.includes('id="shop-main"')); assert.ok(!publicHtml.includes('data-view="overview"'));
   for (const path of ['/api/config', '/api/workspace/store', '/api/workspace/orders', '/api/workspace/tickets', '/workspace', '/index.html', '/%2Findex.html']) assert.equal((await request(path)).status, 403);
-  const disabledConfig = (await request('/api/shop/config')).data; assert.equal(disabledConfig.workspaceReady, false); assert.equal(disabledConfig.editorReady, false); assert.equal(disabledConfig.editorToken, undefined);
+  const disabledConfig = (await request('/api/shop/config')).data; assert.equal(disabledConfig.workspaceReady, false); assert.equal(disabledConfig.editorReady, false); assert.equal(disabledConfig.persistenceMode, 'local'); assert.equal(disabledConfig.editorToken, undefined);
   for (const path of ['/api/workspace/settings', '/api/workspace/ticket', '/api/workspace/image', '/api/store/product', '/api/workspace/order']) assert.equal((await request(path, {}, freshLocal)).status, 403);
   assert.equal((await realFetch(base + uploaded.data.path)).status, 404);
   assert.equal((await request('/api/store')).status, 200); assert.equal((await request('/api/buyer/orders')).data.orders.length, ordersBeforeRestore.length);

@@ -293,6 +293,7 @@ export const server = createServer(async (req, res) => {
       return send(res, 200, {
         paypalClientId: process.env.PAYPAL_CLIENT_ID || '', aiReady: Boolean(process.env.AI_API_KEY && process.env.AI_MODEL),
         paypalReady: Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET),
+        persistenceMode: remoteDatabaseUrl ? 'remote' : 'local',
         workspaceReady: localEditor(req), editorReady: workspace && localEditor(req), editorToken: workspace ? editorToken : undefined
       });
     }
