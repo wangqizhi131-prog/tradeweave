@@ -50,6 +50,26 @@ function priceLabel(value, currency = 'USD') {
   if (currency === 'USD' && state.language === 'zh-CN' && fxRate?.rate) return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 2 }).format(Number(value) * fxRate.rate) + ' CNY (' + usd(value) + ')';
   return usd(value);
 }
+function appendPriceParts(target, value, currency, locale, extraOptions = {}) {
+  const options = { style: 'currency', currency, ...extraOptions };
+  if (['es', 'fr'].includes(state.language) && currency === 'USD') options.currencyDisplay = 'code';
+  for (const part of new Intl.NumberFormat(locale, options).formatToParts(Number(value))) {
+    target.append(part.type === 'currency' ? node('span', 'shop-price-currency', part.value) : document.createTextNode(part.value));
+  }
+}
+function renderBuyerPrice(target, value, currency = 'USD') {
+  target.replaceChildren();
+  if (currency === 'USD' && state.language === 'zh-CN' && fxRate?.rate) {
+    appendPriceParts(target, Number(value) * fxRate.rate, 'CNY', 'zh-CN', { maximumFractionDigits: 2 });
+    target.append(document.createTextNode(' CNY ('));
+    appendPriceParts(target, value, 'USD', currentLanguage().intl);
+    target.append(document.createTextNode(')'));
+    return;
+  }
+  appendPriceParts(target, value, currency, currentLanguage().intl);
+  const formatted = new Intl.NumberFormat(currentLanguage().intl, { style: 'currency', currency, ...(['es', 'fr'].includes(state.language) && currency === 'USD' ? { currencyDisplay: 'code' } : {}) }).format(Number(value));
+  if (currency === 'USD' && !['es', 'fr'].includes(state.language) && !formatted.includes('US$')) target.append(document.createTextNode(' USD'));
+}
 function fxDisclosure() {
   if (state.language !== 'zh-CN') return '';
   return t('paypalUsd');
@@ -195,7 +215,7 @@ function renderProduct() {
   $('#shop-name').textContent = store.shop.name; $('#shop-monogram').textContent = store.shop.name.split(/\s+/).slice(0, 2).map(word => Array.from(word)[0]).join('').toUpperCase();
   $('#shop-product-name').textContent = localize(product.name); $('#shop-subtitle').textContent = localize(product.subtitle); $('#shop-description').textContent = localize(product.description);
   const amount = selectedVariant?.price || product.price;
-  $('#shop-price').textContent = priceLabel(amount, product.currency); $('#shop-currency').textContent = '';
+  renderBuyerPrice($('#shop-price'), amount, product.currency); $('#shop-currency').textContent = '';
   updateFxNotes();
   const location = chinese && store.shop.location === 'Nanjing, China' ? '中国南京' : store.shop.location;
   $('#shop-origin').textContent = location + ' · ' + t('sampleStudio');
@@ -217,7 +237,9 @@ function updateQuantity(next) {
   const sameCheckout = activeCheckout && (!activeCheckout.productId ? product?.id === 'coast-tote' : product?.id === activeCheckout.productId);
   quantity = busy && sameCheckout ? activeCheckout.quantity : limit ? Math.min(limit, Math.max(1, next)) : 0;
   $('#shop-quantity').textContent = quantity; $('#shop-minus').disabled = busy || quantity <= 1; $('#shop-plus').disabled = busy || quantity >= limit;
-  $('#shop-total').textContent = sameCheckout && busy ? priceLabel(activeCheckout.amount, activeCheckout.currency) : product ? priceLabel(Math.round(Number(selectedVariant?.price || product.price) * 100) * quantity / 100, product.currency) : '—';
+  if (sameCheckout && busy) renderBuyerPrice($('#shop-total'), activeCheckout.amount, activeCheckout.currency);
+  else if (product) renderBuyerPrice($('#shop-total'), Math.round(Number(selectedVariant?.price || product.price) * 100) * quantity / 100, product.currency);
+  else $('#shop-total').textContent = '—';
   $('#shop-variant').disabled = busy;
   $('#shop-add-cart').disabled = busy || !quantity || Boolean(activeCheckout);
   $('#shop-add-cart').textContent = quantity ? t('addCart') : t('soldOut');
@@ -299,16 +321,19 @@ function renderOrders() {
         catch (error) { toast(error.message); } finally { action.disabled = false; }
       }); actions.append(action);
     }
-    row.append(info, node('span', 'shop-order-amount', priceLabel(order.amount, order.currency)), actions); root.append(row);
+    const amount = node('span', 'shop-order-amount'); renderBuyerPrice(amount, order.amount, order.currency);
+    row.append(info, amount, actions); root.append(row);
   });
 }
 function receipt(order) {
   selectedOrder = order; const root = $('#shop-receipt-facts'); root.replaceChildren();
-  for (const [label, value] of [[t('orderId'), order.orderId], [t('captureId'), order.captureId || t('notReturned')], [t('product'), order.items?.[0] ? localizedOrderItem(order.items[0]) : order.productName || t('product')], [t('quantity'), order.quantity || 1], [t('subtotal'), priceLabel(order.amount, order.currency)], [t('paymentStatus'), statusLabel(order.status)]]) root.append(node('dt', '', label), node('dd', '', value));
+  for (const [label, value] of [[t('orderId'), order.orderId], [t('captureId'), order.captureId || t('notReturned')], [t('product'), order.items?.[0] ? localizedOrderItem(order.items[0]) : order.productName || t('product')], [t('quantity'), order.quantity || 1]]) root.append(node('dt', '', label), node('dd', '', value));
+  root.append(node('dt', '', t('subtotal'))); const subtotal = node('dd'); renderBuyerPrice(subtotal, order.amount, order.currency); root.append(subtotal);
+  root.append(node('dt', '', t('paymentStatus')), node('dd', '', statusLabel(order.status)));
   if (order.status === 'COMPLETED') root.append(node('dt', '', t('fulfillment')), node('dd', '', t(order.fulfillment === 'FULFILLED' ? 'fulfilled' : 'unfulfilled')));
   if (order.tracking) root.append(node('dt', '', t('tracking')), node('dd', '', order.tracking));
   if (order.shipping) root.append(node('dt', '', t('shipTo')), node('dd', '', [order.shipping.name, ...Object.values(order.shipping.address)].filter(Boolean).join(', ')));
-  for (const item of order.items || []) root.append(node('dt', '', localizedOrderItem(item)), node('dd', '', item.quantity + ' × ' + priceLabel(item.price)));
+  for (const item of order.items || []) { const amount = node('dd'); amount.append(document.createTextNode(item.quantity + ' × ')); appendPriceParts(amount, item.price, order.currency, currentLanguage().intl); root.append(node('dt', '', localizedOrderItem(item)), amount); }
   $('#shop-receipt').showModal();
 }
 $('#shop-receipt-close').addEventListener('click', () => $('#shop-receipt').close());
@@ -477,7 +502,8 @@ function renderShopCatalog() {
     if (item.images.length) { const image = node('img'); image.src = item.images[0]; image.alt = ''; image.loading = 'lazy'; picture.append(image); }
     else if (item.id === 'coast-tote') { const illustration = $('.shop-art .tote').cloneNode(true); illustration.removeAttribute('hidden'); picture.append(illustration); }
     else picture.append(node('span', '', t('noProductImage')));
-    link.append(picture, node('h2', '', localize(item.name)), node('p', '', localize(item.subtitle)), node('strong', '', (item.variants.length ? t('from') + ' ' : '') + priceLabel(item.price, item.currency)), node('small', '', item.stock ? t('viewProduct') : t('soldOut'))); root.append(link);
+    const price = node('strong'); if (item.variants.length) price.append(document.createTextNode(t('from') + ' ')); renderBuyerPrice(price, item.price, item.currency);
+    link.append(picture, node('h2', '', localize(item.name)), node('p', '', localize(item.subtitle)), price, node('small', '', item.stock ? t('viewProduct') : t('soldOut'))); root.append(link);
   }
   if (!items.length) {
     const empty = node('div', 'shop-catalog-empty'); empty.append(node('p', '', t(store.products.length ? 'noMatch' : 'noSale')));
@@ -580,9 +606,9 @@ function renderCart() {
     minus.disabled = busy || Boolean(activeCheckout) || item.quantity <= 1; plus.disabled = busy || Boolean(activeCheckout) || item.quantity >= Math.min(5, item.stock || 0);
     minus.addEventListener('click', () => changeCart(index, -1)); plus.addEventListener('click', () => changeCart(index, 1)); stepper.append(minus, node('span', '', item.quantity), plus);
     const remove = node('button', 'text-button', t('remove')); remove.type = 'button'; remove.setAttribute('aria-label', t('remove') + ' ' + item.name); remove.disabled = busy || Boolean(activeCheckout); remove.addEventListener('click', () => { state.cart.splice(index, 1); state.requestKey = null; cartQuote = null; persist(); renderCart(); }); controls.append(stepper, remove);
-    row.append(details, controls, node('strong', 'cart-item-total', priceLabel(Number(item.price) * item.quantity))); root.append(row);
+    const itemTotal = node('strong', 'cart-item-total'); renderBuyerPrice(itemTotal, Number(item.price) * item.quantity); row.append(details, controls, itemTotal); root.append(row);
   });
-  $('#shop-cart-total').textContent = priceLabel(activeCheckout?.amount || cartTotal()); updateCartControls(); updateFxNotes();
+  renderBuyerPrice($('#shop-cart-total'), activeCheckout?.amount || cartTotal()); updateCartControls(); updateFxNotes();
 }
 $('#shop-add-cart').addEventListener('click', () => {
   if (!product || !quantity || busy || activeCheckout) return;

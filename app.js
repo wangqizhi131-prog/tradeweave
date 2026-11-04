@@ -46,6 +46,10 @@ function logActivity(text, kind = 'info') {
 function money(value, currency = product?.currency || 'USD', locale = 'en-US') {
   return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(Number(value));
 }
+function renderMoneyParts(target, value, currency, locale) {
+  const parts = new Intl.NumberFormat(locale, { style: 'currency', currency }).formatToParts(Number(value));
+  target.replaceChildren(...parts.map(part => part.type === 'currency' ? element('span', 'price-currency-symbol', part.value) : document.createTextNode(part.value)));
+}
 function localized(value, language = state.language) { return value?.[language === 'Chinese' ? 'zh' : 'en'] || ''; }
 function factValue(key, language = 'English') { return localized(product?.facts[key], language) || (language === 'Chinese' ? '卖家尚未提供' : 'Not supplied by the seller'); }
 function suppliedFacts() { return factFields.filter(([key]) => product?.facts[key]?.en).length; }
@@ -156,7 +160,7 @@ function renderProduct() {
   const chinese = state.language === 'Chinese';
   $('.product-details').lang = chinese ? 'zh-CN' : 'en'; $('#listing-language').textContent = chinese ? '中文 / EN' : 'English / 中文';
   $('#product-name').textContent = localized(product.name); $('#product-subtitle').textContent = localized(product.subtitle); $('#product-description').textContent = localized(product.description);
-  $('#product-price').textContent = money(product.price, product.currency, chinese ? 'zh-CN' : 'en-US'); $('#product-currency').textContent = chinese ? '' : product.currency;
+  renderMoneyParts($('#product-price'), product.price, product.currency, chinese ? 'zh-CN' : 'en-US'); $('#product-currency').textContent = chinese ? '' : product.currency;
   $('#tag-one').textContent = localized(product.tags[0]); $('#tag-two').textContent = localized(product.tags[1]); $('#product-dimensions').textContent = localized(product.facts.dimensions);
   $('#product-stock').textContent = product.stock; $('#stock-label').textContent = product.isFictionalSample ? (chinese ? '示例库存' : 'sample stock') : (chinese ? '件有货' : 'in stock');
   const availability = $('.product-status'); availability.replaceChildren(element('span', 'product-status-dot'), document.createTextNode(product.status !== 'active' ? ' ' + product.status : product.stock ? (chinese ? ' 店铺在售' : ' Available to buyers') : (chinese ? ' 暂时售罄' : ' Sold out')), element('span', 'tiny-divider', '/'), element('span', '', 'EN · 中文'));
