@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-04T16:38:27.285Z",
+  "createdAt": "2026-11-04T16:41:16.868Z",
   "files": [
     {
       "path": ".env.example",
@@ -95,7 +95,7 @@
     {
       "path": "scripts/baseline-check.mjs",
       "bytes": 93513,
-      "sha256": "be5d82fe55083e5b910b0a29864f90e3920f938b4133999aca24efb7aea5c1d4"
+      "sha256": "39c2d3da2d53a4b81c8a9e4add733d6be82abbf74b2a09dc62c92cbcaebc31e3"
     },
     {
       "path": "scripts/check.mjs",
@@ -185,7 +185,7 @@
     {
       "path": "storefront.html",
       "bytes": 15800,
-      "sha256": "a4e03a192aab4f0d3e775026e9236344e92c15440d8d31fc03d4e0af3bd758cd"
+      "sha256": "cbb0b6d879a3a919d9829c9d12e1c85f50bca6263abbfd4baff6f43c5dfbb57f"
     },
     {
       "path": "storefront.js",
