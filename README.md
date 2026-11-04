@@ -2,7 +2,7 @@
 
 **Commerce, with context.** TradeWeave is a prototype for independent makers. A seller maintains bilingual product facts; buyers can review product options, ask questions, and check out with PayPal Sandbox.
 
-> **Evaluation status:** This public source repository is a review candidate, not a submitted entry or a verified hosted demo. It contains no provider credentials. Without credentials, the storefront and maker workspace can be explored locally, while live AI and PayPal checkout report as unavailable. The free, unrestricted AI path for judging has not yet been established. Do not present it as a working evaluation demo or submit it until that requirement and the remaining review gates are resolved.
+> **Evaluation status:** This public source is a runnable, credential-free code package, not a hosted demo or a submitted entry. One USD 68 PayPal Sandbox checkout was completed through the storefront JavaScript SDK and read back as completed by PayPal and TradeWeave; no real money moved. The app has also made bounded live requests through OpenRouter's free route, but continuous free AI availability and judge access have not been established. Without provider credentials the app correctly reports live AI and PayPal as unavailable. The official rules allow a hosted demo URL **or** complete repository setup/run instructions; evaluators using this local build need their own free OpenRouter and PayPal Sandbox credentials. Never put credentials in this repository. The demo is not a production payment service.
 
 ## What works in the local build
 
