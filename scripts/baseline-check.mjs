@@ -152,7 +152,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
   const html = await readFile(new URL('../' + htmlName, import.meta.url), 'utf8'), code = await readFile(new URL('../' + scriptName, import.meta.url), 'utf8');
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
   assert.ok(html.includes('/dialog-focus.js'), htmlName + ': shared dialog keyboard behavior must load.');
-  assert.ok(html.includes('/styles.css?v=6.23'), htmlName + ': shared interface, mobile account target, narrow editor navigation and money typography updates must bypass cached CSS.');
+  assert.ok(html.includes('/styles.css?v=6.24'), htmlName + ': shared interface, mobile account target, narrow editor navigation and money typography updates must bypass cached CSS.');
   assert.match(await readFile(new URL('../styles.css', import.meta.url), 'utf8'), /html:has\(dialog\[open\]\),body:has\(dialog\[open\]\)\{overflow:hidden\}/, 'An open workspace dialog must lock document and body scrolling so background copy cannot move into view.');
   if (scriptName === 'app.js') { assert.ok(html.includes('/app.js?v=workspace-6.12'), 'Merchant order recovery changes must bypass cached JavaScript.'); assert.ok(html.includes('class="live-dot pending"'), 'The workspace must default to an unverified provider indicator before credentials load.'); }
   if (scriptName === 'storefront.js') {
@@ -161,12 +161,17 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.ok(html.includes('/storefront.js?v=6.26'), 'The buyer checkout recovery change must bypass cached JavaScript.');
     assert.ok(html.includes('/buyer-locales.js?v=8'), 'Localized product language metadata must bypass cached locale bundles.');
     assert.match(code, /selectedVariant \? 'optionStock' : 'sampleStock'/, 'Inventory for a selected option must be labeled as option-specific.');
-    assert.ok(html.includes('/storefront.css?v=6.10'), 'Buyer responsive and money typography improvements must bypass cached storefront CSS.');
+    assert.ok(html.includes('/storefront.css?v=6.11'), 'Buyer responsive and money typography improvements must bypass cached storefront CSS.');
     assert.match(code, /shop-pending'\)\.scrollIntoView\(\{ block: 'start', behavior: reducedMotion \? 'auto' : 'smooth' \}\);[\s\S]*?recoveryButton\.focus\(\{ preventScroll: true \}\)/, 'Payment recovery must bring its retry action into view and keyboard focus.');
   }
   const sharedStyles = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
-  assert.match(sharedStyles, /\}\s*:\s*is\(#product-price,[^\n]*\)\{font-family:var\(--sans\)\}/, 'All displayed prices must use one font with consistently aligned numerals.');
-  assert.match(sharedStyles, /\.price-currency-symbol,\.shop-price-currency\{font-family:var\(--sans\);font-size:inherit/, 'Currency symbols must match the amount font and size.');
+  assert.match(sharedStyles, /:is\(#product-price,[^\n]*\)\{font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1\}/, 'Displayed prices use lining, tabular numerals.');
+  assert.match(sharedStyles, /\.price-currency-symbol,\.shop-price-currency\{font:inherit;font-variant-numeric:inherit;font-feature-settings:inherit;letter-spacing:inherit\}/, 'Currency symbols inherit the amount font metrics to avoid glyph and baseline mismatch.');
+  assert.doesNotMatch(sharedStyles, /:is\(#product-price,[^\n]*\)\{font-family:var\(--sans\)\}/, 'A late global font override must not replace explicitly styled price typefaces.');
+  const storefrontStyles = await readFile(new URL('../storefront.css', import.meta.url), 'utf8');
+  assert.match(storefrontStyles, /\.shop-price strong\{font:500 31px\/1\.2 var\(--serif\)/, 'The prominent product price keeps its declared serif typeface.');
+  assert.match(storefrontStyles, /\.price-currency-symbol,\.shop-price-currency\{font:inherit;font-variant-numeric:inherit;font-feature-settings:inherit;letter-spacing:inherit\}/, 'Storefront currency tokens inherit the same font metrics as their amount.');
+  assert.doesNotMatch(storefrontStyles, /\.price-currency-symbol,\.shop-price-currency\{font-family:var\(--sans\)/, 'Storefront currency tokens must not be forced into a conflicting typeface.');
   assert.equal(new Set(ids).size, ids.length, htmlName + ': duplicate IDs');
   for (const [, id] of code.matchAll(/\$\('#([A-Za-z][\w-]*)'\)/g)) assert.ok(ids.includes(id) || id === 'editor-field-name' && code.includes("input.id = 'editor-field-'"), scriptName + ': missing DOM binding ' + id);
   if (scriptName === 'app.js') {
@@ -178,7 +183,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /PARTIALLY_REFUNDED: 'Partially refunded'/); assert.match(code, /REFUNDED: 'Refunded'/);
   }
   if (scriptName === 'storefront.js') {
-    assert.match(html, /storefront\.css\?v=6\.10/, 'The latest narrow-screen catalog, gallery, buyer modal and money typography must bypass cached CSS.');
+    assert.match(html, /storefront\.css\?v=6\.11/, 'The latest narrow-screen catalog, gallery, buyer modal and money typography must bypass cached CSS.');
     assert.match(code, /statusPartiallyRefunded/); assert.match(code, /statusRefunded/);
     assert.match(code, /const captureResponseStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'A PayPal refund result must be handled as a terminal capture response, not an unresolvable capture error.');
     assert.match(code, /const terminalCheckoutStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'Saved refunded orders must clear the local pending checkout during order refresh or reload.');
