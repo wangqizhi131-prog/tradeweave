@@ -27,7 +27,7 @@ const state = {
 let config = { paypalClientId: '', paypalReady: false, aiReady: false };
 let aiProviderState = 'unchecked';
 let store = null, product = null, assistantBusy = false, catalogDetail = false, editorUploading = false;
-let selectedOrder = null, toastTimer;
+let selectedOrder = null, toastTimer, ordersLoaded = false, ordersLoadFailed = false;
 function element(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -381,8 +381,15 @@ function renderOrders() {
     const empty = element('div', 'orders-empty');
     const icon = element('span', 'empty-receipt'); icon.setAttribute('aria-hidden', 'true');
     icon.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14l-3-1-4 1-3-1-3 1V3Z"/><path d="M14 3v5h5M9 12h6M9 16h4"/></svg>';
-    empty.append(icon, element('h3', '', state.orders.length ? 'No matching orders' : 'Your first order starts with a story.'), element('p', '', state.orders.length ? 'Try another order ID or choose All statuses.' : 'Complete a PayPal sandbox checkout and its confirmation will appear here.'));
-    if (!state.orders.length) {
+    if (!ordersLoaded) {
+      empty.append(icon, element('h3', '', 'Loading order activity…'), element('p', '', 'Checking saved orders for this shop.'));
+      root.append(empty); return;
+    }
+    const failed = ordersLoadFailed && !state.orders.length;
+    empty.append(icon, element('h3', '', failed ? 'Orders could not be loaded.' : state.orders.length ? 'No matching orders' : 'Your first order starts with a story.'), element('p', '', failed ? 'Refresh orders to try again. Your saved orders have not been changed.' : state.orders.length ? 'Try another order ID or choose All statuses.' : 'Complete a PayPal sandbox checkout and its confirmation will appear here.'));
+    if (failed) {
+      const retry = element('button', 'quiet-button', 'Refresh orders'); retry.type = 'button'; retry.addEventListener('click', loadMerchantOrders); empty.append(retry);
+    } else if (!state.orders.length) {
       const link = element('a', 'primary-button', 'Preview storefront'); link.href = '/shop?preview=1#catalog'; empty.append(link);
     } else {
       const reset = element('button', 'quiet-button', 'Clear filters'); reset.type = 'button';
@@ -543,8 +550,8 @@ $('#editor-image-upload').addEventListener('change', async event => {
 
 async function loadMerchantOrders() {
   $('#refresh-orders').disabled = true;
-  try { const data = await api('/api/workspace/orders'); state.orders = data.orders; state.metrics = data.metrics; renderOrders(); renderReadiness(); $('#merchant-orders-status').textContent = 'Latest 500 stored orders. Counts include all recorded shop orders.'; }
-  catch (error) { $('#merchant-orders-status').textContent = error.message; }
+  try { const data = await api('/api/workspace/orders'); state.orders = data.orders; state.metrics = data.metrics; ordersLoaded = true; ordersLoadFailed = false; renderOrders(); renderReadiness(); $('#merchant-orders-status').textContent = 'Latest 500 stored orders. Counts include all recorded shop orders.'; }
+  catch (error) { ordersLoaded = true; ordersLoadFailed = true; $('#merchant-orders-status').textContent = error.message; renderOrders(); }
   finally { $('#refresh-orders').disabled = false; }
 }
 $('#refresh-orders').addEventListener('click', loadMerchantOrders);

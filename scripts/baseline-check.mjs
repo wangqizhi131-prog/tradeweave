@@ -69,6 +69,9 @@ assert.match(stylesheet, /#order-dialog \.order-dialog-content\{flex:1 1 auto;mi
 assert.match(stylesheet, /#order-dialog \.order-dialog-close-row\{[^}]*margin:-15px 0 9px/, 'The fixed close row must not reintroduce horizontal overflow through negative side margins.');
 assert.match(stylesheet, /\.catalog-info strong\{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden/, 'Extreme long product titles must stay within two lines in the merchant list.');
 const merchantApp = await readFile(new URL('../app.js', import.meta.url), 'utf8');
+assert.match(merchantApp, /let selectedOrder = null, toastTimer, ordersLoaded = false, ordersLoadFailed = false/, 'Merchant orders must stay in an explicit loading state until the first storage request completes.');
+assert.match(merchantApp, /if \(!ordersLoaded\)[\s\S]*?Loading order activity…[\s\S]*?Checking saved orders for this shop\./, 'The first order fetch must not flash an empty-store message before saved orders load.');
+assert.match(merchantApp, /ordersLoadFailed = true[\s\S]*?renderOrders\(\)/, 'A failed first order fetch must show a retryable load error instead of a false empty-store state.');
 assert.match(stylesheet, /\.assistant-disclaimer\.unavailable \.status-ring\{background:#ae644d;border-color:#ae644d\}/, 'A failed AI request must have a visible unavailable state distinct from success.');
 assert.match(merchantApp, /let aiProviderState = 'unchecked'/, 'Credential presence alone must leave AI provider status unverified.');
 assert.match(merchantApp, /Credentials set · live provider not checked/, 'The initial AI status must distinguish credentials from provider availability.');

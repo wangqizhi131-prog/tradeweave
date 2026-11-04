@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-03T10:44:56.580Z",
+  "createdAt": "2026-11-04T08:33:43.589Z",
   "files": [
     {
       "path": ".env.example",
@@ -14,8 +14,8 @@
     },
     {
       "path": "app.js",
-      "bytes": 59177,
-      "sha256": "4c4809889ac34212b7ea74934c6beaacf4215161c4ebb3ba5705224271b92fe7"
+      "bytes": 59994,
+      "sha256": "8cd2f15ae512e2c0cc09ce7408b67ce3f12fd4895596a2ad38fca9ae59f85853"
     },
     {
       "path": "buyer-locales.js",
@@ -34,8 +34,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 6850,
-      "sha256": "e0f771aca466a382c7b60e6d76eca5b58bbb9b998aedd5d6b640dc22529ef628"
+      "bytes": 7417,
+      "sha256": "962df8da1150abc1184baf4729e92542028ab9f524bf6217018d6ce379aa8ba3"
     },
     {
       "path": "docs/notices-and-ai-use.md",
@@ -45,7 +45,7 @@
     {
       "path": "index.html",
       "bytes": 29448,
-      "sha256": "96ae340ae723568499ec2e469d9aae521ba39de981947dfe2fbbd8d47debe047"
+      "sha256": "a826f5e197b48469dd075a50715e986845f9b8f24d0027fbb9562a20aae3e275"
     },
     {
       "path": "integrations/astropods/agent/bridge.mjs",
@@ -69,8 +69,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5240,
-      "sha256": "f3b75135cbc12b7b1d9a8373508bd2fdf9dac2bb2e84a21d955f650a41f0d949"
+      "bytes": 5553,
+      "sha256": "a6203d6180073aeadba3eb3c6399da62c7b5617aecd68908a2149f7c90082763"
     },
     {
       "path": "render.yaml",
@@ -89,8 +89,8 @@
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 83408,
-      "sha256": "fa910a7951b1121c5c98ce119c397cd04ec24099ce5044895abee12e262c7e02"
+      "bytes": 88361,
+      "sha256": "67c10cebbc4b0ca6353ae9962625f295f2fa3093b5d3680bd46bb7da18af8187"
     },
     {
       "path": "scripts/check.mjs",
@@ -99,8 +99,8 @@
     },
     {
       "path": "scripts/fixtures/paypal-ui.js",
-      "bytes": 3379,
-      "sha256": "e6c492efa9a1a74a753f2873701c22f38941e987a93d67c65f6a950c6b164fee"
+      "bytes": 3887,
+      "sha256": "e8112c0d66e43cce8c9643a3c1458b90b35ec18edb06fcd1db0d469d8271c81e"
     },
     {
       "path": "scripts/fixtures/simulated-ai.mjs",
@@ -154,8 +154,8 @@
     },
     {
       "path": "server.mjs",
-      "bytes": 42209,
-      "sha256": "a008eb256ba570896bca0b482811ca9d4a8835b8339a6457ec201ab16ea8b4e5"
+      "bytes": 43170,
+      "sha256": "35e2a154310969cc8e30cc83d7e95243345c4b8b7d11ddaae10652d84e09dae2"
     },
     {
       "path": "storage-remote.mjs",
@@ -164,8 +164,8 @@
     },
     {
       "path": "storage.mjs",
-      "bytes": 12294,
-      "sha256": "dc7f0426ecb8ffd7493394fce2e1e0e34c8e78c7dcfc050bfebcf8322cfbb9e2"
+      "bytes": 12797,
+      "sha256": "745c1c79289d49bd751715f671506718e4f20987b654517e8d2210058bc99a56"
     },
     {
       "path": "store-data.json",
@@ -180,12 +180,12 @@
     {
       "path": "storefront.html",
       "bytes": 15742,
-      "sha256": "4b963fb2774308ab14d5f1045d80972348bb4d4884763953b8d0d6f9a027936d"
+      "sha256": "231320538f63154a72ea4e90a234c975e016360b29b7adeaf08a4ffb771b80f3"
     },
     {
       "path": "storefront.js",
-      "bytes": 60019,
-      "sha256": "fbf236f1bbcd07f57e9efc6131391668909ed071da2ee7c8f5e473218b39c821"
+      "bytes": 60678,
+      "sha256": "19fd93aec22a269a78e87f5bbfc1cf26736c3ac932447250fbd7481fdbf4c34e"
     },
     {
       "path": "styles.css",
