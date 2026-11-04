@@ -34,8 +34,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 7369,
-      "sha256": "2276cd5e1584bcbe6abc7bb4a64f3d73d3cd2e63c3e3ed0043d6ba1cd5277911"
+      "bytes": 5878,
+      "sha256": "dfc127f130f46774d4e6f30579b896dc5aefb694676df976f94b8b1ed52605b0"
     },
     {
       "path": "docs/notices-and-ai-use.md",
@@ -69,8 +69,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5553,
-      "sha256": "a6203d6180073aeadba3eb3c6399da62c7b5617aecd68908a2149f7c90082763"
+      "bytes": 5564,
+      "sha256": "e4c7c8bb7a576ee0b9f7aad74c79cbc68cc4bee368e83ab7015bfbf695d9210f"
     },
     {
       "path": "render.yaml",

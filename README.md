@@ -2,7 +2,7 @@
 
 **Commerce, with context.** TradeWeave is a prototype for independent makers. A seller maintains bilingual product facts; buyers can review product options, ask questions, and check out with PayPal Sandbox.
 
-> **Evaluation status:** This public source is a runnable, credential-free code package, not a hosted demo or a submitted entry. One USD 68 PayPal Sandbox checkout was completed through the storefront JavaScript SDK and read back as completed by PayPal and TradeWeave; no real money moved. The app has also made bounded live requests through OpenRouter's free route, but continuous free AI availability and judge access have not been established. Without provider credentials the app correctly reports live AI and PayPal as unavailable. The official rules allow a hosted demo URL **or** complete repository setup/run instructions; evaluators using this local build need their own free OpenRouter and PayPal Sandbox credentials. Never put credentials in this repository. The demo is not a production payment service.
+> **Evaluation status (checked 2026-11-04):** A hosted buyer preview is available at <https://tradeweave-demo.onrender.com/shop#catalog>. The public host reports AI and PayPal as configured, but this status alone does not prove a complete hosted AI or PayPal transaction, zero-cost billing through judging, or persistence across a host restart. The hosted maker workspace is disabled; use the local build for maker tasks. One USD 68 PayPal Sandbox checkout was completed locally through the storefront JavaScript SDK and read back as completed by PayPal and TradeWeave; no real money moved. Bounded live OpenRouter requests have succeeded, and an empty-model response has also occurred. Continuous free AI availability is not guaranteed. Without provider credentials the local build correctly reports live AI and PayPal as unavailable. Never put credentials in this repository. The demo is not a production payment service.
 
 ## What works in the local build
 
@@ -37,13 +37,13 @@ Provider credentials are optional for local browsing and editing. To test integr
 
 See [evaluator setup and limitations](docs/evaluator-setup-en.md) for exact boundaries.
 
-## Free hosted preview
+## Hosted buyer preview
 
-The repository includes a Render Blueprint (`render.yaml`) for an optional public preview. Import the public GitHub repository as a Blueprint and choose the Free web service. Do not add a payment method. Enter `AI_API_KEY`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET` only as private environment variables in Render; never commit them.
+The Render Blueprint (`render.yaml`) currently backs the public buyer preview at <https://tradeweave-demo.onrender.com/shop#catalog>. The host reports AI and PayPal configuration as ready, but a readiness flag only confirms that the service has configuration values. Hosted PayPal approval/capture and hosted persistence across restart have not been verified. The hosted maker workspace is intentionally disabled because no hosted merchant login or role system exists.
 
-The Free service sleeps after 15 minutes without traffic and may take about a minute to wake. Its filesystem is temporary. Configure both `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` to store the catalog, orders, inventory reservations, buyer questions, replies and newly uploaded image blobs in a remote SQLite-compatible database; without both values, it falls back to local SQLite, which resets when the host filesystem is cleared. Included fictional sample images are restored from the repository at startup. The hosted configuration disables the maker workspace and exposes the buyer storefront. The OpenRouter free router may be rate-limited or unavailable; this Blueprint does not guarantee free model capacity for the judging period. Do not describe it as a working demo until the deployment and both provider flows have been checked.
+The Free service sleeps after 15 minutes without traffic and may take about a minute to wake. Its filesystem is temporary. The project supports Turso/libSQL when both `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` are configured; the live service's database target and persistence across restart still require direct verification. OpenRouter's free router may be rate-limited or unavailable; the Blueprint does not guarantee model capacity for the judging period. The live AI flow has returned both useful answers and an empty-model failure, so use its retry or maker handoff path when needed.
 
-Turso currently lists a $0 Free plan with no credit card required. Keep the account on that plan, do not enable paid overages, and check its billing page before and after judge access. Limits and account policies can change; this project has not created or tested a hosted Turso database.
+Keep Render and Turso on Free plans, do not add a payment method or enable paid overages, and verify both billing pages before and after evaluation. Current billing and overage settings have not been re-read in this status update; availability and zero-cash access through the judging period are not guaranteed.
 
 ## Checks
 
