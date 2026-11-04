@@ -285,6 +285,7 @@ try {
   assert.equal(publicConfig.persistenceMode, 'local', 'A no-Turso development fixture must identify its local persistence backend.');
   assert.equal(await publicStatus('/dialog-focus.js'), 200);
   assert.equal(await publicStatus('/buyer-locales.js'), 200, 'The buyer locale bundle must be served as a public asset.');
+  assert.equal(await publicStatus('/money-format.js'), 200, 'The shared price formatter must be served as a public asset.');
   await request('/api/buyer/orders'); await request('/api/buyer/orders', undefined, {}, true); assert.notEqual(cookie, otherCookie);
   const source = (await request('/api/workspace/store')).data, tote = source.products.find(p => p.id === 'coast-tote');
   assert.equal(source.products.filter(product => product.status === 'active').length, 3, 'A clean install must open with a multi-product demo catalog.');
