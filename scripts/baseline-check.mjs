@@ -152,7 +152,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
   const html = await readFile(new URL('../' + htmlName, import.meta.url), 'utf8'), code = await readFile(new URL('../' + scriptName, import.meta.url), 'utf8');
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
   assert.ok(html.includes('/dialog-focus.js'), htmlName + ': shared dialog keyboard behavior must load.');
-  assert.ok(html.includes('/styles.css?v=6.22'), htmlName + ': shared interface, mobile account target, narrow editor navigation and money typography updates must bypass cached CSS.');
+  assert.ok(html.includes('/styles.css?v=6.23'), htmlName + ': shared interface, mobile account target, narrow editor navigation and money typography updates must bypass cached CSS.');
   assert.match(await readFile(new URL('../styles.css', import.meta.url), 'utf8'), /html:has\(dialog\[open\]\),body:has\(dialog\[open\]\)\{overflow:hidden\}/, 'An open workspace dialog must lock document and body scrolling so background copy cannot move into view.');
   if (scriptName === 'app.js') { assert.ok(html.includes('/app.js?v=workspace-6.12'), 'Merchant order recovery changes must bypass cached JavaScript.'); assert.ok(html.includes('class="live-dot pending"'), 'The workspace must default to an unverified provider indicator before credentials load.'); }
   if (scriptName === 'storefront.js') {

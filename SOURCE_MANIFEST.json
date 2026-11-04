@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-04T14:42:42.613Z",
+  "createdAt": "2026-11-04T15:16:25.008Z",
   "files": [
     {
       "path": ".env.example",
@@ -14,8 +14,8 @@
     },
     {
       "path": "app.js",
-      "bytes": 59994,
-      "sha256": "8cd2f15ae512e2c0cc09ce7408b67ce3f12fd4895596a2ad38fca9ae59f85853"
+      "bytes": 59700,
+      "sha256": "3f2f9c5e453def75988d58fe45e4e94249b5f16aee645abdeb440d7fb2fd79e0"
     },
     {
       "path": "buyer-locales.js",
@@ -34,8 +34,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 7417,
-      "sha256": "962df8da1150abc1184baf4729e92542028ab9f524bf6217018d6ce379aa8ba3"
+      "bytes": 7369,
+      "sha256": "2276cd5e1584bcbe6abc7bb4a64f3d73d3cd2e63c3e3ed0043d6ba1cd5277911"
     },
     {
       "path": "docs/notices-and-ai-use.md",
@@ -44,8 +44,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 29448,
-      "sha256": "1d555fd60322696b12b1ba1a8f57bb4bc3319b3da2fd5535b68f25041f43295a"
+      "bytes": 29340,
+      "sha256": "b846e22c2d2d871d06dd8527b99432954cc0141722529ab6c350a75cbb41ec92"
     },
     {
       "path": "integrations/astropods/agent/bridge.mjs",
@@ -74,8 +74,8 @@
     },
     {
       "path": "render.yaml",
-      "bytes": 872,
-      "sha256": "8afdf582c29552f4718bd9795d3fdf308d4eddab20573623056b192b60b4ff1f"
+      "bytes": 897,
+      "sha256": "f3a01bfd449991f9d9d19e26eb393c15a8adc9b9703bd52a209463bbd81886fb"
     },
     {
       "path": "scripts/astropods-check.mjs",
@@ -89,13 +89,13 @@
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 88864,
-      "sha256": "4c9257157efffde746624d3d6ed3282939f3a048a3d01eba674dee9de952cc28"
+      "bytes": 88235,
+      "sha256": "5a66a0bb78d14751a70123d8ae284df8c8206517b0d4aa2c438515a079eb6dbd"
     },
     {
       "path": "scripts/check.mjs",
-      "bytes": 79,
-      "sha256": "cac3ed464cd154c844426549795c2a43db46db51aae3bae0168ef3b39fc85826"
+      "bytes": 77,
+      "sha256": "4928858cf1209d6b2c3d558a5f3e8f519ef785f481d8db9c946f0cc1757f1427"
     },
     {
       "path": "scripts/fixtures/paypal-ui.js",
@@ -119,8 +119,8 @@
     },
     {
       "path": "scripts/ui-fixture.mjs",
-      "bytes": 11605,
-      "sha256": "77cbc861b8f6fb758152b5304ac4da366006ec46904475df1dea4a39543008b7"
+      "bytes": 11478,
+      "sha256": "b96807236652d5f38fea9c97ee4ded026b19654474cfeaae893cbb72445182ac"
     },
     {
       "path": "seed-media/31b028a799280fca5b064307f246c39973e47e83e4ef62381201256fbed4a655.jpg",
@@ -154,8 +154,8 @@
     },
     {
       "path": "server.mjs",
-      "bytes": 43170,
-      "sha256": "35e2a154310969cc8e30cc83d7e95243345c4b8b7d11ddaae10652d84e09dae2"
+      "bytes": 42691,
+      "sha256": "ac3f0e3a1e66ac762fd4f5b1a70a42611e6f21f440c4069976e4df88f43cd718"
     },
     {
       "path": "storage-remote.mjs",
@@ -174,23 +174,23 @@
     },
     {
       "path": "storefront.css",
-      "bytes": 24461,
-      "sha256": "359355f1176feabe512ad9ed3333f5fd06a776a09c8159a0b178821f37764b9a"
+      "bytes": 24456,
+      "sha256": "1be6e7f1ba684aef01cb9f3a4596e3400b3a73b14363414e49d882263697fe88"
     },
     {
       "path": "storefront.html",
-      "bytes": 15743,
-      "sha256": "c56ea1731a091a5056bcb07158fbe4f5a9b9e2e610f76816bdc3fcc3d1b3be95"
+      "bytes": 15705,
+      "sha256": "d4aba1aef554cac3415ceb6bdf12f25e939b3d0e023feece7347973373405823"
     },
     {
       "path": "storefront.js",
-      "bytes": 60678,
-      "sha256": "19fd93aec22a269a78e87f5bbfc1cf26736c3ac932447250fbd7481fdbf4c34e"
+      "bytes": 61869,
+      "sha256": "6786767c874249159d0bd042292d78c8dd3dd6d5450f73310fed76a208aaf7bf"
     },
     {
       "path": "styles.css",
-      "bytes": 64572,
-      "sha256": "035bf43663c317ee611c8fe3eaa4ecdd83ad0b849a816541ccf634550b6e5079"
+      "bytes": 64721,
+      "sha256": "da8e1302030fc2abdb140d6f8d9a5764a826f97c3d50d119ce966248f539e645"
     }
   ]
 }
