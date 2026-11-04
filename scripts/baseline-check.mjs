@@ -22,6 +22,21 @@ const localeContext = { window: {} };
 runInNewContext(await readFile(new URL('../buyer-locales.js', import.meta.url), 'utf8'), localeContext);
 const buyerI18n = localeContext.window.TradeWeaveI18n;
 assert.deepEqual(Array.from(buyerI18n.languages, language => language.code), ['en', 'zh-CN', 'ja', 'es', 'fr'], 'The storefront must expose its five supported interface locales in a stable order.');
+const fakeElement = tag => ({ tag, className: '', children: [], textContent: '', append(...items) { this.children.push(...items); }, replaceChildren(...items) { this.children = [...items]; } });
+const fakeDocument = { createElement: fakeElement, createTextNode: text => ({ textContent: text }) };
+const moneyContext = { window: {}, document: fakeDocument };
+runInNewContext(await readFile(new URL('../money-format.js', import.meta.url), 'utf8'), moneyContext);
+const moneyFormatter = moneyContext.window.TradeWeaveMoney;
+assert.equal(moneyFormatter.format('68.00', 'USD', 'en-US'), 'US$68.00', 'US dollar values must use an unambiguous US$ prefix and never append a redundant USD suffix.');
+assert.equal(moneyFormatter.format('68.00', 'USD', 'zh-CN'), 'US$68.00', 'Chinese buyer prices must identify the USD settlement amount clearly.');
+assert.equal(moneyFormatter.format('68.00', 'USD', 'es-ES'), '68,00 US$', 'Localized decimal punctuation must remain intact with an explicit USD marker.');
+assert.equal(moneyFormatter.format('68.00', 'USD', 'fr-FR'), '68,00 US$', 'French decimal punctuation must remain intact with an explicit USD marker.');
+assert.equal(moneyFormatter.format('68.00', 'CNY', 'zh-CN'), '¥68.00', 'Non-USD reference currency symbols must retain their locale formatter.');
+const prefixPrice = fakeElement('span'); moneyFormatter.render(prefixPrice, '68.00', 'USD', 'en-US');
+assert.deepEqual(prefixPrice.children.map(child => child.className || child.textContent), ['price-currency-symbol', 'price-amount'], 'Prefix currencies must render as separate currency and aligned numeric spans.');
+assert.equal(prefixPrice.children[1].children.map(child => child.textContent).join(''), '68.00', 'The full amount, including decimals, must share one lining-figure span.');
+const suffixPrice = fakeElement('span'); moneyFormatter.render(suffixPrice, '68.00', 'USD', 'fr-FR');
+assert.deepEqual(suffixPrice.children.map(child => child.className || child.textContent), ['price-amount', 'price-currency-symbol'], 'Suffix currencies must preserve their locale order when the amount is wrapped.');
 for (const locale of buyerI18n.languages) {
   assert.equal(buyerI18n.language(locale.code).product, locale.product, locale.code + ' must resolve its matching product content field.');
   const fallbackCopy = buyerI18n.get(locale.code, 'contentFallback');
@@ -152,21 +167,24 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
   const html = await readFile(new URL('../' + htmlName, import.meta.url), 'utf8'), code = await readFile(new URL('../' + scriptName, import.meta.url), 'utf8');
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
   assert.ok(html.includes('/dialog-focus.js'), htmlName + ': shared dialog keyboard behavior must load.');
-  assert.ok(html.includes('/styles.css?v=6.24'), htmlName + ': shared interface, mobile account target, narrow editor navigation and money typography updates must bypass cached CSS.');
+  assert.ok(html.includes('/styles.css?v=6.25'), htmlName + ': shared interface and explicit price typography updates must bypass cached CSS.');
+  assert.ok(html.includes('/money-format.js?v=1'), htmlName + ': both apps must share the tested USD and localized number formatter.');
+  if (scriptName === 'app.js') assert.match(html, /<b id="fact-price">US\$68\.00<\/b>/, 'The no-JavaScript product facts fallback must use the same unambiguous USD marker.');
   assert.match(await readFile(new URL('../styles.css', import.meta.url), 'utf8'), /html:has\(dialog\[open\]\),body:has\(dialog\[open\]\)\{overflow:hidden\}/, 'An open workspace dialog must lock document and body scrolling so background copy cannot move into view.');
-  if (scriptName === 'app.js') { assert.ok(html.includes('/app.js?v=workspace-6.12'), 'Merchant order recovery changes must bypass cached JavaScript.'); assert.ok(html.includes('class="live-dot pending"'), 'The workspace must default to an unverified provider indicator before credentials load.'); }
+  if (scriptName === 'app.js') { assert.ok(html.includes('/app.js?v=workspace-6.13'), 'Merchant UI changes must bypass cached JavaScript.'); assert.ok(html.includes('class="live-dot pending"'), 'The workspace must default to an unverified provider indicator before credentials load.'); }
   if (scriptName === 'storefront.js') {
-    assert.match(html, /buyer-locales\.js\?v=8[\s\S]*?storefront\.js\?v=6\.26/, 'The storefront must load fresh locale metadata and payment recovery code.');
+    assert.match(html, /buyer-locales\.js\?v=8[\s\S]*?money-format\.js\?v=1[\s\S]*?storefront\.js\?v=6\.27/, 'The storefront must load fresh locale metadata, shared price formatting and payment recovery code.');
     assert.match(code, /function productNeedsFallback\(item\)/, 'Fallback notices must appear when displayed product content lacks the selected translation.');
-    assert.ok(html.includes('/storefront.js?v=6.26'), 'The buyer checkout recovery change must bypass cached JavaScript.');
+    assert.ok(html.includes('/storefront.js?v=6.27'), 'Buyer price rendering changes must bypass cached JavaScript.');
     assert.ok(html.includes('/buyer-locales.js?v=8'), 'Localized product language metadata must bypass cached locale bundles.');
     assert.match(code, /selectedVariant \? 'optionStock' : 'sampleStock'/, 'Inventory for a selected option must be labeled as option-specific.');
-    assert.ok(html.includes('/storefront.css?v=6.11'), 'Buyer responsive and money typography improvements must bypass cached storefront CSS.');
+    assert.ok(html.includes('/storefront.css?v=6.12'), 'Buyer responsive and price typography improvements must bypass cached storefront CSS.');
     assert.match(code, /shop-pending'\)\.scrollIntoView\(\{ block: 'start', behavior: reducedMotion \? 'auto' : 'smooth' \}\);[\s\S]*?recoveryButton\.focus\(\{ preventScroll: true \}\)/, 'Payment recovery must bring its retry action into view and keyboard focus.');
   }
   const sharedStyles = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
   assert.match(sharedStyles, /:is\(#product-price,[^\n]*\)\{font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1\}/, 'Displayed prices use lining, tabular numerals.');
   assert.match(sharedStyles, /\.price-currency-symbol,\.shop-price-currency\{font:inherit;font-variant-numeric:inherit;font-feature-settings:inherit;letter-spacing:inherit\}/, 'Currency symbols inherit the amount font metrics to avoid glyph and baseline mismatch.');
+  assert.match(sharedStyles, /\.price-amount\{display:inline-block;vertical-align:baseline;font:inherit;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1,"onum" 0;line-height:inherit;letter-spacing:inherit\}/, 'Every displayed price isolates its amount in explicit equal-height lining figures.');
   assert.doesNotMatch(sharedStyles, /:is\(#product-price,[^\n]*\)\{font-family:var\(--sans\)\}/, 'A late global font override must not replace explicitly styled price typefaces.');
   const storefrontStyles = await readFile(new URL('../storefront.css', import.meta.url), 'utf8');
   assert.match(storefrontStyles, /\.shop-price strong\{font:500 31px\/1\.2 var\(--serif\)/, 'The prominent product price keeps its declared serif typeface.');
@@ -183,7 +201,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /PARTIALLY_REFUNDED: 'Partially refunded'/); assert.match(code, /REFUNDED: 'Refunded'/);
   }
   if (scriptName === 'storefront.js') {
-    assert.match(html, /storefront\.css\?v=6\.11/, 'The latest narrow-screen catalog, gallery, buyer modal and money typography must bypass cached CSS.');
+    assert.match(html, /storefront\.css\?v=6\.12/, 'The latest narrow-screen catalog, gallery, buyer modal and price typography must bypass cached CSS.');
     assert.match(code, /statusPartiallyRefunded/); assert.match(code, /statusRefunded/);
     assert.match(code, /const captureResponseStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'A PayPal refund result must be handled as a terminal capture response, not an unresolvable capture error.');
     assert.match(code, /const terminalCheckoutStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'Saved refunded orders must clear the local pending checkout during order refresh or reload.');
@@ -195,7 +213,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /state\.replyLanguageTouched = true/, 'A manual reply-language selection remains explicit.');
     assert.match(code, /const summary = \(order\.items \|\| \[\]\)\.map\(item => item\.quantity \+ ' × ' \+ \(localizedOrderItem\(item\)/, 'Pending checkout recovery shows localized item names from its immutable snapshot.');
     assert.match(code, /\$\('#shop-contact-history'\)\.checked = false/, 'Conversation history is shared with the maker only after an explicit opt-in.');
-    assert.match(html, /storefront\.js\?v=6\.26/, 'The browser must load the updated buyer payment recovery handling.');
+    assert.match(html, /storefront\.js\?v=6\.27/, 'The browser must load the updated buyer payment recovery and price formatting handling.');
     assert.match(code, /catch \{ addMessage\('assistant', t\('questionErrorSaved', \{ error: t\('aiTemporaryError'\) \}\), true, contextId, \{ retryQuestion: question \}\); \}/, 'Assistant failures must show localized recovery copy and preserve a one-click retry.');
     assert.match(code, /state\.histories\[product\.id\] = history; persist\(\); renderChat\(\); ask\(failure\.retryQuestion\)/, 'Retry must reuse the failed question without duplicating it in conversation context.');
     assert.match(await readFile(new URL('../storefront.css', import.meta.url), 'utf8'), /\.shop-retry-question\{margin-top:8px;min-height:40px\}/, 'The retry action must remain comfortably tappable in the chat dialog.');
@@ -257,6 +275,9 @@ try {
   const health = await request('/healthz');
   assert.equal(health.status, 200, 'The Render health check route must be available.');
   assert.deepEqual(health.data, { status: 'ok' }, 'The health check must return only a minimal status.');
+  const moneyScript = await realFetch(base + '/money-format.js');
+  assert.equal(moneyScript.status, 200, 'The shared browser currency formatter must be served as a static asset.');
+  assert.match(await moneyScript.text(), /window\.TradeWeaveMoney = Object\.freeze/, 'The browser currency formatter asset must initialize before both page apps.');
   for (const path of ['/.env', '/server.mjs', '/storage.mjs', '/store-data.json', '/data/tradeweave.sqlite', '/fixture-paypal.js', '/scripts/fixtures/paypal-ui.js']) assert.equal((await request(path)).status, 404);
   for (const path of ['/api/config', '/api/workspace/store', '/api/workspace/orders', '/%2Findex.html']) assert.equal(await publicStatus(path), 403);
   const publicConfig = (await request('/api/shop/config')).data;

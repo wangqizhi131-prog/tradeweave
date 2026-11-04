@@ -42,20 +42,14 @@ function productNeedsFallback(item) {
   return [item.name, item.subtitle, item.description, ...item.tags, ...item.variants.map(variant => variant.name), ...Object.values(item.facts)].some(needsFallback);
 }
 function usd(value) {
-  const options = { style: 'currency', currency: 'USD', ...( ['es', 'fr'].includes(state.language) ? { currencyDisplay: 'code' } : {}) };
-  const formatted = new Intl.NumberFormat(currentLanguage().intl, options).format(Number(value));
-  return ['es', 'fr'].includes(state.language) || formatted.includes('US$') ? formatted : formatted + ' USD';
+  return window.TradeWeaveMoney.format(value, 'USD', currentLanguage().intl);
 }
 function priceLabel(value, currency = 'USD') {
   if (currency === 'USD' && state.language === 'zh-CN' && fxRate?.rate) return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 2 }).format(Number(value) * fxRate.rate) + ' CNY (' + usd(value) + ')';
   return usd(value);
 }
 function appendPriceParts(target, value, currency, locale, extraOptions = {}) {
-  const options = { style: 'currency', currency, ...extraOptions };
-  if (['es', 'fr'].includes(state.language) && currency === 'USD') options.currencyDisplay = 'code';
-  for (const part of new Intl.NumberFormat(locale, options).formatToParts(Number(value))) {
-    target.append(part.type === 'currency' ? node('span', 'shop-price-currency', part.value) : document.createTextNode(part.value));
-  }
+  window.TradeWeaveMoney.render(target, value, currency, locale, extraOptions, true);
 }
 function renderBuyerPrice(target, value, currency = 'USD') {
   target.replaceChildren();
@@ -67,8 +61,6 @@ function renderBuyerPrice(target, value, currency = 'USD') {
     return;
   }
   appendPriceParts(target, value, currency, currentLanguage().intl);
-  const formatted = new Intl.NumberFormat(currentLanguage().intl, { style: 'currency', currency, ...(['es', 'fr'].includes(state.language) && currency === 'USD' ? { currencyDisplay: 'code' } : {}) }).format(Number(value));
-  if (currency === 'USD' && !['es', 'fr'].includes(state.language) && !formatted.includes('US$')) target.append(document.createTextNode(' USD'));
 }
 function fxDisclosure() {
   if (state.language !== 'zh-CN') return '';

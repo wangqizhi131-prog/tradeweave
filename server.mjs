@@ -8,7 +8,7 @@ import { openStorage } from './storage.mjs';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.md': 'text/markdown; charset=utf-8' };
-const publicFiles = new Set(['app.js', 'dialog-focus.js', 'styles.css', 'storefront.html', 'storefront.js', 'storefront.css', 'buyer-locales.js', 'README.md']);
+const publicFiles = new Set(['app.js', 'dialog-focus.js', 'money-format.js', 'styles.css', 'storefront.html', 'storefront.js', 'storefront.css', 'buyer-locales.js', 'README.md']);
 const revisionOf = text => createHash('sha256').update(text).digest('hex');
 const editorToken = randomUUID();
 const paypalBase = 'https://api-m.sandbox.paypal.com';

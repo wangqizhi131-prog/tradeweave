@@ -44,11 +44,10 @@ function logActivity(text, kind = 'info') {
   state.activity = state.activity.slice(0, 25); persist(); renderActivity();
 }
 function money(value, currency = product?.currency || 'USD', locale = 'en-US') {
-  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(Number(value));
+  return window.TradeWeaveMoney.format(value, currency, locale);
 }
 function renderMoneyParts(target, value, currency, locale) {
-  const parts = new Intl.NumberFormat(locale, { style: 'currency', currency }).formatToParts(Number(value));
-  target.replaceChildren(...parts.map(part => part.type === 'currency' ? element('span', 'price-currency-symbol', part.value) : document.createTextNode(part.value)));
+  window.TradeWeaveMoney.render(target, value, currency, locale);
 }
 function localized(value, language = state.language) { return value?.[language === 'Chinese' ? 'zh' : 'en'] || ''; }
 function factValue(key, language = 'English') { return localized(product?.facts[key], language) || (language === 'Chinese' ? '卖家尚未提供' : 'Not supplied by the seller'); }
@@ -160,7 +159,7 @@ function renderProduct() {
   const chinese = state.language === 'Chinese';
   $('.product-details').lang = chinese ? 'zh-CN' : 'en'; $('#listing-language').textContent = chinese ? '中文 / EN' : 'English / 中文';
   $('#product-name').textContent = localized(product.name); $('#product-subtitle').textContent = localized(product.subtitle); $('#product-description').textContent = localized(product.description);
-  renderMoneyParts($('#product-price'), product.price, product.currency, chinese ? 'zh-CN' : 'en-US'); $('#product-currency').textContent = chinese ? '' : product.currency;
+  renderMoneyParts($('#product-price'), product.price, product.currency, chinese ? 'zh-CN' : 'en-US');
   $('#tag-one').textContent = localized(product.tags[0]); $('#tag-two').textContent = localized(product.tags[1]); $('#product-dimensions').textContent = localized(product.facts.dimensions);
   $('#product-stock').textContent = product.stock; $('#stock-label').textContent = product.isFictionalSample ? (chinese ? '示例库存' : 'sample stock') : (chinese ? '件有货' : 'in stock');
   const availability = $('.product-status'); availability.replaceChildren(element('span', 'product-status-dot'), document.createTextNode(product.status !== 'active' ? ' ' + product.status : product.stock ? (chinese ? ' 店铺在售' : ' Available to buyers') : (chinese ? ' 暂时售罄' : ' Sold out')), element('span', 'tiny-divider', '/'), element('span', '', 'EN · 中文'));
@@ -414,7 +413,7 @@ function showOrderDetails(order) {
   selectedOrder = order;
   $('#order-dialog-copy').textContent = order.status === 'COMPLETED' ? 'PayPal returned a completed sandbox capture. No real money moved.' : 'PayPal has not returned a completed capture. This order is not shown as paid.';
   const root = $('#order-receipt'); root.replaceChildren();
-  for (const [label, value] of [['Order ID', order.orderId], ['Capture ID', order.captureId || 'Not returned'], ['Product', order.productName], ['Quantity', order.quantity], ['Amount', money(order.amount, order.currency) + ' ' + order.currency], ['Status', statusLabel(order.status)]]) root.append(element('dt', '', label), element('dd', '', value));
+  for (const [label, value] of [['Order ID', order.orderId], ['Capture ID', order.captureId || 'Not returned'], ['Product', order.productName], ['Quantity', order.quantity], ['Amount', money(order.amount, order.currency)], ['Status', statusLabel(order.status)]]) root.append(element('dt', '', label), element('dd', '', value));
   $('#merchant-tracking').value = order.tracking || ''; $('#merchant-fulfill').disabled = order.status !== 'COMPLETED'; $('#merchant-reconcile').disabled = !order.paypalOrderId || ['COMPLETED','FAILED','DECLINED','DENIED','REFUNDED'].includes(order.status); $('#merchant-order-message').textContent = '';
   if (order.status === 'COMPLETED') root.append(element('dt', '', 'Fulfillment'), element('dd', '', order.fulfillment || 'UNFULFILLED'));
   root.append(element('dt', '', 'Ship to · sandbox'), element('dd', '', order.shipping ? [order.shipping.name, ...Object.values(order.shipping.address)].filter(Boolean).join(', ') : 'Not returned by PayPal. Confirm before dispatch.'));
