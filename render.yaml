@@ -4,6 +4,7 @@ services:
     runtime: node
     plan: free
     healthCheckPath: /healthz
+    buildCommand: npm ci
     startCommand: npm start
     envVars:
       - key: NODE_VERSION
