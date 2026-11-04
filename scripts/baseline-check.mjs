@@ -98,6 +98,7 @@ assert.ok(merchantApp.includes('Credentials set · not live checked'), 'The top-
 assert.ok(merchantApp.includes("aiProviderState = 'failed';"), 'A failed request must transition to the unavailable AI state.');
 assert.match(merchantApp, /title\.title = item\.name\.en/, 'The full product title must remain available as a hover title when the list is clamped.');
 const storefrontApp = await readFile(new URL('../storefront.js', import.meta.url), 'utf8');
+assert.doesNotMatch(storefrontApp, /new Intl\.NumberFormat/, 'All visible storefront prices must go through the shared currency and numeral formatter.');
 const buyerLocales = await readFile(new URL('../buyer-locales.js', import.meta.url), 'utf8');
 assert.equal((buyerLocales.match(/aiTemporaryError:/g) || []).length, 5, 'Assistant provider failures need localized recovery copy in every supported storefront language.');
 const storefrontHtml = await readFile(new URL('../storefront.html', import.meta.url), 'utf8');

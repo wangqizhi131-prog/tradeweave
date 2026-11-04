@@ -44,10 +44,6 @@ function productNeedsFallback(item) {
 function usd(value) {
   return window.TradeWeaveMoney.format(value, 'USD', currentLanguage().intl);
 }
-function priceLabel(value, currency = 'USD') {
-  if (currency === 'USD' && state.language === 'zh-CN' && fxRate?.rate) return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY', maximumFractionDigits: 2 }).format(Number(value) * fxRate.rate) + ' CNY (' + usd(value) + ')';
-  return usd(value);
-}
 function appendPriceParts(target, value, currency, locale, extraOptions = {}) {
   window.TradeWeaveMoney.render(target, value, currency, locale, extraOptions, true);
 }
