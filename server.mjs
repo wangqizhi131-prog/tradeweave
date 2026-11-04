@@ -170,7 +170,8 @@ function captureResult(data, order) {
   return { captureId: capture.id, status: capture.status, capturedAt: capture.create_time || new Date().toISOString() };
 }
 async function captureOrder(order, reconcileOnly = false) {
-  if (['CANCELLED', 'FAILED', 'DECLINED', 'DENIED', 'REFUNDED'].includes(order.status) || order.status === 'PARTIALLY_REFUNDED' && !reconcileOnly) throw new HttpError(409, 'This checkout is closed. Start a new checkout.');
+  const recoverableCancel = reconcileOnly && order.status === 'CANCELLED';
+  if ((!recoverableCancel && ['CANCELLED', 'FAILED', 'DECLINED', 'DENIED', 'REFUNDED'].includes(order.status)) || order.status === 'PARTIALLY_REFUNDED' && !reconcileOnly) throw new HttpError(409, 'This checkout is closed. Start a new checkout.');
   const token = await paypalToken(), headers = { authorization: 'Bearer ' + token, 'content-type': 'application/json' };
   let data = await remoteJson(paypalBase + '/v2/checkout/orders/' + encodeURIComponent(order.orderId), { headers });
   if (data.id !== order.orderId) throw new HttpError(502, 'PayPal returned a different order reference. Refresh this payment before continuing.');
@@ -183,6 +184,7 @@ async function captureOrder(order, reconcileOnly = false) {
   let result = captureResult(data, order);
   if (result) return storage.complete(order.id, result);
   if (reconcileOnly) {
+    if (data.status === 'APPROVED' && order.status === 'CANCELLED') return storage.restoreApproved(order.id);
     if (data.status === 'APPROVED' && order.status === 'CREATED') return storage.update(order.id, { status: 'APPROVED' }, 'Buyer approval confirmed by PayPal.');
     return storage.get(order.id);
   }
@@ -427,7 +429,15 @@ export const server = createServer(async (req, res) => {
       }
       if (url.pathname === '/api/paypal/cancel') {
         if (createPromises.has(order.id) || capturePromises.has(order.id)) throw new HttpError(409, 'A payment request is still running. Refresh its status before cancelling.');
-        return send(res, 200, orderView(await storage.release(order.id), true));
+        if (['COMPLETED', 'PENDING', 'DECLINED', 'DENIED', 'FAILED', 'PARTIALLY_REFUNDED', 'REFUNDED'].includes(order.status)) throw new HttpError(409, 'This checkout can no longer be cancelled. Refresh its payment status.');
+        if (!order.orderId) return send(res, 200, orderView(await storage.release(order.id), true));
+        const entry = { reconcileOnly: true, promise: Promise.resolve(storage.get(order.id)).then(async current => {
+          const latest = await captureOrder(current, true);
+          return latest.status === 'CREATED' ? storage.release(order.id) : latest;
+        }) };
+        capturePromises.set(order.id, entry);
+        try { return send(res, 200, orderView(await entry.promise, true)); }
+        finally { if (capturePromises.get(order.id) === entry) capturePromises.delete(order.id); }
       }
       if (!order.orderId) throw new HttpError(409, 'PayPal has not returned an order reference yet. Resume checkout creation.');
       if (order.status === 'COMPLETED') return send(res, 200, orderView(order, !merchant));

@@ -151,11 +151,11 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
   assert.ok(html.includes('/dialog-focus.js'), htmlName + ': shared dialog keyboard behavior must load.');
   assert.ok(html.includes('/styles.css?v=6.21'), htmlName + ': shared interface, mobile account target and narrow editor navigation updates must bypass cached CSS.');
   assert.match(await readFile(new URL('../styles.css', import.meta.url), 'utf8'), /html:has\(dialog\[open\]\),body:has\(dialog\[open\]\)\{overflow:hidden\}/, 'An open workspace dialog must lock document and body scrolling so background copy cannot move into view.');
-  if (scriptName === 'app.js') { assert.ok(html.includes('/app.js?v=workspace-6.11'), 'Merchant product translation fields must bypass cached JavaScript.'); assert.ok(html.includes('class="live-dot pending"'), 'The workspace must default to an unverified provider indicator before credentials load.'); }
+  if (scriptName === 'app.js') { assert.ok(html.includes('/app.js?v=workspace-6.12'), 'Merchant order recovery changes must bypass cached JavaScript.'); assert.ok(html.includes('class="live-dot pending"'), 'The workspace must default to an unverified provider indicator before credentials load.'); }
   if (scriptName === 'storefront.js') {
-    assert.match(html, /buyer-locales\.js\?v=8[\s\S]*?storefront\.js\?v=6\.25/, 'The storefront must load fresh locale metadata and multilingual product rendering code.');
+    assert.match(html, /buyer-locales\.js\?v=8[\s\S]*?storefront\.js\?v=6\.26/, 'The storefront must load fresh locale metadata and payment recovery code.');
     assert.match(code, /function productNeedsFallback\(item\)/, 'Fallback notices must appear when displayed product content lacks the selected translation.');
-    assert.ok(html.includes('/storefront.js?v=6.25'), 'The buyer catalog must load multilingual product support.');
+    assert.ok(html.includes('/storefront.js?v=6.26'), 'The buyer checkout recovery change must bypass cached JavaScript.');
     assert.ok(html.includes('/buyer-locales.js?v=8'), 'Localized product language metadata must bypass cached locale bundles.');
     assert.match(code, /selectedVariant \? 'optionStock' : 'sampleStock'/, 'Inventory for a selected option must be labeled as option-specific.');
     assert.ok(html.includes('/storefront.css?v=6.9'), 'Buyer responsive improvements must bypass cached storefront CSS.');
@@ -168,7 +168,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /dialog\.showModal\(\);[^}]*const orderContent = dialog\.querySelector\('\.order-dialog-content'\); if \(orderContent\) orderContent\.scrollTop = 0;/, 'Merchant order content resets after native dialog autofocus so every open begins at the top.');
     assert.match(code, /if \(order\.status === 'COMPLETED'\) info\.append\(element\('span', '', 'Fulfillment · '/, 'Fulfillment status is only applicable to paid orders in the merchant list.');
     assert.match(code, /if \(order\.status === 'COMPLETED'\) root\.append\(element\('dt', '', 'Fulfillment'\)/, 'Merchant order details must not show fulfillment for orders without completed payment.');
-    assert.match(code, /\['COMPLETED','CANCELLED','FAILED','DECLINED','DENIED','REFUNDED'\]\.includes\(order\.status\)/, 'Merchant payment reconciliation must be disabled for every terminal order state.');
+    assert.match(code, /\['COMPLETED','FAILED','DECLINED','DENIED','REFUNDED'\]\.includes\(order\.status\)/, 'Merchant payment reconciliation may be used to recover a locally cancelled PayPal order.');
     assert.match(code, /PARTIALLY_REFUNDED: 'Partially refunded'/); assert.match(code, /REFUNDED: 'Refunded'/);
   }
   if (scriptName === 'storefront.js') {
@@ -176,6 +176,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /statusPartiallyRefunded/); assert.match(code, /statusRefunded/);
     assert.match(code, /const captureResponseStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'A PayPal refund result must be handled as a terminal capture response, not an unresolvable capture error.');
     assert.match(code, /const terminalCheckoutStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'Saved refunded orders must clear the local pending checkout during order refresh or reload.');
+    assert.match(code, /if \(\['APPROVED', 'CAPTURE_PENDING'\]\.includes\(result\.status\)\)/, 'A PayPal approval discovered while the buyer closes checkout must remain resumable instead of being discarded.');
     assert.match(code, /if \(order\.status === 'COMPLETED'\) info\.append\(node\('small', '', t\('fulfillment'\)/, 'Buyer order list must not show fulfillment for orders without completed payment.');
     assert.match(code, /if \(order\.status === 'COMPLETED'\) root\.append\(node\('dt', '', t\('fulfillment'\)/, 'Buyer receipt must not show fulfillment for orders without completed payment.');
     assert.match(code, /replyLanguageTouched === true \? normalizeLanguage\(saved\.replyLanguage\) : normalizeLanguage\(saved\.language\)/, 'Reply language defaults to the selected storefront language unless the buyer changed it manually.');
@@ -183,7 +184,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /state\.replyLanguageTouched = true/, 'A manual reply-language selection remains explicit.');
     assert.match(code, /const summary = \(order\.items \|\| \[\]\)\.map\(item => item\.quantity \+ ' × ' \+ \(localizedOrderItem\(item\)/, 'Pending checkout recovery shows localized item names from its immutable snapshot.');
     assert.match(code, /\$\('#shop-contact-history'\)\.checked = false/, 'Conversation history is shared with the maker only after an explicit opt-in.');
-    assert.match(html, /storefront\.js\?v=6\.25/, 'The browser must load the updated buyer payment recovery handling.');
+    assert.match(html, /storefront\.js\?v=6\.26/, 'The browser must load the updated buyer payment recovery handling.');
     assert.match(code, /catch \{ addMessage\('assistant', t\('questionErrorSaved', \{ error: t\('aiTemporaryError'\) \}\), true, contextId, \{ retryQuestion: question \}\); \}/, 'Assistant failures must show localized recovery copy and preserve a one-click retry.');
     assert.match(code, /state\.histories\[product\.id\] = history; persist\(\); renderChat\(\); ask\(failure\.retryQuestion\)/, 'Retry must reuse the failed question without duplicating it in conversation context.');
     assert.match(await readFile(new URL('../storefront.css', import.meta.url), 'utf8'), /\.shop-retry-question\{margin-top:8px;min-height:40px\}/, 'The retry action must remain comfortably tappable in the chat dialog.');
@@ -329,7 +330,8 @@ try {
   const frenchFallbackFacts = JSON.parse(lastAiPayload.messages.at(-1).content).SELLER_REFERENCE_DATA;
   assert.equal(frenchFallbackFacts.description, fallbackProduct.description.en, 'Missing French copy must fall back to the seller-provided English description.');
   assert.equal(frenchFallbackFacts.material, fallbackProduct.facts.material.en, 'Missing French facts must fall back to the seller-provided English fact.');
-  assert.equal((await request('/api/paypal/cancel', { orderId: reserved.id, checkoutToken: reserved.checkoutToken })).status, 200);
+  approvalMode = 'CREATED';
+  assert.equal((await request('/api/paypal/cancel', { orderId: reserved.id, checkoutToken: reserved.checkoutToken })).data.status, 'CANCELLED');
   assert.equal((await request('/api/paypal/capture', { orderId: reserved.id, checkoutToken: reserved.checkoutToken })).status, 409);
   assert.equal((await request('/api/cart/quote', { items: [{ productId: selected.id, variantId: selected.variants[0].id, quantity: 2 }] })).status, 200);
   const raceInputs = ['stock-race-buyer-a', 'stock-race-buyer-b'].map(requestKey => ({ items: [{ productId: selected.id, variantId: selected.variants[0].id, quantity: 2 }], requestKey }));
@@ -338,7 +340,29 @@ try {
   const winningRaceOrder = raceResults.find(result => result.status === 200).data;
   assert.match(raceResults.find(result => result.status === 409).data.error, /requested quantity|no longer has enough stock/i);
   assert.equal((await request('/api/cart/quote', { items: [{ productId: selected.id, variantId: selected.variants[0].id, quantity: 1 }] })).status, 409, 'Only the winning concurrent checkout may hold the remaining stock.');
-  assert.equal((await request('/api/paypal/cancel', { orderId: winningRaceOrder.id, checkoutToken: winningRaceOrder.checkoutToken })).status, 200);
+  assert.equal((await request('/api/paypal/cancel', { orderId: winningRaceOrder.id, checkoutToken: winningRaceOrder.checkoutToken })).data.status, 'CANCELLED');
+  approvalMode = 'APPROVED'; captureMode = 'COMPLETED';
+  const beforeApprovedCancelStock = (await request('/api/store')).data.products.find(p => p.id === tote.id).stock;
+  const approvedOnCancel = (await request('/api/paypal/order', { productId: tote.id, quantity: 1 })).data;
+  const beforeApprovedCancelCapture = captureCalls;
+  const cancelApproval = await request('/api/paypal/cancel', { orderId: approvedOnCancel.id, checkoutToken: approvedOnCancel.checkoutToken });
+  assert.equal(cancelApproval.status, 200); assert.equal(cancelApproval.data.status, 'APPROVED');
+  assert.equal(cancelApproval.data.checkoutToken, approvedOnCancel.checkoutToken, 'An approval found during cancellation must preserve the buyer recovery token.');
+  assert.equal(captureCalls, beforeApprovedCancelCapture, 'Cancellation reconciliation must never capture a buyer-approved payment automatically.');
+  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, beforeApprovedCancelStock - 1, 'An approved order found during cancellation must keep its inventory reservation.');
+  const captureApprovedOnCancel = await request('/api/paypal/capture', { orderId: approvedOnCancel.id, checkoutToken: approvedOnCancel.checkoutToken });
+  assert.equal(captureApprovedOnCancel.status, 200); assert.equal(captureApprovedOnCancel.data.status, 'COMPLETED');
+  const beforeLateApprovalStock = (await request('/api/store')).data.products.find(p => p.id === tote.id).stock;
+  approvalMode = 'CREATED';
+  const lateApproval = (await request('/api/paypal/order', { productId: tote.id, quantity: 1 })).data;
+  assert.equal((await request('/api/paypal/cancel', { orderId: lateApproval.id, checkoutToken: lateApproval.checkoutToken })).data.status, 'CANCELLED');
+  approvalMode = 'APPROVED';
+  const recoveredApproval = await request('/api/paypal/reconcile', { orderId: lateApproval.id, checkoutToken: lateApproval.checkoutToken });
+  assert.equal(recoveredApproval.status, 200); assert.equal(recoveredApproval.data.status, 'APPROVED');
+  assert.equal(recoveredApproval.data.checkoutToken, lateApproval.checkoutToken, 'A locally cancelled order that later becomes approved must be recoverable by its buyer.');
+  assert.equal((await request('/api/cart/quote', { productId: tote.id, quantity: 1 })).status, 200);
+  assert.equal((await request('/api/paypal/capture', { orderId: lateApproval.id, checkoutToken: lateApproval.checkoutToken })).data.status, 'COMPLETED');
+  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, beforeLateApprovalStock - 1, 'Recovered approval must deduct inventory once after capture.');
   const processRaceDb = join(temporary, 'process-race');
   const processRaceSeed = { products: [{ id: 'process-race-product', status: 'active', stock: 2, variants: [{ id: 'process-race-variant', stock: 2 }] }] };
   const initializedRaceStorage = openStorage(processRaceDb, processRaceSeed); initializedRaceStorage.db.close();
@@ -447,24 +471,24 @@ try {
   assert.equal(new Set(captureRequestHistory.get(retryableCapture.id)).size, 1, 'A capture retry must carry the exact same PayPal idempotency ID.');
   const beforeReconcile = captureCalls; captured.get(pending.id).purchase_units[0].payments.captures[0].status = 'COMPLETED';
   assert.equal((await request('/api/workspace/order', { orderId: pending.id, action: 'reconcile' }, freshLocal)).data.status, 'COMPLETED'); assert.equal(captureCalls, beforeReconcile);
-  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 6); // 4 earlier paid units + 1 transient-retry capture + 1 unresolved mismatched capture reservation.
+  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 8); // Prior paid units plus the cancellation and restored-approval captures.
   captureMode = 'UNRECOGNIZED';
   const unknownStatus = (await request('/api/paypal/order', { productId: tote.id, quantity: 1 })).data;
   assert.equal((await request('/api/paypal/capture', { orderId: unknownStatus.id, checkoutToken: unknownStatus.checkoutToken })).status, 502);
   const retainedUnknown = (await request('/api/buyer/orders')).data.orders.find(order => order.localId === unknownStatus.localId);
   assert.equal(retainedUnknown.status, 'CAPTURE_PENDING'); assert.equal(retainedUnknown.checkoutToken, unknownStatus.checkoutToken);
-  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 7, 'An unknown capture status must keep its reservation until reconciliation.');
+  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 9, 'An unknown capture status must keep its reservation until reconciliation.');
   captured.get(unknownStatus.id).purchase_units[0].payments.captures[0].status = 'PARTIALLY_REFUNDED';
   assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'reconcile' }, freshLocal)).data.status, 'PARTIALLY_REFUNDED');
   assert.equal((await request('/api/paypal/cancel', { orderId: unknownStatus.id, checkoutToken: unknownStatus.checkoutToken })).status, 409, 'A stale buyer cancel request must not overwrite a partial refund status.');
   assert.equal((await request('/api/buyer/orders')).data.orders.find(item => item.localId === unknownStatus.localId).status, 'PARTIALLY_REFUNDED');
-  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 7);
+  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 9);
   assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'fulfill', tracking: '' }, freshLocal)).status, 409);
   captured.get(unknownStatus.id).purchase_units[0].payments.captures[0].status = 'REFUNDED';
   assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'reconcile' }, freshLocal)).data.status, 'REFUNDED');
   assert.equal((await request('/api/paypal/cancel', { orderId: unknownStatus.id, checkoutToken: unknownStatus.checkoutToken })).status, 409, 'A stale buyer cancel request must not overwrite a full refund status.');
   assert.equal((await request('/api/buyer/orders')).data.orders.find(item => item.localId === unknownStatus.localId).status, 'REFUNDED');
-  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 7, 'A refund status refresh must not deduct stock twice.');
+  assert.equal((await request('/api/store')).data.products.find(p => p.id === tote.id).stock, tote.stock - 9, 'A refund status refresh must not deduct stock twice.');
   assert.equal((await request('/api/workspace/order', { orderId: unknownStatus.id, action: 'fulfill', tracking: '' }, freshLocal)).status, 409);
   captureMode = 'COMPLETED';
   const expiring = (await request('/api/paypal/order', { items: [{ productId: selected.id, variantId: selected.variants[0].id, quantity: 2 }] })).data;
@@ -473,7 +497,9 @@ try {
   const replacement = (await request('/api/paypal/order', { items: [{ productId: selected.id, variantId: selected.variants[0].id, quantity: 2 }] })).data;
   const beforeExhausted = captureCalls;
   assert.equal((await request('/api/paypal/capture', { orderId: expiring.id, checkoutToken: expiring.checkoutToken })).status, 409); assert.equal(captureCalls, beforeExhausted);
-  await request('/api/paypal/cancel', { orderId: replacement.id, checkoutToken: replacement.checkoutToken });
+  approvalMode = 'CREATED';
+  assert.equal((await request('/api/paypal/cancel', { orderId: replacement.id, checkoutToken: replacement.checkoutToken })).data.status, 'CANCELLED');
+  approvalMode = 'APPROVED';
   assert.equal((await request('/api/paypal/capture', { orderId: expiring.id, checkoutToken: expiring.checkoutToken })).data.status, 'COMPLETED');
   aiMode = 'TIMEOUT'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 502);
   aiMode = 'CONNECT_TIMEOUT_ONCE'; aiConnectAttempts = 0; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200); assert.equal(aiConnectAttempts, 2, 'Only a pre-connect timeout is retried once.');
@@ -534,6 +560,17 @@ try {
   assert.equal(reconciled.data.status, 'APPROVED');
   for (const result of confirmed) assert.equal(result.data.status, 'COMPLETED', 'A capture queued behind a reconcile must perform capture, not return approval as success.');
   assert.equal(captureCalls, beforeConcurrentCapture + 1);
+  const cancelRaceOrder = (await request('/api/paypal/order', { productId: tote.id, quantity: 1 })).data;
+  const beforeCancelRaceCapture = captureCalls, cancelHeld = new Promise(resolve => { heldStarted = resolve; }); heldOrderId = cancelRaceOrder.id;
+  const cancelInFlight = request('/api/paypal/cancel', { orderId: cancelRaceOrder.id, checkoutToken: cancelRaceOrder.checkoutToken });
+  await cancelHeld;
+  const captureArrivedAfterCancel = new Promise(resolve => { const listener = req => { if (req.url === '/api/paypal/capture') { server.off('request', listener); resolve(); } }; server.on('request', listener); });
+  const captureAfterCancel = request('/api/paypal/capture', { orderId: cancelRaceOrder.id, checkoutToken: cancelRaceOrder.checkoutToken });
+  await captureArrivedAfterCancel; await new Promise(resolve => setTimeout(resolve, 100)); releaseHeld();
+  const [cancelledOrApproved, capturedAfterCancel] = await Promise.all([cancelInFlight, captureAfterCancel]);
+  assert.equal(cancelledOrApproved.data.status, 'APPROVED', 'A cancellation status lookup must preserve a provider-approved order.');
+  assert.equal(capturedAfterCancel.data.status, 'COMPLETED', 'A capture queued during cancellation must run after reconciliation rather than being lost.');
+  assert.equal(captureCalls, beforeCancelRaceCapture + 1);
   afterBulk = (await request('/api/workspace/store')).data;
   await writeFile(join(temporary, 'media', 'unreferenced-fixture.txt'), 'This file is not referenced by any product.');
   process.env.BACKUP_DIR = join(temporary, 'backups');

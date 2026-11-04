@@ -18,6 +18,8 @@ window.paypal = {
               const button = document.createElement('button'); button.type = 'button'; button.className = 'quiet-button'; button.textContent = title; button.style.marginBottom = '12px';
               button.addEventListener('click', async () => { close(); await fetch('/fixture/payment', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, mode }) }); await options.onApprove({ orderID: id }); }); dialog.append(button);
             }
+            const approvedCancel = document.createElement('button'); approvedCancel.type = 'button'; approvedCancel.className = 'quiet-button'; approvedCancel.textContent = 'Approve remotely, then send cancel callback';
+            approvedCancel.addEventListener('click', async () => { close(); await fetch('/fixture/payment', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, mode: 'COMPLETED' }) }); await options.onCancel(); }); dialog.append(approvedCancel);
             const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'text-button'; cancel.textContent = 'Cancel test approval'; cancel.addEventListener('click', async () => { close(); await options.onCancel(); }); dialog.append(cancel);
             dialog.addEventListener('cancel', event => { event.preventDefault(); close(); options.onCancel(); }); document.body.append(dialog); dialog.showModal();
           } catch (error) { launch.disabled = false; options.onError(error); }

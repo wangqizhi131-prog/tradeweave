@@ -404,7 +404,18 @@ $('#shop-resume-checkout').addEventListener('click', beginCheckout);
 $('#shop-cancel-checkout').addEventListener('click', cancelCheckout);
 async function cancelCheckout() {
   if (!activeCheckout) return;
-  try { await api('/api/paypal/cancel', { method: 'POST', body: JSON.stringify({ orderId: activeCheckout.id, checkoutToken: activeCheckout.checkoutToken }) }); activeCheckout = null; state.openCheckout = null; state.pendingCheckout = null; state.requestKey = null; cartQuote = null; persist(); lockCheckout(false); renderPending(); renderCart(); await refreshOrders(); toast(t('checkoutCancel')); }
+  try {
+    const result = await api('/api/paypal/cancel', { method: 'POST', body: JSON.stringify({ orderId: activeCheckout.id, checkoutToken: activeCheckout.checkoutToken }) });
+    if (['APPROVED', 'CAPTURE_PENDING'].includes(result.status)) {
+      activeCheckout = { ...result, id: result.paypalOrderId || result.orderId };
+      state.openCheckout = null; state.pendingCheckout = activeCheckout; state.requestKey = result.requestKey || state.requestKey;
+      persist(); lockCheckout(true); renderPending(); renderCart(); await refreshOrders(); toast(t('checkoutPending')); return;
+    }
+    if (['COMPLETED', 'PENDING'].includes(result.status)) state.cart = [];
+    activeCheckout = null; state.openCheckout = null; state.pendingCheckout = null; state.requestKey = null; cartQuote = null;
+    persist(); lockCheckout(false); renderPending(); renderCart(); await refreshOrders();
+    toast(result.status === 'COMPLETED' || result.status === 'PENDING' ? t('paymentReturned', { status: statusLabel(result.status) }) : t('checkoutCancel'));
+  }
   catch (error) { toast(error.message); renderPending(); }
 }
 async function initialize() {

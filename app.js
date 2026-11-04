@@ -404,7 +404,7 @@ function showOrderDetails(order) {
   $('#order-dialog-copy').textContent = order.status === 'COMPLETED' ? 'PayPal returned a completed sandbox capture. No real money moved.' : 'PayPal has not returned a completed capture. This order is not shown as paid.';
   const root = $('#order-receipt'); root.replaceChildren();
   for (const [label, value] of [['Order ID', order.orderId], ['Capture ID', order.captureId || 'Not returned'], ['Product', order.productName], ['Quantity', order.quantity], ['Amount', money(order.amount, order.currency) + ' ' + order.currency], ['Status', statusLabel(order.status)]]) root.append(element('dt', '', label), element('dd', '', value));
-  $('#merchant-tracking').value = order.tracking || ''; $('#merchant-fulfill').disabled = order.status !== 'COMPLETED'; $('#merchant-reconcile').disabled = !order.paypalOrderId || ['COMPLETED','CANCELLED','FAILED','DECLINED','DENIED','REFUNDED'].includes(order.status); $('#merchant-order-message').textContent = '';
+  $('#merchant-tracking').value = order.tracking || ''; $('#merchant-fulfill').disabled = order.status !== 'COMPLETED'; $('#merchant-reconcile').disabled = !order.paypalOrderId || ['COMPLETED','FAILED','DECLINED','DENIED','REFUNDED'].includes(order.status); $('#merchant-order-message').textContent = '';
   if (order.status === 'COMPLETED') root.append(element('dt', '', 'Fulfillment'), element('dd', '', order.fulfillment || 'UNFULFILLED'));
   root.append(element('dt', '', 'Ship to · sandbox'), element('dd', '', order.shipping ? [order.shipping.name, ...Object.values(order.shipping.address)].filter(Boolean).join(', ') : 'Not returned by PayPal. Confirm before dispatch.'));
   for (const item of order.items || []) root.append(element('dt', '', item.name), element('dd', '', item.quantity + ' × ' + money(item.price)));
@@ -553,7 +553,7 @@ async function updateMerchantOrder(action) {
   $('#merchant-reconcile').disabled = true; $('#merchant-fulfill').disabled = true;
   $('#merchant-tracking').disabled = true;
   try { const order = await api('/api/workspace/order', { method: 'POST', headers: { 'x-editor-token': config.editorToken }, body: JSON.stringify({ orderId: selectedOrder.paypalOrderId || selectedOrder.localId, action, tracking: $('#merchant-tracking').value.trim() }) }); await loadMerchantOrders(); showOrderDetails(order); $('#merchant-order-message').textContent = action === 'fulfill' ? 'Fulfillment recorded in this sandbox shop. No shipment service was contacted.' : 'PayPal payment status refreshed.'; }
-  catch (error) { $('#merchant-order-message').textContent = error.message; $('#merchant-reconcile').disabled = !selectedOrder.paypalOrderId; $('#merchant-fulfill').disabled = selectedOrder.status !== 'COMPLETED'; }
+  catch (error) { $('#merchant-order-message').textContent = error.message; $('#merchant-reconcile').disabled = !selectedOrder.paypalOrderId || ['COMPLETED','FAILED','DECLINED','DENIED','REFUNDED'].includes(selectedOrder.status); $('#merchant-fulfill').disabled = selectedOrder.status !== 'COMPLETED'; }
   finally { $('#merchant-tracking').disabled = false; }
 }
 $('#merchant-reconcile').addEventListener('click', () => updateMerchantOrder('reconcile'));
