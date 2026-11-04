@@ -123,6 +123,5 @@ body{overflow-wrap:anywhere}input,select,textarea{min-width:0}.inbox-row strong{
 
 /* Use lining figures for money so every digit shares one baseline. */
 :is(#product-price,.product-price #product-price,.shop-price strong,.shop-purchase-summary strong,.shop-product-card strong,.shop-order-amount,.shop-cart-summary strong,.cart-summary-line strong,.cart-item-total,.order-total,.checkout-summary>strong,.merchant-product-actions strong){font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1}
-.price-currency-symbol,.shop-price-currency{font-family:var(--sans);font-variant-numeric:lining-nums tabular-nums;letter-spacing:-.035em;font-weight:500}
-.shop-price-currency{font-size:.86em}
-.price-currency-symbol{font-size:.9em}
+.price-currency-symbol,.shop-price-currency{font-family:var(--sans);font-size:inherit;font-variant-numeric:lining-nums tabular-nums;letter-spacing:normal;font-weight:inherit}
+:is(#product-price,.product-price #product-price,.shop-price strong,.shop-purchase-summary strong,.shop-product-card strong,.shop-order-amount,.shop-cart-summary strong,.cart-summary-line strong,.cart-item-total,.order-total,.checkout-summary>strong,.merchant-product-actions strong){font-family:var(--sans)}

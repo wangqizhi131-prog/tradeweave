@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-04T08:33:43.589Z",
+  "createdAt": "2026-11-04T14:42:42.613Z",
   "files": [
     {
       "path": ".env.example",
@@ -45,7 +45,7 @@
     {
       "path": "index.html",
       "bytes": 29448,
-      "sha256": "a826f5e197b48469dd075a50715e986845f9b8f24d0027fbb9562a20aae3e275"
+      "sha256": "1d555fd60322696b12b1ba1a8f57bb4bc3319b3da2fd5535b68f25041f43295a"
     },
     {
       "path": "integrations/astropods/agent/bridge.mjs",
@@ -89,8 +89,8 @@
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 88361,
-      "sha256": "67c10cebbc4b0ca6353ae9962625f295f2fa3093b5d3680bd46bb7da18af8187"
+      "bytes": 88864,
+      "sha256": "4c9257157efffde746624d3d6ed3282939f3a048a3d01eba674dee9de952cc28"
     },
     {
       "path": "scripts/check.mjs",
@@ -174,13 +174,13 @@
     },
     {
       "path": "storefront.css",
-      "bytes": 23698,
-      "sha256": "609744af59966ce3d9c613a04c6abe641181fc5c316158cce65a29f66c1d975e"
+      "bytes": 24461,
+      "sha256": "359355f1176feabe512ad9ed3333f5fd06a776a09c8159a0b178821f37764b9a"
     },
     {
       "path": "storefront.html",
-      "bytes": 15742,
-      "sha256": "231320538f63154a72ea4e90a234c975e016360b29b7adeaf08a4ffb771b80f3"
+      "bytes": 15743,
+      "sha256": "c56ea1731a091a5056bcb07158fbe4f5a9b9e2e610f76816bdc3fcc3d1b3be95"
     },
     {
       "path": "storefront.js",
@@ -189,8 +189,8 @@
     },
     {
       "path": "styles.css",
-      "bytes": 63643,
-      "sha256": "dcd77a8265ea68a1725ba6c02a0785969ba43d7e7d89ac011e8aadcf0a3bc30f"
+      "bytes": 64572,
+      "sha256": "035bf43663c317ee611c8fe3eaa4ecdd83ad0b849a816541ccf634550b6e5079"
     }
   ]
 }
