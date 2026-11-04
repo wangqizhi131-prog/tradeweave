@@ -1,10 +1,10 @@
 # Evaluator setup and limitations
 
-This document describes the local build and the currently deployed hosted buyer preview. Read-only status was checked on 2026-11-05 at public source commit `28df280959e750667182f13826d63beb84d52c4b`; it is not a guarantee of service availability, zero cost, or unrestricted access throughout judging.
+This document describes the local build and the currently deployed hosted buyer preview. Read-only status was checked on 2026-11-05 at public source commit `6e835fd`; it is not a guarantee of service availability, zero cost, or unrestricted access throughout judging.
 
 ## Hosted buyer preview
 
-Open <https://tradeweave-demo.onrender.com/shop#catalog> for the hosted buyer storefront. The live host returned HTTP 200 for `/healthz`, `/`, `/shop`, `/money-format.js`, current CSS and app scripts; its public config response reported `aiReady=true`, `paypalReady=true`, `persistenceMode=remote`, and `workspaceReady=false`. A `remote` value is useful configuration evidence but still does not prove a write/read roundtrip or persistence across restart. These responses do not verify a hosted AI response now, PayPal approval/capture, current billing/overage controls, or availability through the judging period.
+Open <https://tradeweave-demo.onrender.com/shop#catalog> for the hosted buyer storefront. The live host returned HTTP 200 for `/healthz`, `/`, `/shop`, `/money-format.js`, and `/storefront.js?v=6.28`; the page references that cache-busted script, which uses the shared `renderBuyerPrice` formatter and no longer contains the old `priceLabel` helper. Its public config response reported `aiReady=true`, `paypalReady=true`, `persistenceMode=remote`, and `workspaceReady=false`. A `remote` value is useful configuration evidence but still does not prove a write/read roundtrip or persistence across restart. HTTP/source checks do not verify rendered font metrics, a hosted AI response now, PayPal approval/capture, current billing/overage controls, or availability through the judging period.
 
 The hosted maker workspace is disabled because the project has no hosted maker account or role system. Use the local build for product editing, maker inbox and fulfillment demonstrations. Do not expose the local editor to the public host: it has no authentication for remote merchants.
 

@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-04T16:45:36.524Z",
+  "createdAt": "2026-11-04T16:48:36.385Z",
   "files": [
     {
       "path": ".env.example",
@@ -44,8 +44,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 6053,
-      "sha256": "06d593d42cb36a5ab1ea3461bf10b49d8176f3a05f8442cc189114465577373e"
+      "bytes": 6195,
+      "sha256": "872991bb1d2a148c79fb7598c888a419abd63908701ba5702f99a5b49c8670c3"
     },
     {
       "path": "docs/notices-and-ai-use.md",
