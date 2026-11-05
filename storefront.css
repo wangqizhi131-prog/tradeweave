@@ -45,5 +45,5 @@
 
 /* Use lining figures for money so every digit shares one baseline. */
 :is(#product-price,.product-price #product-price,.shop-price strong,.shop-purchase-summary strong,.shop-product-card strong,.shop-order-amount,.shop-cart-summary strong,.cart-summary-line strong,.cart-item-total,.order-total,.checkout-summary>strong,.merchant-product-actions strong){font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1}
-.price-currency-symbol,.shop-price-currency{font:inherit;font-variant-numeric:inherit;font-feature-settings:inherit;letter-spacing:inherit}
+.price-currency-symbol,.shop-price-currency,.price-currency-code{font:inherit;font-variant-numeric:inherit;font-feature-settings:inherit;letter-spacing:inherit}
 .price-amount{display:inline-block;vertical-align:baseline;font:inherit;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1,"onum" 0;line-height:inherit;letter-spacing:inherit}

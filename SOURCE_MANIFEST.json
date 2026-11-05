@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-05T01:41:55.730Z",
+  "createdAt": "2026-11-05T01:55:44.418Z",
   "files": [
     {
       "path": ".env.example",
@@ -24,8 +24,8 @@
     },
     {
       "path": "app.js",
-      "bytes": 60001,
-      "sha256": "88f1a4e306435d01d4ca29b5355d2df327b071863d6a7ab6fb42b1b25fe4285d"
+      "bytes": 60003,
+      "sha256": "8e3097d4be37c6c4ceda18e3ef3deae97be6936be20f98a4cc58cb4098cf8c67"
     },
     {
       "path": "buyer-locales.js",
@@ -54,8 +54,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 29501,
-      "sha256": "4408a278b07b0f20bbd2dccd087d847ebd58c4409c537f9ff77aeb6e562fee77"
+      "bytes": 29505,
+      "sha256": "31099174bba5f722bb0ca55dcea623de92b2d345593975b3617b95f737a16905"
     },
     {
       "path": "integrations/astropods/agent/bridge.mjs",
@@ -64,8 +64,8 @@
     },
     {
       "path": "money-format.js",
-      "bytes": 1335,
-      "sha256": "6d436b2f411a37903696bd5d49974f9b25f009f599b6405f693f1dfb3fef5c54"
+      "bytes": 1629,
+      "sha256": "01a435fe20719486bfb9a3c86fdf18a911f15f8f030762dd785ca146fba414e9"
     },
     {
       "path": "package-lock.json",
@@ -94,8 +94,8 @@
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 93964,
-      "sha256": "019116753581620a652d5c32c77a6b51bae5e841a0e212dd0245a45c9995d6a6"
+      "bytes": 94073,
+      "sha256": "f9bb52744fa4a021c8c63789b642c00c69a8845278cb6ba71dfebdb07a216a74"
     },
     {
       "path": "scripts/check.mjs",
@@ -179,13 +179,13 @@
     },
     {
       "path": "storefront.css",
-      "bytes": 24543,
-      "sha256": "9846d3645cdc67bf04eb667115a3d6985ef39d2bcfb94e9cef6d227d73df2f92"
+      "bytes": 24564,
+      "sha256": "d0baea959f5d81918919b1590491902421011a66b050d06928688ecd7b204873"
     },
     {
       "path": "storefront.html",
       "bytes": 15800,
-      "sha256": "bdc4075ae9ac9540dca707ab13f11a7c8287673c209aa467fd20ad7cecde057d"
+      "sha256": "65ad0c42a9a2192bad4fd01b46b6b4cb9ecf45f629031bd7238f45cc4563a02e"
     },
     {
       "path": "storefront.js",
@@ -194,8 +194,8 @@
     },
     {
       "path": "styles.css",
-      "bytes": 64794,
-      "sha256": "7f62e0abb5f21dc1bb3d7fb5aea639dd8c205756581f11b2c91dda566e6aa85f"
+      "bytes": 64815,
+      "sha256": "efe6631b7dea53505be9dcd4dcbc7e56b639a0375c2401b14af6b290e4427718"
     }
   ]
 }

@@ -277,7 +277,7 @@ $('#editor-reload').addEventListener('click', async () => {
   finally { button.disabled = false; }
 });
 function validateEditor() {
-  if (editorDraft.status === 'active' && !editorDraft.variants.length && Number(editorDraft.price) < .01) { $('#editor-error').textContent = 'Set a unit price of at least US$0.01 before making this product available to buyers.'; $('#editor-error').hidden = false; $('#editor-price').focus(); return false; }
+  if (editorDraft.status === 'active' && !editorDraft.variants.length && Number(editorDraft.price) < .01) { $('#editor-error').textContent = 'Set a unit price of at least $0.01 USD before making this product available to buyers.'; $('#editor-error').hidden = false; $('#editor-price').focus(); return false; }
   for (const key of ['price', 'stock']) if (!$('#editor-' + key).reportValidity()) return false;
   const fields = [...storyFields, ...factFields.map(([key, en]) => ['facts.' + key, en, 300])];
   for (const [path, title, max] of fields) {

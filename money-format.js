@@ -1,7 +1,12 @@
 (() => {
   function parts(value, currency = 'USD', locale = 'en-US', extraOptions = {}) {
     const formatted = new Intl.NumberFormat(locale, { style: 'currency', currency, ...extraOptions }).formatToParts(Number(value));
-    return formatted.map(part => part.type === 'currency' && currency === 'USD' ? { ...part, value: 'US$' } : part);
+    if (currency !== 'USD') return formatted;
+    return [
+      ...formatted.map(part => part.type === 'currency' ? { ...part, value: '$' } : part),
+      { type: 'literal', value: ' ' },
+      { type: 'currency', value: 'USD' }
+    ];
   }
 
   function format(value, currency = 'USD', locale = 'en-US', extraOptions = {}) {
@@ -15,9 +20,12 @@
       if (part.type === 'currency') {
         amount = null;
         const symbol = document.createElement('span');
-        symbol.className = 'price-currency-symbol';
+        symbol.className = part.value === 'USD' ? 'price-currency-code' : 'price-currency-symbol';
         symbol.textContent = part.value;
         target.append(symbol);
+      } else if (part.type === 'literal') {
+        amount = null;
+        target.append(document.createTextNode(part.value));
       } else {
         if (!amount) {
           amount = document.createElement('span');
