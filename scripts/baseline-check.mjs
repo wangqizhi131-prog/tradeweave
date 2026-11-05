@@ -168,7 +168,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
   const html = await readFile(new URL('../' + htmlName, import.meta.url), 'utf8'), code = await readFile(new URL('../' + scriptName, import.meta.url), 'utf8');
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
   assert.ok(html.includes('/dialog-focus.js'), htmlName + ': shared dialog keyboard behavior must load.');
-  assert.ok(html.includes('/styles.css?v=6.27'), htmlName + ': shared interface and explicit price typography updates must bypass cached CSS.');
+  assert.ok(html.includes('/styles.css?v=6.28'), htmlName + ': shared interface, price typography and narrow navigation text updates must bypass cached CSS.');
   assert.ok(html.includes('/money-format.js?v=2'), htmlName + ': both apps must share the tested USD and localized number formatter.');
   if (scriptName === 'app.js') assert.match(html, /<b id="fact-price">\$68\.00 USD<\/b>/, 'The no-JavaScript product facts fallback must use the same unambiguous USD marker.');
   assert.match(await readFile(new URL('../styles.css', import.meta.url), 'utf8'), /html:has\(dialog\[open\]\),body:has\(dialog\[open\]\)\{overflow:hidden\}/, 'An open workspace dialog must lock document and body scrolling so background copy cannot move into view.');
@@ -186,6 +186,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
   assert.match(sharedStyles, /:is\(#product-price,[^\n]*\)\{font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1\}/, 'Displayed prices use lining, tabular numerals.');
   assert.match(sharedStyles, /\.price-currency-symbol,\.shop-price-currency,\.price-currency-code\{font:inherit;font-variant-numeric:inherit;font-feature-settings:inherit;letter-spacing:inherit\}/, 'Currency symbols and the ISO code inherit consistent price font metrics.');
   assert.match(sharedStyles, /\.price-amount\{display:inline-block;vertical-align:baseline;font:inherit;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1,"onum" 0;line-height:inherit;letter-spacing:inherit\}/, 'Every displayed price isolates its amount in explicit equal-height lining figures.');
+  assert.match(sharedStyles, /@media\(max-width:360px\)\{\.nav-item>span:not\(\.nav-count\)\{font-size:11px;letter-spacing:-\.03em\}\}/, 'Narrow workspace navigation labels remain readable at 11px.');
   assert.match(sharedStyles, /\.product-price\{font:600 29px\/1\.3 var\(--sans\);font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1\}/, 'The prominent product price uses consistent sans-serif lining figures.');
   const storefrontStyles = await readFile(new URL('../storefront.css', import.meta.url), 'utf8');
   assert.match(storefrontStyles, /\.shop-price strong\{font:600 31px\/1\.2 var\(--sans\);font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1\}/, 'Storefront hero prices use consistent sans-serif lining figures.');

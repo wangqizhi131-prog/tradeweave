@@ -127,5 +127,5 @@ body{overflow-wrap:anywhere}input,select,textarea{min-width:0}.inbox-row strong{
 .price-amount{display:inline-block;vertical-align:baseline;font:inherit;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1,"onum" 0;line-height:inherit;letter-spacing:inherit}
 
 @media(max-width:600px){.nav-item>span:not(.nav-count){white-space:nowrap}}
-@media(max-width:360px){.nav-item>span:not(.nav-count){font-size:10px;letter-spacing:-.02em}}
-@media(max-width:360px){.nav-item[data-page-link="assistant"]>span:not(.nav-count){font-size:9px}}
+@media(max-width:360px){.nav-item>span:not(.nav-count){font-size:11px;letter-spacing:-.03em}}
+@media(max-width:360px){.nav-item[data-page-link="assistant"]>span:not(.nav-count){font-size:11px;letter-spacing:-.04em}}
