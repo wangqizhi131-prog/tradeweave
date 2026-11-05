@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-05T07:59:00.927Z",
+  "createdAt": "2026-11-05T09:05:06.4625345Z",
   "files": [
     {
       "path": ".env.example",
@@ -34,8 +34,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 6254,
-      "sha256": "2d1134fe27da51fde644dff8d29b1af83cb677672f6aaac6426d000286dea171"
+      "bytes": 6650,
+      "sha256": "7ea1d1fc33ecf5b638ac603c0ff53b88d5b710a692478f1038fba3a58dfde930"
     },
     {
       "path": "docs/notices-and-ai-use.md",
@@ -74,8 +74,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 6126,
-      "sha256": "095b7af4416eb0f00aa9a2cea1059f0c3ff715173be35e892d9865a261d8177b"
+      "bytes": 6357,
+      "sha256": "9ae7a97cb01cdbd5460b79a0fb9cd47f7cfb0d4ebe59e23c45ef03a188e687aa"
     },
     {
       "path": "render.yaml",
