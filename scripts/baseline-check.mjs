@@ -168,7 +168,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
   const html = await readFile(new URL('../' + htmlName, import.meta.url), 'utf8'), code = await readFile(new URL('../' + scriptName, import.meta.url), 'utf8');
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
   assert.ok(html.includes('/dialog-focus.js'), htmlName + ': shared dialog keyboard behavior must load.');
-  assert.ok(html.includes('/styles.css?v=6.25'), htmlName + ': shared interface and explicit price typography updates must bypass cached CSS.');
+  assert.ok(html.includes('/styles.css?v=6.26'), htmlName + ': shared interface and explicit price typography updates must bypass cached CSS.');
   assert.ok(html.includes('/money-format.js?v=1'), htmlName + ': both apps must share the tested USD and localized number formatter.');
   if (scriptName === 'app.js') assert.match(html, /<b id="fact-price">US\$68\.00<\/b>/, 'The no-JavaScript product facts fallback must use the same unambiguous USD marker.');
   assert.match(await readFile(new URL('../styles.css', import.meta.url), 'utf8'), /html:has\(dialog\[open\]\),body:has\(dialog\[open\]\)\{overflow:hidden\}/, 'An open workspace dialog must lock document and body scrolling so background copy cannot move into view.');
@@ -179,16 +179,16 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.ok(html.includes('/storefront.js?v=6.28'), 'Buyer price rendering changes must bypass cached JavaScript.');
     assert.ok(html.includes('/buyer-locales.js?v=8'), 'Localized product language metadata must bypass cached locale bundles.');
     assert.match(code, /selectedVariant \? 'optionStock' : 'sampleStock'/, 'Inventory for a selected option must be labeled as option-specific.');
-    assert.ok(html.includes('/storefront.css?v=6.12'), 'Buyer responsive and price typography improvements must bypass cached storefront CSS.');
+    assert.ok(html.includes('/storefront.css?v=6.13'), 'Buyer responsive and price typography improvements must bypass cached storefront CSS.');
     assert.match(code, /shop-pending'\)\.scrollIntoView\(\{ block: 'start', behavior: reducedMotion \? 'auto' : 'smooth' \}\);[\s\S]*?recoveryButton\.focus\(\{ preventScroll: true \}\)/, 'Payment recovery must bring its retry action into view and keyboard focus.');
   }
   const sharedStyles = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
   assert.match(sharedStyles, /:is\(#product-price,[^\n]*\)\{font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1\}/, 'Displayed prices use lining, tabular numerals.');
   assert.match(sharedStyles, /\.price-currency-symbol,\.shop-price-currency\{font:inherit;font-variant-numeric:inherit;font-feature-settings:inherit;letter-spacing:inherit\}/, 'Currency symbols inherit the amount font metrics to avoid glyph and baseline mismatch.');
   assert.match(sharedStyles, /\.price-amount\{display:inline-block;vertical-align:baseline;font:inherit;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1,"onum" 0;line-height:inherit;letter-spacing:inherit\}/, 'Every displayed price isolates its amount in explicit equal-height lining figures.');
-  assert.doesNotMatch(sharedStyles, /:is\(#product-price,[^\n]*\)\{font-family:var\(--sans\)\}/, 'A late global font override must not replace explicitly styled price typefaces.');
+  assert.match(sharedStyles, /\.product-price\{font:600 29px\/1\.3 var\(--sans\);font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1\}/, 'The prominent product price uses consistent sans-serif lining figures.');
   const storefrontStyles = await readFile(new URL('../storefront.css', import.meta.url), 'utf8');
-  assert.match(storefrontStyles, /\.shop-price strong\{font:500 31px\/1\.2 var\(--serif\)/, 'The prominent product price keeps its declared serif typeface.');
+  assert.match(storefrontStyles, /\.shop-price strong\{font:600 31px\/1\.2 var\(--sans\);font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1\}/, 'Storefront hero prices use consistent sans-serif lining figures.');
   assert.match(storefrontStyles, /\.price-currency-symbol,\.shop-price-currency\{font:inherit;font-variant-numeric:inherit;font-feature-settings:inherit;letter-spacing:inherit\}/, 'Storefront currency tokens inherit the same font metrics as their amount.');
   assert.doesNotMatch(storefrontStyles, /\.price-currency-symbol,\.shop-price-currency\{font-family:var\(--sans\)/, 'Storefront currency tokens must not be forced into a conflicting typeface.');
   assert.equal(new Set(ids).size, ids.length, htmlName + ': duplicate IDs');
@@ -202,7 +202,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /PARTIALLY_REFUNDED: 'Partially refunded'/); assert.match(code, /REFUNDED: 'Refunded'/);
   }
   if (scriptName === 'storefront.js') {
-    assert.match(html, /storefront\.css\?v=6\.12/, 'The latest narrow-screen catalog, gallery, buyer modal and price typography must bypass cached CSS.');
+    assert.match(html, /storefront\.css\?v=6\.13/, 'The latest narrow-screen catalog, gallery, buyer modal and price typography must bypass cached CSS.');
     assert.match(code, /statusPartiallyRefunded/); assert.match(code, /statusRefunded/);
     assert.match(code, /const captureResponseStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'A PayPal refund result must be handled as a terminal capture response, not an unresolvable capture error.');
     assert.match(code, /const terminalCheckoutStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'Saved refunded orders must clear the local pending checkout during order refresh or reload.');
