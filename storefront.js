@@ -58,6 +58,9 @@ function renderBuyerPrice(target, value, currency = 'USD') {
   }
   appendPriceParts(target, value, currency, currentLanguage().intl);
 }
+function priceLabel(value, currency = 'USD') {
+  return window.TradeWeaveMoney.format(value, currency, currentLanguage().intl);
+}
 function fxDisclosure() {
   if (state.language !== 'zh-CN') return '';
   return t('paypalUsd');

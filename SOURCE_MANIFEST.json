@@ -185,12 +185,12 @@
     {
       "path": "storefront.html",
       "bytes": 15813,
-      "sha256": "8794dd3ae0e0160c74e516df2a293f7b53c2d04764bf17abe17fb8220531649b"
+      "sha256": "6ee1bd52f3bd6daf1bad872c0bc3524da937b587a278ed70d99a26c5e2872c7d"
     },
     {
       "path": "storefront.js",
-      "bytes": 61270,
-      "sha256": "58d5539976004981470115aec5333b76b82590c91b50361202e9e0cfb96747be"
+      "bytes": 61403,
+      "sha256": "4133c12af93f1a8c302c4e3ae4b989ba1e078113862a235f165bdcd23e08c3b0"
     },
     {
       "path": "styles.css",
