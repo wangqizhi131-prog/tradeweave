@@ -1,6 +1,8 @@
-import { createServer } from 'node:http';
-import { readFile, access, writeFile, rename, unlink, mkdir, readdir, copyFile } from 'node:fs/promises';
+import { createServer, request as httpRequest } from 'node:http';
+import { spawn } from 'node:child_process';
+import { readFile, access, writeFile, rename, unlink, mkdir, readdir, copyFile, mkdtemp, rm } from 'node:fs/promises';
 import { extname, join, dirname } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { randomUUID, createHash } from 'node:crypto';
 import { normalizeStore, validateProduct } from './catalog.mjs';
@@ -80,6 +82,7 @@ function send(res, status, data) {
   res.end(JSON.stringify(data));
 }
 function localEditor(req) {
+  if (process.env.PUBLIC_MAKER_DEMO_INSTANCE === '1') return true;
   // A public reverse proxy must not turn into an unauthenticated merchant editor.
   const host = new URL('http://' + req.headers.host).hostname;
   return process.env.DISABLE_LOCAL_EDITOR !== '1' && ['127.0.0.1', 'localhost', '[::1]'].includes(host)
@@ -229,12 +232,33 @@ async function createOrder(order) {
   } catch (error) { if (error.status === 503) await storage.release(order.id, 'FAILED'); else await storage.update(order.id, { lastError: error.message }, 'Order creation needs another try.'); throw error; }
 }
 
+let makerDemoPort = null, makerDemoProcess = null, makerDemoDirectory = null;
 export const server = createServer(async (req, res) => {
   res.setHeader('x-frame-options', 'DENY');
   res.setHeader('content-security-policy', "frame-ancestors 'none'");
   try {
-    ({ store, revision: storeRevision } = await storage.catalog());
     const url = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
+    const demoCookie = /(?:^|;\s*)tradeweave_maker_demo=1(?:;|$)/.test(req.headers.cookie || '');
+    const publicDemoEnabled = process.env.DISABLE_LOCAL_EDITOR === '1' && process.env.PUBLIC_MAKER_DEMO === '1' && process.env.PUBLIC_MAKER_DEMO_INSTANCE !== '1';
+    const secureCookie = req.socket.encrypted || req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
+    if (url.pathname === '/exit-maker-demo' && req.method === 'GET') {
+      res.writeHead(303, { location: '/shop', 'set-cookie': 'tradeweave_maker_demo=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax' + secureCookie, 'cache-control': 'no-store' });
+      return res.end();
+    }
+    if (publicDemoEnabled && ['/workspace', '/workspace/'].includes(url.pathname) && req.method === 'GET' && !demoCookie) {
+      res.writeHead(303, { location: req.url, 'set-cookie': 'tradeweave_maker_demo=1; Path=/; Max-Age=43200; HttpOnly; SameSite=Lax' + secureCookie, 'cache-control': 'no-store' });
+      return res.end();
+    }
+    if (publicDemoEnabled && demoCookie) {
+      if (!makerDemoPort) throw new HttpError(503, 'The isolated maker demo is starting. Refresh in a moment.');
+      const upstream = httpRequest({ host: '127.0.0.1', port: makerDemoPort, method: req.method, path: req.url,
+        headers: { ...req.headers, host: req.headers.host, 'x-forwarded-for': req.socket.remoteAddress || '' } }, upstreamRes => {
+        res.writeHead(upstreamRes.statusCode || 502, upstreamRes.headers); upstreamRes.pipe(res);
+      });
+      upstream.on('error', () => { if (!res.headersSent) send(res, 503, { error: 'The isolated maker demo is temporarily unavailable.' }); else res.destroy(); });
+      req.pipe(upstream); return;
+    }
+    ({ store, revision: storeRevision } = await storage.catalog());
     if (req.method === 'GET' && url.pathname === '/healthz') return send(res, 200, { status: 'ok' });
     if (req.method === 'POST' && req.headers.origin && new URL(req.headers.origin).host !== req.headers.host) throw new HttpError(403, 'Use this workspace to make the request.');
     if (req.method === 'GET' && url.pathname === '/api/store') {
@@ -510,5 +534,36 @@ export const server = createServer(async (req, res) => {
     send(res, status, { error: status === 500 ? 'The server could not complete this request. Please try again.' : error instanceof SyntaxError ? 'Invalid JSON request body.' : error.message });
   }
 });
-server.on('close', () => storage.db.close());
+server.on('close', () => {
+  storage.db.close();
+  makerDemoProcess?.kill();
+  if (makerDemoDirectory) void rm(makerDemoDirectory, { recursive: true, force: true });
+});
+
+async function startMakerDemo() {
+  if (process.env.PUBLIC_MAKER_DEMO_INSTANCE === '1' || process.env.DISABLE_LOCAL_EDITOR !== '1' || process.env.PUBLIC_MAKER_DEMO !== '1') return;
+  makerDemoDirectory = await mkdtemp(join(tmpdir(), 'tradeweave-maker-demo-'));
+  const env = { ...process.env, PUBLIC_MAKER_DEMO_INSTANCE: '1', HOST: '127.0.0.1', PORT: '0',
+    DATA_DIR: join(makerDemoDirectory, 'data'), MEDIA_DIR: join(makerDemoDirectory, 'media') };
+  delete env.TURSO_DATABASE_URL; delete env.TURSO_AUTH_TOKEN;
+  makerDemoProcess = spawn(process.execPath, [fileURLToPath(import.meta.url)], { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  let output = '';
+  const collect = chunk => { output = (output + chunk.toString()).slice(-4000); };
+  makerDemoProcess.stdout.on('data', collect); makerDemoProcess.stderr.on('data', collect);
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Isolated maker demo did not start: ' + output)), 15000);
+    const ready = chunk => {
+      const match = (output + chunk.toString()).match(/TradeWeave is ready on port (\d+)/);
+      if (!match) return;
+      makerDemoPort = Number(match[1]); clearTimeout(timeout); makerDemoProcess.stdout.off('data', ready); resolve();
+    };
+    makerDemoProcess.stdout.on('data', ready);
+    makerDemoProcess.once('error', error => { clearTimeout(timeout); reject(error); });
+    makerDemoProcess.once('exit', code => { if (!makerDemoPort) { clearTimeout(timeout); reject(new Error('Isolated maker demo exited before startup (' + code + '): ' + output)); } });
+    ready('');
+  });
+  makerDemoProcess.on('exit', () => { makerDemoPort = null; });
+}
+
+if (process.env.PUBLIC_MAKER_DEMO_INSTANCE !== '1') await startMakerDemo();
 server.listen(Number(process.env.PORT || 4173), process.env.HOST || '127.0.0.1', () => console.log('TradeWeave is ready on port ' + server.address().port));

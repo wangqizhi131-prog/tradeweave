@@ -130,3 +130,5 @@ body{overflow-wrap:anywhere}input,select,textarea{min-width:0}.inbox-row strong{
 @media(max-width:600px){.nav-item>span:not(.nav-count){white-space:nowrap}}
 @media(max-width:360px){.nav-item>span:not(.nav-count){font-size:11px;letter-spacing:-.03em}}
 @media(max-width:360px){.nav-item[data-page-link="assistant"]>span:not(.nav-count){font-size:11px;letter-spacing:-.04em}}
+.maker-demo-banner{margin:12px 28px 0;padding:10px 14px;border:1px solid #cbd8cc;border-radius:10px;background:#edf3ed;color:#355644;font-size:12px;line-height:1.5}.maker-demo-banner strong{font-weight:700}.maker-demo-banner a{text-decoration:underline;text-underline-offset:3px;font-weight:600}
+@media(max-width:700px){.maker-demo-banner{margin:10px 14px 0;font-size:11px}}
