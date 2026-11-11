@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-11T02:10:16.912Z",
+  "createdAt": "2026-11-11T02:48:46.782Z",
   "files": [
     {
       "path": ".env.example",
@@ -34,8 +34,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 7822,
-      "sha256": "c1cefcf2b0a31c21f23ddfe0135e1feb8b0c24d04f326dea07217a3c45f54f19"
+      "bytes": 8588,
+      "sha256": "92faed087789c1e5939e91f592584d0fc8a8405be5719c03b818eef7b78bc664"
     },
     {
       "path": "docs/notices-and-ai-use.md",
@@ -74,8 +74,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 8366,
-      "sha256": "e82c420d4b65a9415ab1080a0461aa82bfa78c3a2a4c4e8ddd167be589f99939"
+      "bytes": 8894,
+      "sha256": "e358f86a2d5dba8eb6b6733ed9140300372b6e2966657c59f35e6c0070ad229d"
     },
     {
       "path": "render.yaml",
@@ -99,8 +99,8 @@
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 162861,
-      "sha256": "9eb68f227c98864aa852e929765e374e95a31ada5c4e79622c2ca59cd02ed5f2"
+      "bytes": 164612,
+      "sha256": "b9f4f4205844ec81ade70efc51bda968c7d9594f28c24bc80243049417145233"
     },
     {
       "path": "scripts/check.mjs",
@@ -164,8 +164,8 @@
     },
     {
       "path": "server.mjs",
-      "bytes": 44867,
-      "sha256": "94a100575d77625917dd6e528a6789a79c40a636d8af4f1105da24e9c265fd13"
+      "bytes": 45360,
+      "sha256": "310406311a25b8bf849174207beb65b2fabdbc26b9aac2d5c9b28642ad038e0a"
     },
     {
       "path": "storage-remote.mjs",

@@ -558,13 +558,13 @@ const temporary = await mkdtemp(join(tmpdir(), 'tradeweave-check-'));
 await writeFile(join(temporary, 'store-data.json'), await readFile(new URL('../store-data.json', import.meta.url)));
 Object.assign(process.env, { ENV_FILE: join(temporary, 'absent.env'), DISABLE_LOCAL_EDITOR: '0', PORT: '0', HOST: '127.0.0.1', DATA_DIR: temporary, STORE_FILE: join(temporary, 'store-data.json'), MEDIA_DIR: join(temporary, 'media'), PAYPAL_CLIENT_ID: 'check-client', PAYPAL_CLIENT_SECRET: 'check-secret', AI_API_KEY: 'check-key', AI_MODEL: 'check-model', AI_API_URL: 'https://test.invalid/ai' });
 const realFetch = globalThis.fetch, remoteOrders = new Map(), captured = new Map(), requestIds = new Map(), captureRequestHistory = new Map();
-let created = 0, captureCalls = 0, captureMode = 'COMPLETED', createMode = 'OK', aiMode = 'OK', approvalMode = 'APPROVED', lastAiPayload, fxMode = 'INVALID', aiConnectAttempts = 0;
+let created = 0, captureCalls = 0, captureMode = 'COMPLETED', createMode = 'OK', aiMode = 'OK', approvalMode = 'APPROVED', lastAiPayload, fxMode = 'INVALID', aiConnectAttempts = 0, aiProviderAttempts = 0;
 let heldOrderId = null, heldStarted = null, releaseHeld = null;
 const remoteJson = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
 globalThis.fetch = async (url, options = {}) => {
   const target = String(url);
   if (target === 'https://api.frankfurter.dev/v2/providers/ecb/rate/usd/cny') return remoteJson({ date: '2026-10-23', base: 'USD', quote: 'CNY', rate: fxMode === 'INVALID' ? -6.67 : 6.67 });
-  if (target === 'https://test.invalid/ai' || target === 'https://openrouter.ai/api/v1/chat/completions') { lastAiPayload = JSON.parse(options.body); if (aiMode === 'TIMEOUT') throw new DOMException('Simulated timeout', 'TimeoutError'); if (aiMode === 'CONNECT_TIMEOUT_ONCE' && aiConnectAttempts++ === 0) { const error = new TypeError('fetch failed'); error.cause = Object.assign(new Error('connect timeout'), { code: 'UND_ERR_CONNECT_TIMEOUT' }); throw error; } if (aiMode === 'HTTP_ERROR') return remoteJson({ error: { message: 'SECRET_PROVIDER_DETAIL_MUST_NOT_LEAK' } }, 429); if (aiMode === 'EMPTY') return remoteJson({ choices: [] }); return remoteJson({ choices: [{ message: { content: 'Spot clean with a damp cloth.' } }] }); }
+  if (target === 'https://test.invalid/ai' || target === 'https://openrouter.ai/api/v1/chat/completions') { lastAiPayload = JSON.parse(options.body); const aiAttempt = aiProviderAttempts++; if (aiMode === 'TIMEOUT') throw new DOMException('Simulated timeout', 'TimeoutError'); if (aiMode === 'CONNECT_TIMEOUT_ONCE' && aiConnectAttempts++ === 0) { const error = new TypeError('fetch failed'); error.cause = Object.assign(new Error('connect timeout'), { code: 'UND_ERR_CONNECT_TIMEOUT' }); throw error; } if (aiMode === 'HTTP_502_ALWAYS' || aiMode === 'HTTP_502_ONCE' && aiAttempt === 0) return remoteJson({ error: { message: 'Temporary upstream failure' } }, 502); if (aiMode === 'HTTP_ERROR') return remoteJson({ error: { message: 'SECRET_PROVIDER_DETAIL_MUST_NOT_LEAK' } }, 429); if (aiMode === 'EMPTY') return remoteJson({ choices: [] }); return remoteJson({ choices: [{ message: { content: 'Spot clean with a damp cloth.' } }] }); }
   if (!target.startsWith('https://api-m.sandbox.paypal.com/')) throw new Error('Unexpected provider request');
   if (target.endsWith('/v1/oauth2/token')) return remoteJson({ access_token: 'stub-token' });
   if (target.endsWith('/v2/checkout/orders')) {
@@ -937,7 +937,7 @@ try {
   assert.equal((await request('/api/paypal/cancel', { orderId: replacement.id, checkoutToken: replacement.checkoutToken })).data.status, 'CANCELLED');
   approvalMode = 'APPROVED';
   assert.equal((await request('/api/paypal/capture', { orderId: expiring.id, checkoutToken: expiring.checkoutToken })).data.status, 'COMPLETED');
-  aiMode = 'TIMEOUT'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 502);
+  aiMode = 'TIMEOUT'; aiProviderAttempts = 0; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 502); assert.equal(aiProviderAttempts, 1, 'Ambiguous provider timeouts must not replay the request.');
   aiMode = 'CONNECT_TIMEOUT_ONCE'; aiConnectAttempts = 0; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200); assert.equal(aiConnectAttempts, 2, 'Only a pre-connect timeout is retried once.');
   aiMode = 'EMPTY'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 502);
   aiMode = 'HTTP_ERROR'; const providerFailure = await request('/api/assistant', { productId: tote.id, question: 'Care?' }); assert.equal(providerFailure.status, 502); assert.doesNotMatch(JSON.stringify(providerFailure.data), /SECRET_PROVIDER_DETAIL_MUST_NOT_LEAK/); assert.match(providerFailure.data.error, /temporarily unavailable/i);
@@ -951,6 +951,18 @@ try {
   process.env.AI_API_URL = 'https://openrouter.ai/api/v1/chat/completions'; process.env.AI_MODEL = 'openrouter/free';
   assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200);
   assert.equal(lastAiPayload.model, 'openrouter/free'); assert.deepEqual(lastAiPayload.provider.max_price, { prompt: 0, completion: 0 }); assert.equal(Object.hasOwn(lastAiPayload, 'reasoning_effort'), false, 'The dynamic free router must not force a reasoning mode that some providers reject.');
+  aiMode = 'HTTP_502_ONCE'; aiProviderAttempts = 0;
+  assert.equal((await request('/api/assistant', { productId: tote.id, question: 'What material is this tote made from?' })).status, 200, 'An explicit upstream HTTP 502 should get one bounded retry for arbitrary buyer questions.');
+  assert.equal(aiProviderAttempts, 2, 'Only one explicit upstream HTTP 502 is retried.');
+  assert.equal(JSON.parse(lastAiPayload.messages.at(-1).content).BUYER_QUESTION, 'What material is this tote made from?', 'The assistant must forward arbitrary buyer text rather than answer only suggested prompts.');
+  assert.deepEqual(lastAiPayload.provider.max_price, { prompt: 0, completion: 0 }, 'The retry must retain the zero-price cap.');
+  aiMode = 'HTTP_502_ALWAYS'; aiProviderAttempts = 0;
+  assert.equal((await request('/api/assistant', { productId: tote.id, question: 'What material is this tote made from?' })).status, 502, 'A persistent upstream 502 should still fail after the bounded retry.');
+  assert.equal(aiProviderAttempts, 2, 'Persistent 502 responses must stop after one retry.');
+  aiMode = 'HTTP_ERROR'; aiProviderAttempts = 0;
+  assert.equal((await request('/api/assistant', { productId: tote.id, question: 'What material is this tote made from?' })).status, 502, 'A 429 response must not be retried.');
+  assert.equal(aiProviderAttempts, 1, 'Rate-limit responses must not be replayed.');
+  aiMode = 'OK';
   process.env.AI_MODEL = 'sample/model:free'; assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 200); assert.equal(Object.hasOwn(lastAiPayload, 'reasoning_effort'), false);
   lastAiPayload = null; process.env.AI_MODEL = 'sample/paid-model';
   assert.equal((await request('/api/assistant', { productId: tote.id, question: 'Care?' })).status, 503); assert.equal(lastAiPayload, null, 'A paid OpenRouter model must be rejected before making a provider call.');
