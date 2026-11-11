@@ -189,6 +189,13 @@ function answerLanguageMatches(answer, locale) {
   if (locale === 'fr') return french && !spanish;
   return !/[\u3400-\u9fff\u3040-\u30ff]/.test(text) && !spanish && !french;
 }
+
+function plainAssistantAnswer(answer) {
+  return answer.trim()
+    .replace(/\*\*(.+?)\*\*/gs, '$1')
+    .replace(/__(.+?)__/gs, '$1')
+    .replace(/`([^`\n]+)`/g, '$1');
+}
 async function paypalToken() {
   const id = process.env.PAYPAL_CLIENT_ID, secret = process.env.PAYPAL_CLIENT_SECRET;
   if (!id || !secret) throw new HttpError(503, 'PayPal sandbox is not configured. Open the setup guide.');
@@ -505,9 +512,11 @@ export const server = createServer(async (req, res) => {
       } finally { aiInFlight--; }
       const answer = data.choices?.[0]?.message?.content;
       if (typeof answer !== 'string' || !answer.trim() || !answerLanguageMatches(answer.trim(), locale)) return fallbackAnswer();
+      const plainAnswer = plainAssistantAnswer(answer);
+      if (!plainAnswer) return fallbackAnswer();
       try { await storage.bump(localEditor(req) && req.headers['x-editor-token'] === editorToken ? 'previewAnswers' : 'buyerAnswers'); }
       catch { console.warn('Assistant answer metric could not be saved.'); }
-      return send(res, 200, { answer: answer.trim(), fallback: false });
+      return send(res, 200, { answer: plainAnswer, fallback: false });
     }
     if (req.method === 'POST' && url.pathname === '/api/cart/quote') {
       const items = await quoteCart(await bodyJson(req));
