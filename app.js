@@ -10,12 +10,13 @@ const factFields = [
   ['shippingPrice', 'Shipping price', '运费'], ['arrivalDateGuarantee', 'Arrival guarantee', '送达日期承诺']
 ];
 const productLanguages = [['en', 'English', 'en'], ['zh', '中文', 'zh-CN'], ['ja', '日本語', 'ja'], ['es', 'Español', 'es'], ['fr', 'Français', 'fr']];
+const assistantReplyLanguages = ['English', 'Chinese', 'Japanese', 'Spanish', 'French'];
 let saved = {};
 try { saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}') || {}; } catch {}
 const state = {
   selectedProductId: typeof saved.selectedProductId === 'string' ? saved.selectedProductId : null,
   language: saved.language === 'Chinese' ? 'Chinese' : 'English',
-  replyLanguage: saved.replyLanguage === 'Chinese' ? 'Chinese' : 'English',
+  replyLanguage: assistantReplyLanguages.includes(saved.replyLanguage) ? saved.replyLanguage : 'English',
   history: Array.isArray(saved.history) ? saved.history.filter(m => m && ['user', 'assistant'].includes(m.role) && typeof m.text === 'string').slice(-30) : [],
   orders: [],
   metrics: { answers: 0, checkouts: 0, completed: 0 },
@@ -125,17 +126,17 @@ function renderActivity() {
 }
 function renderReadiness() {
   const root = $('#readiness-list'); root.replaceChildren();
-  const aiStatusCopy = aiProviderState === 'responded' ? 'A live request responded in this session' : aiProviderState === 'failed' ? 'The last request failed · check the connection and retry' : 'Credentials set · live service not checked';
+  const aiStatusCopy = aiProviderState === 'responded' ? 'A live model responded in this session' : aiProviderState === 'fallback' ? 'Grounded answers remain available if the live model is offline' : aiProviderState === 'failed' ? 'The last request could not be completed' : config.aiReady ? 'Seller-fact answers are ready · live model not checked' : 'Seller-fact answers are ready · live model optional';
   const items = [
     ['Product story', product ? suppliedFacts() + ' facts supplied · ' + (factFields.length - suppliedFacts()) + ' still to confirm' : 'Product facts could not be loaded', Boolean(product), 'facts', Boolean(product)],
-    ['Product assistant', config.aiReady ? aiStatusCopy : 'Connect a model to answer buyer questions', config.aiReady, 'assistant', config.aiReady && aiProviderState === 'responded'],
+    ['Product assistant', aiStatusCopy, Boolean(product), 'assistant', Boolean(product) && ['responded', 'fallback'].includes(aiProviderState)],
     ['PayPal checkout', config.paypalReady ? 'Sandbox credentials set · checkout not tested this session' : 'Add sandbox credentials to try checkout', config.paypalReady, 'checkout', false]
   ];
   items.forEach(([title, copy, configured, action, confirmed]) => {
     const ready = confirmed;
     const row = element('div', 'readiness-row'), mark = element('span', ready ? 'readiness-mark ready' : 'readiness-mark');
     mark.innerHTML = ready ? '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 3 3 7-7"/></svg>' : '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="M10 7v4m0 2h.01"/></svg>';
-    mark.setAttribute('aria-label', ready ? action === 'assistant' ? 'Live response received this session' : 'Configured' : configured ? action === 'assistant' ? 'Credentials configured, live response not verified' : 'Sandbox credentials configured, live checkout not verified' : 'Setup needed');
+    mark.setAttribute('aria-label', ready ? action === 'assistant' ? aiProviderState === 'fallback' ? 'Seller-fact fallback answered this session' : 'Live response received this session' : 'Configured' : configured ? action === 'assistant' ? 'Seller-fact answers available; live model not verified' : 'Sandbox credentials configured, live checkout not verified' : 'Setup needed');
     const words = element('div'); words.append(element('strong', '', title), element('p', '', copy));
     const button = element('button', 'text-button', action === 'facts' ? 'Review' : configured ? 'Open' : 'Set up'); button.type = 'button';
     button.addEventListener('click', () => {
@@ -149,8 +150,8 @@ function renderReadiness() {
   const completed = state.metrics.completed;
   for (const [id, value] of [['overview-answers', state.metrics.answers], ['overview-orders', completed], ['overview-facts', product ? suppliedFacts() + '/' + factFields.length : '—'], ['insight-answers', state.metrics.answers], ['insight-checkouts', state.metrics.checkouts], ['insight-orders', completed]]) $('#' + id).textContent = value;
   $('#help-connections').replaceChildren();
-  const aiSetup = config.aiReady ? aiProviderState === 'responded' ? 'Responded this session' : aiProviderState === 'failed' ? 'Last request failed' : 'Credentials set · not tested' : 'Not configured';
-  for (const [label, status, confirmed] of [['AI model', aiSetup, aiProviderState === 'responded'], ['PayPal sandbox', config.paypalReady ? 'Credentials set · checkout not tested' : 'Not configured', false]]) {
+  const aiSetup = aiProviderState === 'responded' ? 'Live model responded this session' : aiProviderState === 'fallback' ? 'Answered from seller facts' : config.aiReady ? 'Seller-fact fallback available · live model not tested' : 'Seller-fact answers available · no live model configured';
+  for (const [label, status, confirmed] of [['Product assistant', aiSetup, ['responded', 'fallback'].includes(aiProviderState)], ['PayPal sandbox', config.paypalReady ? 'Credentials set · checkout not tested' : 'Not configured', false]]) {
     const row = element('div'); row.append(element('span', '', label), element('strong', confirmed ? 'status-good' : 'status-pending', status)); $('#help-connections').append(row);
   }
 }
@@ -335,10 +336,10 @@ function addMessage(role, text, isError = false) {
   state.history.push({ role, text, isError }); state.history = state.history.slice(-30); persist(); renderConversation();
 }
 function renderAssistantStatus(text) {
-  $('#assistant-status').classList.toggle('connected', config.aiReady && aiProviderState === 'responded' && !assistantBusy);
-  $('#assistant-status').classList.toggle('unavailable', config.aiReady && aiProviderState === 'failed' && !assistantBusy);
+  $('#assistant-status').classList.toggle('connected', ['responded', 'fallback'].includes(aiProviderState) && !assistantBusy);
+  $('#assistant-status').classList.toggle('unavailable', aiProviderState === 'failed' && !assistantBusy);
   $('#assistant-status').classList.toggle('loading', assistantBusy);
-  $('#assistant-status-text').textContent = text || (!config.aiReady ? 'AI setup needed · open the setup guide to connect a model' : aiProviderState === 'responded' ? 'Provider responded · seller facts supplied with each question' : aiProviderState === 'failed' ? 'Last request failed · your question is saved; retry when available' : 'Credentials set · live provider not checked');
+  $('#assistant-status-text').textContent = text || (aiProviderState === 'fallback' ? 'Answered from seller facts · the live model was unavailable' : aiProviderState === 'responded' ? 'Live model responded · seller facts supplied with each question' : aiProviderState === 'failed' ? 'The answer could not be loaded · your question is saved; retry when available' : config.aiReady ? 'Seller-fact answers are ready · live model not checked' : 'Seller-fact answers are ready · live model optional');
 }
 async function askAssistant(question) {
   if (assistantBusy || !question.trim()) return;
@@ -346,16 +347,12 @@ async function askAssistant(question) {
   const history = state.history.filter(m => !m.isError).slice(-10).map(m => ({ role: m.role, content: m.text.slice(0, 1800) }));
   const replyLanguage = state.replyLanguage;
   addMessage('user', question);
-  if (!config.aiReady) {
-    addMessage('assistant', 'The live assistant is not connected yet. Open Setup guide to connect an AI model, then try your question again.', true);
-    renderAssistantStatus(); return;
-  }
   assistantBusy = true; $('#chat-form').classList.add('loading'); $('#chat-form').setAttribute('aria-busy', 'true');
   $$('#chat-form button, .suggestion-chip, #clear-chat, #reply-language').forEach(button => button.disabled = true);
   renderAssistantStatus('Reading the product facts…');
   try {
     const data = await api('/api/assistant', { method: 'POST', headers: { 'x-editor-token': config.editorToken }, body: JSON.stringify({ productId: product.id, question, language: replyLanguage, history }) });
-    aiProviderState = 'responded'; addMessage('assistant', data.answer); persist(); logActivity('The assistant answered a product question.', 'success'); renderReadiness();
+    aiProviderState = data.fallback ? 'fallback' : 'responded'; addMessage('assistant', data.answer); persist(); logActivity(data.fallback ? 'The assistant answered from seller facts.' : 'The assistant answered a product question.', 'success'); renderReadiness();
   } catch (error) {
     aiProviderState = 'failed'; addMessage('assistant', error.message + ' Your question is saved here; you can try it again.', true);
     logActivity('An assistant request needs another try.', 'warning'); renderReadiness();

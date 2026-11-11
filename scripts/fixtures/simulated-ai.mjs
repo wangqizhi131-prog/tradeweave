@@ -88,7 +88,7 @@ const answers = {
 export function simulatedAssistantResponse(rawBody) {
   let messages = [];
   try { messages = JSON.parse(rawBody || '{}').messages || []; } catch {}
-  const requested = messages.find(message => message.role === 'system')?.content?.match(/Answer in (English|Chinese|Japanese|Spanish|French)\./i)?.[1];
+  const requested = messages.find(message => message.role === 'system')?.content?.match(/Answer in (English|Chinese|Japanese|Spanish|French)(?: only)?[,.]/i)?.[1];
   const language = ({ English: 'en', Chinese: 'zh-CN', Japanese: 'ja', Spanish: 'es', French: 'fr' })[requested] || 'en';
   const lastUserContent = String([...messages].reverse().find(message => message.role === 'user')?.content || '');
   let buyerQuestion = lastUserContent;

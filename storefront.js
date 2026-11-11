@@ -286,8 +286,8 @@ function renderChat() {
   $('#shop-new-chat').disabled = aiBusy || !chatHistory().length;
 }
 function aiStatus(text) {
-  $('#shop-ai-status').textContent = text || t(config.aiReady ? 'aiSellerFacts' : 'aiUnavailable');
-  $$('#shop-chat-form input, #shop-chat-form button, .shop-prompts button').forEach(control => control.disabled = aiBusy || !config.aiReady || !product);
+  $('#shop-ai-status').textContent = text || t('aiSellerFacts');
+  $$('#shop-chat-form input, #shop-chat-form button, .shop-prompts button').forEach(control => control.disabled = aiBusy || !product);
   $('#shop-reply-language').disabled = aiBusy; $('#shop-chat-form').setAttribute('aria-busy', String(aiBusy));
 }
 function checkoutInstruction() {
@@ -367,7 +367,7 @@ function answerEvidence(question, item = product, variant = selectedVariant, ans
   return evidence;
 }
 async function ask(question) {
-  if (aiBusy || !product || !config.aiReady || !question.trim()) return;
+  if (aiBusy || !product || !question.trim()) return;
   const history = chatHistory().filter(m => !m.isError).slice(-10).map(m => ({ role: m.role, content: m.text.slice(0, 1800) }));
   const contextId = product.id, contextProduct = product, contextVariant = selectedVariant, optionId = selectedVariant?.id, answerLanguage = state.replyLanguage;
   const evidence = answerEvidence(question, contextProduct, contextVariant, answerLanguage);

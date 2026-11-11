@@ -1,81 +1,81 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-11T04:25:34.4245032Z",
+  "createdAt": "2026-11-11T05:09:53.254Z",
   "files": [
     {
       "path": ".env.example",
-      "bytes": 1095,
-      "sha256": "792ee621afd58b24c48666a33544dae5bae2cc8a25f924d3b003ac4f46ff8da9"
+      "bytes": 1072,
+      "sha256": "b2e21de3f2924f436ff419ce3531c2a216d125267d97b25d9f2d4a5d1ac84b90"
     },
     {
       "path": ".gitignore",
-      "bytes": 228,
-      "sha256": "b8cf571cd348074acf762be418f0bd523e64ba4c00a9a3ce417bdd5d22cd3975"
+      "bytes": 212,
+      "sha256": "bfc9ad2f368958b8ce99b43436c168e0bffee11e073b86b4f4c1f5c7be454829"
     },
     {
       "path": "app.js",
-      "bytes": 60039,
-      "sha256": "b7adc84fee265c297c0c1c6b21fd7dd3527e70bbae4181a769e4ad8d9b7558ea"
+      "bytes": 60458,
+      "sha256": "8f2622fec28de954ae09fa667014c9c666b73bf7aef769064c451a5ec83877d6"
     },
     {
       "path": "buyer-locales.js",
-      "bytes": 64662,
-      "sha256": "acef0994979a0e9e50afe0538203c794aa5968415da7c8ba53cb38aed36ba735"
+      "bytes": 64533,
+      "sha256": "499664870b9a6768f01368f797dc228c766cb41b0ce8bf6fa3f1747eb839b210"
     },
     {
       "path": "catalog.mjs",
-      "bytes": 5636,
-      "sha256": "eb082782c889694df1162a36a2878ded3c9fc00c37183d5006a3bc41142399be"
+      "bytes": 5562,
+      "sha256": "02038a5956b3522dd350b9b7bd07b539cbdb23fd6e5f0c350ce939961caefb16"
     },
     {
       "path": "dialog-focus.js",
-      "bytes": 885,
-      "sha256": "0bc9ab4c476272c215566525a38819553d9e962b2c3fe5e4317f7b6fb7d856c0"
+      "bytes": 873,
+      "sha256": "25c20715aa48b9e1bc51ac0f47442381ac8889edd6dd493e79855517100bbf84"
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 8234,
-      "sha256": "2a41cf9d7a69491c57e778906c1f9e9e930fc7de2823a3b57fa8aac1887a6f25"
+      "bytes": 8623,
+      "sha256": "c67509e0f75069f8d2f1881cab93792f4fd44d7b6e7395923aa3cf9cf4243e02"
     },
     {
       "path": "docs/notices-and-ai-use.md",
-      "bytes": 2357,
-      "sha256": "bd3e8d02273ad03cb7df3f6ef63f8896f6e1a131602424d4441a2cbbe5793c46"
+      "bytes": 2449,
+      "sha256": "113891bb51c7c3a565b4b67d93ec23c08cd2b1d1ecc919b472a7b85b464af74d"
     },
     {
       "path": "index.html",
-      "bytes": 29906,
-      "sha256": "7c791a866da17d5752ec118b592f829a29524e107e814b75ff26a4450ea291d9"
+      "bytes": 30031,
+      "sha256": "64367ba4d05847c9984655716d2a9a7f7b1f8f4418abdd669e3697188aeca7b9"
     },
     {
       "path": "integrations/astropods/agent/bridge.mjs",
-      "bytes": 5041,
-      "sha256": "0cd8f433695cf96813e442d47404a855077d6e2b852447d599af878684388879"
+      "bytes": 4970,
+      "sha256": "e2d574dd11c7e7a608cf753ee2cadb8a128cddfc371aa36f2da05d4b134a0b58"
     },
     {
       "path": "LICENSE",
-      "bytes": 1101,
-      "sha256": "2d1766443582f5b646f53eed0f400602d8d357bb02d4119c26fb045313d0ab8a"
+      "bytes": 1080,
+      "sha256": "3afabdec7dea024608fd82edbd082e636fdb093e85579d0d997006a24ca976b4"
     },
     {
       "path": "money-format.js",
-      "bytes": 1670,
-      "sha256": "cd5c3ec86e5f317293a9b1eeb267f63cf1d9dbe33bb7a5f8f4336fec7577ae05"
+      "bytes": 1629,
+      "sha256": "01a435fe20719486bfb9a3c86fdf18a911f15f8f030762dd785ca146fba414e9"
     },
     {
       "path": "package-lock.json",
-      "bytes": 9877,
-      "sha256": "cfaf776cc59ad90a263d46694d54e12678062941eb620ee24949ee0806b70478"
+      "bytes": 9596,
+      "sha256": "d19abf0495b6b37c85c4ba9db5e1a0264436a6cc715205d3ae4a2d1cdabc271b"
     },
     {
       "path": "package.json",
-      "bytes": 415,
-      "sha256": "10bf0d58b85285292496f63e8838990e199a580564c9b7056c6fb2497e0200be"
+      "bytes": 398,
+      "sha256": "6296b6c5f57519d3eef3c6e579fffe0a257df019a1923621ebe90d0ddc3fc605"
     },
     {
       "path": "README.md",
-      "bytes": 9115,
-      "sha256": "0c0807d94028f67dcca2ae71e92c17e3d1b6281a2faceecbdb709a852790774a"
+      "bytes": 9640,
+      "sha256": "a412efbf4074dfd572d1eadbb855257836a7e27c652814dd79fdaf7f114f1d8e"
     },
     {
       "path": "render.yaml",
@@ -84,23 +84,23 @@
     },
     {
       "path": "scripts/ai-behavior-check.mjs",
-      "bytes": 37189,
-      "sha256": "5beffbafacbcd63be916680c1d0af4aca12775655a3e5547964730983acddd37"
+      "bytes": 36887,
+      "sha256": "4875ff44afb623aa5a14f63fcf0fc7bb76ffa8d39f8874de07d599ef5362596f"
     },
     {
       "path": "scripts/astropods-check.mjs",
-      "bytes": 5388,
-      "sha256": "c3294851b6b75ef2b5a8966108e23b44490ae48317d6165c4627237c4725039d"
+      "bytes": 5320,
+      "sha256": "f830f35913915fa1617633e7f29d54cfb8be430b6701a874d256b0443a1b603e"
     },
     {
       "path": "scripts/backup.mjs",
-      "bytes": 2894,
-      "sha256": "1cbe4012c3665405f36c197e2a7c6706b5270c386acb8f69e81adf4c36238e8a"
+      "bytes": 2855,
+      "sha256": "e6f5ba12df451e4ab866ffbb4e303a29d498513f26b0ac889f856a3e2c62751d"
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 166507,
-      "sha256": "1d47f5a9e9a8ba863ce92ebee7fd3bcc78b25229cf6486f8bf4bbc1ba387b4cd"
+      "bytes": 170541,
+      "sha256": "9f559c4561e91cf39d68e1fde431be28472df5f131a6c63550d04b1d22f390c7"
     },
     {
       "path": "scripts/check.mjs",
@@ -109,13 +109,13 @@
     },
     {
       "path": "scripts/fixtures/paypal-ui.js",
-      "bytes": 3923,
-      "sha256": "5ecc414476a4cf50403a7b93e4ae1c765cd48d9c139fd75b2bb2377a79226148"
+      "bytes": 3887,
+      "sha256": "e8112c0d66e43cce8c9643a3c1458b90b35ec18edb06fcd1db0d469d8271c81e"
     },
     {
       "path": "scripts/fixtures/simulated-ai.mjs",
-      "bytes": 22985,
-      "sha256": "9e37bb695f063a7f4535e4b1d410087269a382e078b59d93b81ed8ea958ace2d"
+      "bytes": 22751,
+      "sha256": "87e970853c962331452230114276bfc138555f32f2f714969d3b7eca33665213"
     },
     {
       "path": "scripts/fixtures/upload-check.png",
@@ -124,8 +124,8 @@
     },
     {
       "path": "scripts/remote-storage-check.mjs",
-      "bytes": 12459,
-      "sha256": "eb8d9cddb36c82f427b17391c3ba7843d3f1a6af529cf5c025219221894c568b"
+      "bytes": 12319,
+      "sha256": "db78a6f02321a8eb51c1c9175c54e4fd0f87d1008f83373431182d95b13cbf95"
     },
     {
       "path": "scripts/ui-fixture.mjs",
@@ -164,23 +164,23 @@
     },
     {
       "path": "server.mjs",
-      "bytes": 49851,
-      "sha256": "cbab12fd5782105698828b422290a0b9936b233f5b8e2773b48f0c15a483617b"
+      "bytes": 61878,
+      "sha256": "95ad902e8bbaeafe9a5ac2b9d220cf1325efc170d44747946cac63dc03c9bf0b"
     },
     {
       "path": "storage-remote.mjs",
-      "bytes": 13417,
-      "sha256": "ba9573c7b7c472bf4eb4933fa91f0f58bcb7750d329d5ec1076d595f0e91d5a4"
+      "bytes": 13319,
+      "sha256": "2830f19e71993152ddf44f3691b0def97b7bac1938cd60cae2a833240d3769aa"
     },
     {
       "path": "storage.mjs",
-      "bytes": 12883,
-      "sha256": "821292cb4c0a5c056078dffd5141ebaf8d525c203de5c325d7a135a2eb39053e"
+      "bytes": 12797,
+      "sha256": "745c1c79289d49bd751715f671506718e4f20987b654517e8d2210058bc99a56"
     },
     {
       "path": "store-data.json",
-      "bytes": 12528,
-      "sha256": "5a21247467426d14836060d080421533f84fae158c55ffab055dc06147027443"
+      "bytes": 12200,
+      "sha256": "95b9f0fcb34be5418ac9d7cf599fa078ae4326f7a12d746842fb0b8fcb2e184b"
     },
     {
       "path": "storefront.css",
@@ -190,12 +190,12 @@
     {
       "path": "storefront.html",
       "bytes": 15863,
-      "sha256": "dac25aaecab6c82250a25dcbe7ebeaac63bc49c8f03a3aee9e388d5085f68f08"
+      "sha256": "2c1ac0e3ca7365b85b6339987f9cd578176f31c9f2c0b6854c4225b078455799"
     },
     {
       "path": "storefront.js",
-      "bytes": 80651,
-      "sha256": "ecff39ecc6969253ce88b18d71cb4e9e3463d438df946257171bc57ce2f4efd1"
+      "bytes": 80577,
+      "sha256": "176e0acc4b4e4dac1e9f731468fe65eb839cce3b95a1cb46defc4c57b2103057"
     },
     {
       "path": "styles.css",
