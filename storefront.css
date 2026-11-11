@@ -117,6 +117,15 @@
 /* Give buyer quantity controls a comfortable touch target without changing workspace controls. */
 .shop-body .qty-stepper{height:46px}
 .shop-body .qty-stepper button{width:44px;min-width:44px;height:44px;min-height:44px}
+.shop-account-trigger{width:44px;height:44px;flex-shrink:0;display:grid;place-items:center;padding:0;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--green);transition:background-color 140ms,border-color 140ms,transform 100ms}
+.shop-account-trigger:hover,.shop-account-trigger.signed-in{background:#edf1e6;border-color:#b9c8b1}
+.shop-account-trigger:active{transform:scale(.96)}
+.shop-account-trigger .ui-icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+.shop-account-trigger>span{font:600 12px var(--sans)}
+.account-dialog{width:min(460px,calc(100vw - 40px));max-height:calc(100dvh - 40px)}
+.account-dialog>.account-content{padding:6px 25px 25px;overflow:auto}
+.account-dialog .account-profile{padding-bottom:25px}
+@media(max-width:700px){.shop-account-trigger{width:42px;height:42px}.account-dialog{width:100vw;max-width:none;max-height:100dvh;margin:0;border-radius:0}.account-dialog[open]{height:100dvh}.account-dialog>.account-content{padding:5px 20px max(24px,env(safe-area-inset-bottom))}}
 
 /* Keep the empty assistant useful without taking over a phone screen. */
 #shop-chat:not(.has-conversation){height:min(560px,calc(100dvh - 40px))}

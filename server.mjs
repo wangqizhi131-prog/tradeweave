@@ -198,10 +198,10 @@ function plainAssistantAnswer(answer) {
 }
 async function paypalToken() {
   const id = process.env.PAYPAL_CLIENT_ID, secret = process.env.PAYPAL_CLIENT_SECRET;
-  if (!id || !secret) throw new HttpError(503, 'PayPal sandbox is not configured. Open the setup guide.');
+  if (!id || !secret) throw new HttpError(503, 'PayPal is not configured. Open the setup guide.');
   const auth = Buffer.from(id + ':' + secret).toString('base64');
   const data = await remoteJson(paypalBase + '/v1/oauth2/token', { method: 'POST', headers: { authorization: 'Basic ' + auth, 'content-type': 'application/x-www-form-urlencoded' }, body: 'grant_type=client_credentials' });
-  if (!data.access_token) throw new HttpError(502, 'PayPal did not return a sandbox access token.');
+  if (!data.access_token) throw new HttpError(502, 'PayPal did not return an access token.');
   return data.access_token;
 }
 function buyerOwner(req, res, create = true) {
@@ -223,7 +223,7 @@ function orderView(order, buyer = false) {
 function receiptView(order) {
   const pick = (value, keys) => Object.fromEntries(keys.filter(key => value?.[key] !== undefined).map(key => [key, value[key]]));
   return {
-    environment: 'PayPal sandbox', schemaVersion: 1,
+    environment: 'PayPal', schemaVersion: 1,
     ...pick(order, ['orderId', 'captureId', 'productName', 'quantity', 'amount', 'currency', 'status', 'fulfillment', 'tracking', 'createdAt', 'updatedAt']),
     orderId: order.orderId || 'local-' + order.id,
     items: order.items.map(item => pick(item, ['productId', 'variantId', 'name', 'price', 'quantity'])),
@@ -266,7 +266,7 @@ async function captureOrder(order, reconcileOnly = false) {
   if (destination?.address) {
     const shipping = { name: typeof destination.name?.full_name === 'string' ? destination.name.full_name.slice(0, 300) : '', address: {} };
     for (const field of ['address_line_1', 'address_line_2', 'admin_area_2', 'admin_area_1', 'postal_code', 'country_code']) if (typeof destination.address[field] === 'string') shipping.address[field] = destination.address[field].slice(0, 300);
-    if (Object.keys(shipping.address).length && JSON.stringify(shipping) !== JSON.stringify(order.shipping)) await storage.update(order.id, { shipping }, 'Sandbox shipping details returned by PayPal.');
+    if (Object.keys(shipping.address).length && JSON.stringify(shipping) !== JSON.stringify(order.shipping)) await storage.update(order.id, { shipping }, 'Shipping details returned by PayPal.');
   }
   let result = captureResult(data, order);
   if (result) return storage.complete(order.id, result);
@@ -295,9 +295,9 @@ async function createOrder(order) {
       amount: { currency_code: 'USD', value: order.amount, breakdown: { item_total: { currency_code: 'USD', value: order.amount } } },
       items: order.items.map(item => ({ name: item.name.slice(0, 127), sku: item.sku || undefined, unit_amount: { currency_code: 'USD', value: item.price }, quantity: String(item.quantity), category: 'PHYSICAL_GOODS' }))
     }], application_context: { brand_name: store.shop.name, shipping_preference: 'GET_FROM_FILE', user_action: 'PAY_NOW' } }) });
-    if (typeof data.id !== 'string' || !/^[A-Za-z0-9_-]{8,40}$/.test(data.id)) throw new HttpError(502, 'PayPal did not return a valid sandbox order reference.');
+    if (typeof data.id !== 'string' || !/^[A-Za-z0-9_-]{8,40}$/.test(data.id)) throw new HttpError(502, 'PayPal did not return a valid order reference.');
     if (['CANCELLED', 'FAILED'].includes((await storage.get(order.id)).status)) throw new HttpError(409, 'This checkout was closed while the request was running. Start a new checkout.');
-    return storage.update(order.id, { orderId: data.id, status: 'CREATED' }, 'PayPal sandbox order created.');
+    return storage.update(order.id, { orderId: data.id, status: 'CREATED' }, 'PayPal order created.');
   } catch (error) { if (error.status === 503) await storage.release(order.id, 'FAILED'); else await storage.update(order.id, { lastError: error.message }, 'Order creation needs another try.'); throw error; }
 }
 

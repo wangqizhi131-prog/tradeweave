@@ -127,6 +127,46 @@ body{overflow-wrap:anywhere}input,select,textarea{min-width:0}.inbox-row strong{
 .price-currency-symbol,.shop-price-currency,.price-currency-code{font:inherit;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1,"onum" 0;letter-spacing:inherit}
 .price-amount{display:inline-block;vertical-align:baseline;font:inherit;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1,"onum" 0;font-synthesis:none;line-height:inherit;letter-spacing:inherit}
 
+/* Account shells share one quiet, editorial treatment across both storefronts. */
+.account-kicker{display:block;margin:0 0 8px;color:var(--muted);font:500 10px/1.2 "DM Mono",monospace;letter-spacing:.12em;text-transform:uppercase}
+.account-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin-bottom:20px;border:1px solid var(--line);border-radius:9px;background:#f4f4ed}
+.account-tabs button{min-height:39px;border:0;border-radius:6px;background:transparent;color:var(--muted);font:500 13px var(--sans)}
+.account-tabs button[aria-pressed="true"]{background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgb(27 42 34 / 10%)}
+.account-form{display:grid;gap:14px;margin:0}
+.account-form label{display:grid;gap:7px;color:var(--muted);font-size:12px}
+.account-form input{width:100%;min-height:46px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font:400 14px var(--sans)}
+.account-form input:focus{border-color:var(--green);outline:3px solid #49765d2b}
+.account-continue{width:100%;justify-content:center;margin-top:3px}
+.account-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:11px}
+.account-divider::before,.account-divider::after{content:"";height:1px;flex:1;background:var(--line)}
+.google-button{width:100%;min-height:45px;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink);font:500 13px var(--sans)}
+.google-button:hover{background:#f4f5ef}
+.google-mark{width:20px;height:20px;display:grid;place-items:center;border:1px solid #d8d8d1;border-radius:50%;background:#fff;color:#4285f4;font:700 13px Arial,sans-serif}
+.account-profile{display:grid;gap:17px}
+.account-profile-heading,.maker-account-identity{display:flex;align-items:center;gap:13px;padding:12px 0 17px;border-bottom:1px solid var(--line)}
+.account-avatar{width:52px;height:52px;display:grid;place-items:center;border-radius:50%;background:#e6eadf;color:var(--green);font:500 17px var(--serif)}
+.account-profile-heading>div,.maker-account-identity>div{min-width:0;display:grid;gap:5px}
+.account-profile-heading strong,.maker-account-identity strong{font-size:14px;font-weight:600;overflow-wrap:anywhere}
+.account-profile-heading p,.maker-account-identity span:not(.avatar){margin:0;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.account-summary{display:grid;grid-template-columns:1fr 1.4fr;gap:11px 16px;margin:0;font-size:13px}
+.account-summary dt{color:var(--muted)}.account-summary dd{margin:0;overflow-wrap:anywhere}
+.account-footer-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:2px;padding-top:14px;border-top:1px solid var(--line)}
+.seller-account-dialog{width:min(520px,calc(100vw - 32px))}
+.seller-account-dialog .account-footer-actions{margin-top:22px}
+.seller-account-dialog .seller-account-actions{display:grid;gap:9px;margin-top:18px}
+.seller-account-dialog .seller-account-actions>*{width:100%;justify-content:center}
+.seller-account-dialog .account-back{margin-top:14px}
+.profile-button{min-height:62px;padding:8px;border:0;border-radius:12px;transition:background-color 140ms ease,transform 100ms ease}
+.profile-button:hover{background:#e4e8de}
+.profile-button:focus-visible{outline:3px solid #49765d55;outline-offset:2px}
+.profile-copy{min-width:0;flex:1;gap:3px}
+.profile-button strong{font-size:13px}
+.profile-button small{color:var(--muted);font-size:11px;line-height:1.3}
+.profile-button .avatar{width:42px;height:42px;border:1px solid #dac7b2;background:linear-gradient(145deg,#f0e2d0 2%,#dbc6ad 100%);box-shadow:0 2px 0 #bca58d,0 5px 9px #513d281c,inset 0 1px 0 #fff9;transition:transform 140ms ease,box-shadow 140ms ease}
+.profile-button:hover .avatar{transform:translateY(-2px);box-shadow:0 4px 0 #bca58d,0 7px 11px #513d2828,inset 0 1px 0 #fff9}
+.profile-button:active .avatar{transform:translateY(1px);box-shadow:0 1px 0 #bca58d,0 2px 4px #513d281a,inset 0 1px 0 #fff9}
+@media(max-width:600px){.seller-account-dialog{width:calc(100vw - 24px);padding:24px}.account-footer-actions{gap:7px}.account-footer-actions button{font-size:12px}.profile-button{width:40px;height:40px;min-height:40px;padding:0;border:0;border-radius:50%}.profile-button .avatar{width:32px;height:32px}}
+
 @media(max-width:600px){.nav-item>span:not(.nav-count){white-space:nowrap}}
 @media(max-width:360px){.nav-item>span:not(.nav-count){font-size:11px;letter-spacing:-.03em}}
 @media(max-width:360px){.nav-item[data-page-link="assistant"]>span:not(.nav-count){font-size:11px;letter-spacing:-.04em}}

@@ -159,7 +159,7 @@ assert.match(merchantApp, /Seller-fact answers are ready · live model optional/
 assert.match(merchantApp, /aiProviderState === 'responded' \? 'Live model responded/, 'The workspace must distinguish a live model answer.');
 assert.match(merchantApp, /aiProviderState === 'fallback' \? 'Answered from seller facts'/, 'The workspace must distinguish a grounded fallback answer from a model response.');
 assert.match(merchantApp, /classList\.toggle\('connected', \['responded', 'fallback'\]\.includes\(aiProviderState\)/, 'A grounded fallback must be represented as a successful assistant answer.');
-assert.ok(merchantApp.includes('Sandbox credentials set · checkout not tested this session'), 'Sandbox credentials must not imply a live checkout was verified.');
+assert.ok(merchantApp.includes('Checkout credentials set · not tested this session'), 'Configured payment credentials must not imply a checkout was verified.');
 assert.ok(merchantApp.includes('Seller-fact answers are ready · live model not checked'), 'The top-level status must distinguish grounded answers from unverified live provider status.');
 assert.ok(merchantApp.includes("aiProviderState = data.fallback ? 'fallback' : 'responded';"), 'The workspace must report whether a response came from the model or the grounded fallback.');
 assert.match(merchantApp, /assistantReplyLanguages = \['English', 'Chinese', 'Japanese', 'Spanish', 'French'\]/, 'The maker assistant must offer the same five reply languages as the buyer assistant.');
@@ -346,14 +346,14 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
   const html = await readFile(new URL('../' + htmlName, import.meta.url), 'utf8'), code = await readFile(new URL('../' + scriptName, import.meta.url), 'utf8');
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
   assert.ok(html.includes('/dialog-focus.js'), htmlName + ': shared dialog keyboard behavior must load.');
-  assert.ok(html.includes('/styles.css?v=6.30'), htmlName + ': shared interface, price typography and narrow navigation text updates must bypass cached CSS.');
+  assert.ok(html.includes('/styles.css?v=6.33'), htmlName + ': shared interface, price typography and narrow navigation text updates must bypass cached CSS.');
   assert.ok(html.includes('/money-format.js?v=2'), htmlName + ': both apps must share the tested USD and localized number formatter.');
   if (scriptName === 'app.js') assert.match(html, /<b id="fact-price">\$68\.00 USD<\/b>/, 'The no-JavaScript product facts fallback must use the same unambiguous USD marker.');
   assert.match(await readFile(new URL('../styles.css', import.meta.url), 'utf8'), /html:has\(dialog\[open\]\),body:has\(dialog\[open\]\)\{overflow:hidden\}/, 'An open workspace dialog must lock document and body scrolling so background copy cannot move into view.');
-  if (scriptName === 'app.js') { assert.ok(html.includes('/app.js?v=workspace-6.15'), 'Merchant UI changes must bypass cached JavaScript.'); assert.ok(html.includes('class="live-dot pending"'), 'The workspace must default to an unverified provider indicator before credentials load.'); assert.match(html, /Setup status confirms only that provider credentials are configured; it does not confirm current availability\./, 'Provider configuration readiness must not be presented as proof of live service availability.'); assert.doesNotMatch(html, /a completed sandbox capture are still needed to verify the integrations/i, 'The workspace guide must not contradict the known completed Sandbox checkout evidence.'); }
+  if (scriptName === 'app.js') { assert.ok(html.includes('/app.js?v=workspace-6.19'), 'Merchant UI changes must bypass cached JavaScript.'); assert.ok(html.includes('class="live-dot pending"'), 'The workspace must default to an unverified provider indicator before credentials load.'); assert.match(html, /Setup status confirms only that provider credentials are configured; it does not confirm current availability\./, 'Provider configuration readiness must not be presented as proof of live service availability.'); assert.doesNotMatch(html, /a completed sandbox capture are still needed to verify the integrations/i, 'The workspace guide must not contradict the known completed Sandbox checkout evidence.'); }
   if (scriptName === 'storefront.js') {
-    assert.match(html, /buyer-locales\.js\?v=17[\s\S]*?money-format\.js\?v=2[\s\S]*?storefront\.js\?v=6\.70/, 'The storefront must load fresh locale metadata, shared price formatting and current buyer UI code.');
-    assert.ok(html.includes('/storefront.css?v=6.32'), 'Buyer evidence-source styling and compact empty assistant styling must bypass cached CSS.');
+    assert.match(html, /buyer-locales\.js\?v=20[\s\S]*?money-format\.js\?v=2[\s\S]*?storefront\.js\?v=6\.73/, 'The storefront must load fresh locale metadata, shared price formatting and current buyer UI code.');
+    assert.ok(html.includes('/storefront.css?v=6.34'), 'Buyer evidence-source styling and compact empty assistant styling must bypass cached CSS.');
     assert.match(code, /function productNeedsFallback\(item\)/, 'Fallback notices must appear when displayed product content lacks the selected translation.');
     assert.match(code, /function answerEvidence\(question, item = product, variant = selectedVariant, answerLanguage = state\.replyLanguage\)/, 'Each assistant response must expose related listing fields from the current product in its answer language.');
     assert.ok(code.includes(String.raw`shipping\s+(?:time|timeline|takes|in|within)\b|delivery\s+(?:time|timeline|takes|in|within)\b`), 'Dispatch evidence must match shipping or delivery timing without treating a price question as dispatch timing.');
@@ -504,10 +504,10 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /return t\(state\.openCheckout \? 'checkoutResumeLoad' : 'checkoutStepOne'\)/, 'Before SDK mount, checkout guidance must explain the first of two steps.');
     assert.match(html, /id="shop-checkout-note" role="status" tabindex="-1">[\s\S]*?<\/p><div id="shop-paypal" hidden><\/div>/, 'The checkout instruction must be focusable and precede the PayPal button so keyboard users can tab to step two.');
     assert.match(code, /\$\('#shop-checkout-note'\)\.textContent = checkoutInstruction\(\);\s*\$\('#shop-checkout-note'\)\.focus\(\);/, 'After PayPal mounts, focus must move to the step-two instruction before the official button.');
-    assert.ok(html.includes('/storefront.js?v=6.70'), 'Buyer assistant recovery changes must bypass cached JavaScript.');
-  assert.ok(html.includes('/buyer-locales.js?v=17'), 'Localized evidence and checkout-step text must bypass cached locale bundles.');
-    assert.match(code, /selectedVariant \? 'optionStock' : 'sampleStock'/, 'Inventory for a selected option must be labeled as option-specific.');
-  assert.ok(html.includes('/storefront.css?v=6.32'), 'Buyer evidence-source styling and compact empty assistant styling must bypass cached storefront CSS.');
+    assert.ok(html.includes('/storefront.js?v=6.73'), 'Buyer account and assistant changes must bypass cached JavaScript.');
+    assert.ok(html.includes('/buyer-locales.js?v=20'), 'Localized account and checkout text must bypass cached locale bundles.');
+    assert.match(code, /selectedVariant \? t\('optionStock'\) \+ ' ' : ''/, 'Inventory for a selected option must be labeled as option-specific.');
+    assert.ok(html.includes('/storefront.css?v=6.34'), 'Buyer account and assistant styling must bypass cached storefront CSS.');
     assert.match(html, /class="qty-stepper" role="group" aria-label="Quantity"/, 'The product quantity controls must expose their visible purpose as a named control group.');
     assert.match(code, /shop-pending'\)\.scrollIntoView\(\{ block: 'start', behavior: reducedMotion \? 'auto' : 'smooth' \}\);[\s\S]*?recoveryButton\.focus\(\{ preventScroll: true \}\)/, 'Payment recovery must bring its retry action into view and keyboard focus.');
   }
@@ -532,7 +532,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /PARTIALLY_REFUNDED: 'Partially refunded'/); assert.match(code, /REFUNDED: 'Refunded'/);
   }
   if (scriptName === 'storefront.js') {
-    assert.match(html, /storefront\.css\?v=6\.32/, 'The latest narrow-screen catalog, gallery, buyer modal, evidence sources, checkout focus and compact empty assistant styling must bypass cached CSS.');
+    assert.match(html, /storefront\.css\?v=6\.34/, 'The latest narrow-screen catalog, gallery, buyer account panel, evidence sources, checkout focus and assistant styling must bypass cached CSS.');
     assert.match(code, /statusPartiallyRefunded/); assert.match(code, /statusRefunded/);
     assert.match(code, /const captureResponseStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'A PayPal refund result must be handled as a terminal capture response, not an unresolvable capture error.');
     assert.match(code, /const terminalCheckoutStatuses = new Set\(\[[^\]]*'PARTIALLY_REFUNDED', 'REFUNDED'\]\)/, 'Saved refunded orders must clear the local pending checkout during order refresh or reload.');
@@ -544,7 +544,7 @@ for (const [htmlName, scriptName] of [['index.html', 'app.js'], ['storefront.htm
     assert.match(code, /state\.replyLanguageTouched = true/, 'A manual reply-language selection remains explicit.');
     assert.match(code, /const summary = \(order\.items \|\| \[\]\)\.map\(item => item\.quantity \+ ' × ' \+ \(localizedOrderItem\(item\)/, 'Pending checkout recovery shows item names from its immutable snapshot.');
     assert.match(code, /\$\('#shop-contact-history'\)\.checked = false/, 'Conversation history is shared with the maker only after an explicit opt-in.');
-    assert.match(html, /storefront\.js\?v=6\.70/, 'The browser must load the current buyer assistant recovery code.');
+    assert.match(html, /storefront\.js\?v=6\.73/, 'The browser must load the current buyer account and assistant code.');
     assert.match(code, /catch \{ addMessage\('assistant', t\('questionErrorSaved', \{ error: t\('aiTemporaryError'\) \}\), true, contextId, \{ retryQuestion: question \}\); \}/, 'Assistant failures must show localized recovery copy and preserve a one-click retry.');
     assert.match(code, /state\.histories\[product\.id\] = history; persist\(\); renderChat\(\); ask\(failure\.retryQuestion\)/, 'Retry must reuse the failed question without duplicating it in conversation context.');
     assert.match(await readFile(new URL('../storefront.css', import.meta.url), 'utf8'), /\.shop-retry-question\{margin-top:8px;min-height:40px\}/, 'The retry action must remain comfortably tappable in the chat dialog.');

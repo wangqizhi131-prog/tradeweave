@@ -1,6 +1,6 @@
 {
   "status": "PUBLIC_SOURCE_CANDIDATE_REVIEW_ONLY_NOT_SUBMITTED",
-  "createdAt": "2026-11-11T05:24:04.879Z",
+  "createdAt": "2026-11-11T09:31:06.131Z",
   "files": [
     {
       "path": ".env.example",
@@ -14,13 +14,13 @@
     },
     {
       "path": "app.js",
-      "bytes": 60458,
-      "sha256": "8f2622fec28de954ae09fa667014c9c666b73bf7aef769064c451a5ec83877d6"
+      "bytes": 66491,
+      "sha256": "e85853c3ffc680986ca7aee72b93096605b85e0cef3488921b18bdcd09155709"
     },
     {
       "path": "buyer-locales.js",
-      "bytes": 64533,
-      "sha256": "499664870b9a6768f01368f797dc228c766cb41b0ce8bf6fa3f1747eb839b210"
+      "bytes": 72220,
+      "sha256": "6c79329dc633872d108ec8045ed47f60eed57676cc7c15aa0e1e5f4a8ea05d19"
     },
     {
       "path": "catalog.mjs",
@@ -34,8 +34,8 @@
     },
     {
       "path": "docs/evaluator-setup-en.md",
-      "bytes": 8623,
-      "sha256": "c67509e0f75069f8d2f1881cab93792f4fd44d7b6e7395923aa3cf9cf4243e02"
+      "bytes": 7322,
+      "sha256": "b297081e1ab92d4772846c128bee1cf601c9777be384273aa687bfa654af4c98"
     },
     {
       "path": "docs/notices-and-ai-use.md",
@@ -44,8 +44,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 30031,
-      "sha256": "64367ba4d05847c9984655716d2a9a7f7b1f8f4418abdd669e3697188aeca7b9"
+      "bytes": 31570,
+      "sha256": "852a47621f7c6f712b279513b716d1e2578e30dea5b848755c4262b7d451c36d"
     },
     {
       "path": "integrations/astropods/agent/bridge.mjs",
@@ -74,8 +74,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 9640,
-      "sha256": "a412efbf4074dfd572d1eadbb855257836a7e27c652814dd79fdaf7f114f1d8e"
+      "bytes": 8583,
+      "sha256": "1cab5f0526dc89673b160985ad7a2767f9d98eb4bc855df9e8efa2499f0658e0"
     },
     {
       "path": "render.yaml",
@@ -99,13 +99,13 @@
     },
     {
       "path": "scripts/baseline-check.mjs",
-      "bytes": 171079,
-      "sha256": "48f4e06f84e175a94ddc2185d4548ecc81846e9f01677e21296a8c11cedf0ea9"
+      "bytes": 171046,
+      "sha256": "08f882bb1c49823eebc55430ffd191932c738ef6dfdf4d7cf7a93e9f44019672"
     },
     {
       "path": "scripts/check.mjs",
-      "bytes": 79,
-      "sha256": "cac3ed464cd154c844426549795c2a43db46db51aae3bae0168ef3b39fc85826"
+      "bytes": 77,
+      "sha256": "4928858cf1209d6b2c3d558a5f3e8f519ef785f481d8db9c946f0cc1757f1427"
     },
     {
       "path": "scripts/fixtures/paypal-ui.js",
@@ -129,8 +129,8 @@
     },
     {
       "path": "scripts/ui-fixture.mjs",
-      "bytes": 12605,
-      "sha256": "12687376d713f5f2c928e3618e2d6e77a2583371f07e07b9de5b4ea13a388192"
+      "bytes": 12467,
+      "sha256": "6fa433c0be84e884116cb68a02dcaa43feaa6d6c66d0a3adae54d9d4470ed5ad"
     },
     {
       "path": "seed-media/31b028a799280fca5b064307f246c39973e47e83e4ef62381201256fbed4a655.jpg",
@@ -164,8 +164,8 @@
     },
     {
       "path": "server.mjs",
-      "bytes": 62164,
-      "sha256": "8170ce66f2d39f31e11252cdfaf6dbcf9a920eae9133ca7ca54c311d980abbb4"
+      "bytes": 61472,
+      "sha256": "9e1dab0705d1ffb91f03aa449458a30146bf82b5b2e208feb3b808b6f4dc6595"
     },
     {
       "path": "storage-remote.mjs",
@@ -184,23 +184,23 @@
     },
     {
       "path": "storefront.css",
-      "bytes": 32076,
-      "sha256": "151c947aa4225536fbdf448152fe15fcacd7c5acede317c5e18541a150da2656"
+      "bytes": 33177,
+      "sha256": "279534d6b7dc750e944d92c93cbfe436bdfa685d790ae9ad0bfee5e903179973"
     },
     {
       "path": "storefront.html",
-      "bytes": 15863,
-      "sha256": "2c1ac0e3ca7365b85b6339987f9cd578176f31c9f2c0b6854c4225b078455799"
+      "bytes": 18455,
+      "sha256": "ca89f2cc5bb030a907ccab844c426571e32e2050f8fccd352cdbfe41b905f081"
     },
     {
       "path": "storefront.js",
-      "bytes": 80577,
-      "sha256": "176e0acc4b4e4dac1e9f731468fe65eb839cce3b95a1cb46defc4c57b2103057"
+      "bytes": 84632,
+      "sha256": "12d6ecddd72bd327646a5baa3919fa3a012a387110501f1645bcf6018d6dae52"
     },
     {
       "path": "styles.css",
-      "bytes": 65411,
-      "sha256": "03c064e6c788e5cb9e938c186f43c54d9307615c26d96ff166c40a36f384842a"
+      "bytes": 69627,
+      "sha256": "074a1d5d72b88dde434fb53a091452ad672d456609ddfca7565cc2208c3473b7"
     }
   ]
 }

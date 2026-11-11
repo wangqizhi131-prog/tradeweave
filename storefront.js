@@ -25,6 +25,7 @@ const state = { legacyMigrated: true, language: normalizeLanguage(saved.language
   openCheckout: validCheckout(saved.openCheckout) ? saved.openCheckout : null,
   pendingCheckout: validCheckout(saved.pendingCheckout) ? saved.pendingCheckout : null };
 if (!saved.histories && Array.isArray(saved.history)) state.histories['coast-tote'] = saved.history.filter(m => m && ['user', 'assistant'].includes(m.role) && typeof m.text === 'string').slice(-30);
+let buyerAccount = null, buyerAccountMode = 'signin';
 let selectedVariant = null;
 let addedToCart = false;
 let galleryProductId = null, galleryImagePath = null;
@@ -79,6 +80,65 @@ function updateFxNotes() {
   productContentNote.hidden = !productNeedsFallback(product); productContentNote.textContent = productContentNote.hidden ? '' : t('contentFallback');
 }
 function node(tag, className, text) { const item = document.createElement(tag); if (className) item.className = className; if (text !== undefined) item.textContent = text; return item; }
+function buyerInitials(name) { return (name || 'Shopper').trim().split(/\s+/).slice(0, 2).map(part => Array.from(part)[0] || '').join('').toUpperCase().slice(0, 2) || 'S'; }
+function renderBuyerAccount() {
+  const signedIn = Boolean(buyerAccount);
+  $('#buyer-login-view').hidden = signedIn; $('#buyer-profile-view').hidden = !signedIn;
+  $('#buyer-account-initials').hidden = !signedIn;
+  $('#buyer-account-trigger').classList.toggle('signed-in', signedIn);
+  $('#buyer-account-trigger').setAttribute('aria-label', t('accountTrigger'));
+  $('#buyer-account-close').setAttribute('aria-label', t('accountClose'));
+  if (signedIn) {
+    const initials = buyerInitials(buyerAccount.name);
+    $('#buyer-account-initials').textContent = initials;
+    $('#buyer-account-title').textContent = t('accountProfileTitle');
+    $('#buyer-account-subtitle').textContent = t('accountProfileSubtitle');
+    $('#buyer-account-kicker').textContent = t('accountTrigger');
+    $('#buyer-profile-avatar').textContent = initials;
+    $('#buyer-profile-name').textContent = buyerAccount.name;
+    $('#buyer-profile-email').textContent = buyerAccount.email || '—';
+    $('#buyer-account-label').textContent = t('accountLabel');
+    $('#buyer-profile-kind').textContent = t('accountKindBuyer');
+    $('#buyer-account-orders').textContent = t('accountOrders');
+    $('#buyer-switch-account').textContent = t('accountSwitch');
+    $('#buyer-sign-out').textContent = t('accountSignOut');
+  } else {
+    $('#buyer-account-initials').textContent = '';
+    setBuyerAccountMode(buyerAccountMode);
+  }
+}
+function setBuyerAccountMode(mode) {
+  buyerAccountMode = mode === 'create' ? 'create' : 'signin';
+  const create = buyerAccountMode === 'create';
+  $('#buyer-name-field').hidden = !create;
+  $('#buyer-account-title').textContent = t(create ? 'accountTitleCreate' : 'accountTitleSignIn');
+  $('#buyer-account-subtitle').textContent = t(create ? 'accountSubtitleCreate' : 'accountSubtitleSignIn');
+  $('#buyer-account-kicker').textContent = t('accountTrigger');
+  $('#buyer-account-dialog .account-tabs').setAttribute('aria-label', t('accountAccess'));
+  $('#buyer-name-field').firstChild.textContent = t('accountName');
+  $('#buyer-email-field').firstChild.textContent = t('accountIdentity');
+  $('#buyer-password-field').firstChild.textContent = t('accountPassword');
+  $('#buyer-account-name').placeholder = t('accountNamePlaceholder');
+  $('#buyer-account-email').placeholder = t('accountIdentityPlaceholder');
+  $('#buyer-account-password').placeholder = t('accountPasswordPlaceholder');
+  $('#buyer-account-continue').textContent = t('accountContinue');
+  $('#buyer-account-dialog [data-buyer-account-mode="signin"]').textContent = t('accountTabSignIn');
+  $('#buyer-account-dialog [data-buyer-account-mode="create"]').textContent = t('accountTabCreate');
+  $('#buyer-account-dialog [data-buyer-account-mode="signin"]').setAttribute('aria-pressed', String(!create));
+  $('#buyer-account-dialog [data-buyer-account-mode="create"]').setAttribute('aria-pressed', String(create));
+  $('#buyer-account-dialog .account-divider span').textContent = t('accountOr');
+  $('#buyer-google-signin').lastChild.textContent = t('accountGoogle');
+  $('#buyer-account-close').setAttribute('aria-label', t('accountClose'));
+}
+function completeBuyerAccount(viaGoogle = false) {
+  const identity = $('#buyer-account-email').value.trim();
+  const enteredName = $('#buyer-account-name').value.trim();
+  const fallbackName = viaGoogle ? 'Google shopper' : identity.split('@')[0] || 'Shopper';
+  buyerAccount = { name: (buyerAccountMode === 'create' ? enteredName : '') || fallbackName, email: viaGoogle ? '' : identity };
+  $('#buyer-account-password').value = '';
+  renderBuyerAccount();
+}
+function openBuyerAccount() { renderBuyerAccount(); $('#buyer-account-dialog').showModal(); }
 function persist() { try { sessionStorage.setItem(storageKey, JSON.stringify(state)); return true; } catch { return false; } }
 function toast(text) { $('#shop-toast').textContent = text; $('#shop-toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#shop-toast').classList.remove('show'), 4500); }
 function statusLabel(status) { const key = ({ CREATING: 'statusCreating', CREATED: 'statusCreated', APPROVED: 'statusApproved', CAPTURE_PENDING: 'statusCapturePending', COMPLETED: 'completed', PENDING: 'statusPending', DECLINED: 'statusDeclined', DENIED: 'statusDenied', CANCELLED: 'statusCancelled', FAILED: 'statusFailed', PARTIALLY_REFUNDED: 'statusPartiallyRefunded', REFUNDED: 'statusRefunded' })[status] || 'statusUnconfirmed'; return t(key); }
@@ -95,7 +155,7 @@ function translateStatic() {
   const text = (selector, key) => { const element = $(selector); if (element) element.textContent = t(key); };
   const attr = (selector, name, key) => { const element = $(selector); if (element) element.setAttribute(name, t(key)); };
   document.documentElement.lang = currentLanguage().intl;
-  text('.skip-link', 'skip'); text('.shop-demo', 'sandbox'); text('#shop-preview>span', 'preview');
+  text('.skip-link', 'skip'); text('#shop-demo-label', 'sandbox'); text('#shop-preview>span', 'preview');
   const previewLink = $('#shop-preview>a'); if (previewLink) previewLink.lastChild.textContent = t('backWorkspace');
   attr('.shop-header nav', 'aria-label', 'nav');
   $$('[data-shop-page="catalog"]').forEach(el => { if (el.matches('nav a')) el.childNodes[0].textContent = t('shop'); });
@@ -141,6 +201,7 @@ function translateStatic() {
   const languageSelect = $('#shop-language'); languageSelect.setAttribute('aria-label', t('language'));
   if ($('.shop-catalog-heading>p')) $('.shop-catalog-heading>p').textContent = t('catalogIntro');
   updateFxNotes();
+  renderBuyerAccount();
 }
 function setupLanguageSelect() {
   const select = $('#shop-language'); select.replaceChildren();
@@ -207,6 +268,16 @@ document.addEventListener('click', event => {
   if (location.hash !== hash) history.pushState(null, '', hash);
   showPage(true);
 });
+$('#buyer-account-trigger').addEventListener('click', openBuyerAccount);
+$('#buyer-account-close').addEventListener('click', () => $('#buyer-account-dialog').close());
+$$('[data-buyer-account-mode]').forEach(button => button.addEventListener('click', () => setBuyerAccountMode(button.dataset.buyerAccountMode)));
+$('#buyer-account-form').addEventListener('submit', event => { event.preventDefault(); completeBuyerAccount(false); });
+$('#buyer-google-signin').addEventListener('click', () => completeBuyerAccount(true));
+function clearBuyerAccountFields() { $('#buyer-account-name').value = ''; $('#buyer-account-email').value = ''; $('#buyer-account-password').value = ''; }
+function switchBuyerAccount() { buyerAccount = null; clearBuyerAccountFields(); renderBuyerAccount(); $('#buyer-account-email').focus(); }
+$('#buyer-switch-account').addEventListener('click', switchBuyerAccount);
+$('#buyer-sign-out').addEventListener('click', switchBuyerAccount);
+$('#buyer-account-orders').addEventListener('click', () => { $('#buyer-account-dialog').close(); if (location.hash !== '#orders') history.pushState(null, '', '#orders'); showPage(true); refreshOrders(); });
 addEventListener('hashchange', () => { syncProduct(); showPage(); }); addEventListener('popstate', () => { syncProduct(); showPage(); });
 function renderProduct() {
   if (!product) return;
@@ -218,9 +289,9 @@ function renderProduct() {
   renderBuyerPrice($('#shop-price'), amount, product.currency); $('#shop-currency').textContent = '';
   updateFxNotes();
   const location = chinese && store.shop.location === 'Nanjing, China' ? '中国南京' : store.shop.location;
-  $('#shop-origin').textContent = location + ' · ' + t('sampleStudio');
+  $('#shop-origin').textContent = location;
   const stock = selectedVariant ? selectedVariant.stock : product.stock;
-  $('#shop-stock').textContent = stock ? `${t(selectedVariant ? 'optionStock' : 'sampleStock')} ${stock} ${t('itemsAvailable')}` : t('soldOut');
+  $('#shop-stock').textContent = stock ? `${selectedVariant ? t('optionStock') + ' ' : ''}${stock} ${t('itemsAvailable')}` : t('soldOut');
   $('#shop-tags').replaceChildren(...product.tags.map(tag => node('span', '', localize(tag))));
   $('#shop-facts-label').textContent = t('facts'); $('#shop-facts-note').textContent = t('factsNote');
   $('#shop-facts').replaceChildren();
@@ -444,7 +515,7 @@ $('#shop-download-receipt').addEventListener('click', async () => {
   try {
     const receipt = await api('/api/buyer/receipt?orderId=' + encodeURIComponent(orderId));
     const url = URL.createObjectURL(new Blob([JSON.stringify(receipt, null, 2)], { type: 'application/json' }));
-    const link = document.createElement('a'); link.href = url; link.download = 'tradeweave-sandbox-' + receipt.orderId + '.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const link = document.createElement('a'); link.href = url; link.download = 'tradeweave-order-' + receipt.orderId + '.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   } catch (error) { toast(error.message); }
   finally { $('#shop-download-receipt').disabled = false; }
 });
@@ -662,9 +733,6 @@ function renderGallery() {
   galleryProductId = product.id;
   art.setAttribute('aria-label', product.id === 'coast-tote' ? t('illustration') : t('noImage'));
   image.hidden = !product.images.length; art.hidden = Boolean(product.images.length);
-  const imageNote = $('#shop-image-note');
-  imageNote.hidden = !product.isFictionalSample || !product.images.length;
-  imageNote.textContent = imageNote.hidden ? '' : t('generatedSampleImages');
   $('.shop-art .tote').toggleAttribute('hidden', product.id !== 'coast-tote'); $('#shop-no-image').hidden = product.id === 'coast-tote'; $('.shop-art>span').hidden = product.id !== 'coast-tote';
   if (product.images.length) { image.src = galleryImagePath; image.alt = localize(product.name); }
   const root = $('#shop-image-thumbs'); root.replaceChildren();

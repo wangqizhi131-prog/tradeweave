@@ -28,12 +28,73 @@ const state = {
 let config = { paypalClientId: '', paypalReady: false, aiReady: false };
 let aiProviderState = 'unchecked';
 let store = null, product = null, assistantBusy = false, catalogDetail = false, editorUploading = false;
+let makerAccount, makerAccountMode = 'signin';
 let selectedOrder = null, toastTimer, ordersLoaded = false, ordersLoadFailed = false;
 function element(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
+}
+function makerInitials(name) { return (name || 'Maker').trim().split(/\s+/).slice(0, 2).map(part => Array.from(part)[0] || '').join('').toUpperCase().slice(0, 2) || 'M'; }
+const makerAccountCopy = {
+  English: { kicker:'MAKER ACCOUNT', close:'Close account', account:'Maker account', profileTitle:'Maker workspace', profileCopy:'Explore the Coastline Market workspace and its buyer journey.', signInTitle:'Welcome back.', createTitle:'Create your account', signInCopy:'Sign in to continue.', createCopy:'Add your details to get started.', access:'Account access', signIn:'Sign in', create:'Create account', fullName:'Full name', namePlaceholder:'Your name', identity:'Email or username', identityPlaceholder:'Email or username', password:'Password', passwordPlaceholder:'Password', continue:'Continue with email', or:'or', google:'Continue with Google', back:'Back to maker account', shop:'Shop', location:'Location', checkout:'Checkout', edit:'Edit shop & policies', guide:'Workspace guide', switch:'Switch account', signOut:'Sign out' },
+  Chinese: { kicker:'商家账户', close:'关闭账户面板', account:'商家账户', profileTitle:'商家工作区', profileCopy:'查看 Coastline Market 工作区和买家购物流程。', signInTitle:'欢迎回来', createTitle:'创建账户', signInCopy:'登录后继续。', createCopy:'填写信息以开始使用。', access:'账户操作', signIn:'登录', create:'注册', fullName:'姓名', namePlaceholder:'输入姓名', identity:'邮箱或用户名', identityPlaceholder:'邮箱或用户名', password:'密码', passwordPlaceholder:'输入密码', continue:'使用邮箱继续', or:'或', google:'使用 Google 继续', back:'返回商家账户', shop:'店铺', location:'所在地', checkout:'结账方式', edit:'编辑店铺与政策', guide:'工作区指南', switch:'切换账户', signOut:'退出登录' }
+};
+function makerText(key) { return makerAccountCopy[state.language]?.[key] || makerAccountCopy.English[key] || key; }
+function setMakerAccountMode(mode) {
+  makerAccountMode = mode === 'create' ? 'create' : 'signin';
+  const create = makerAccountMode === 'create';
+  $('#maker-auth-title').textContent = makerText(create ? 'createTitle' : 'signInTitle');
+  $('#maker-auth-subtitle').textContent = makerText(create ? 'createCopy' : 'signInCopy');
+  $('#maker-name-field').hidden = !create;
+  $('#maker-auth-view .account-kicker').textContent = makerText('kicker');
+  $('#maker-auth-view .account-tabs').setAttribute('aria-label', makerText('access'));
+  $('#maker-name-field').firstChild.textContent = makerText('fullName');
+  $('#maker-account-email-field').firstChild.textContent = makerText('identity');
+  $('#maker-account-password-field').firstChild.textContent = makerText('password');
+  $('#maker-account-name-input').placeholder = makerText('namePlaceholder');
+  $('#maker-account-email-input').placeholder = makerText('identityPlaceholder');
+  $('#maker-account-password').placeholder = makerText('passwordPlaceholder');
+  $('#maker-account-form .account-continue').textContent = makerText('continue');
+  $('#maker-auth-view [data-maker-account-mode="signin"]').textContent = makerText('signIn');
+  $('#maker-auth-view [data-maker-account-mode="create"]').textContent = makerText('create');
+  $('#maker-auth-view .account-divider span').textContent = makerText('or');
+  $('#maker-google-signin').lastChild.textContent = makerText('google');
+  $('#maker-auth-back').textContent = makerText('back');
+  $('#maker-auth-view [data-maker-account-mode="signin"]').setAttribute('aria-pressed', String(!create));
+  $('#maker-auth-view [data-maker-account-mode="create"]').setAttribute('aria-pressed', String(create));
+}
+function showMakerAuth() {
+  $('#seller-account-profile').hidden = true; $('#maker-auth-view').hidden = false;
+  setMakerAccountMode(makerAccountMode);
+}
+function renderMakerAccount() {
+  const signedIn = makerAccount !== null;
+  $('#seller-account-profile').hidden = !signedIn; $('#maker-auth-view').hidden = signedIn;
+  $('#seller-account-profile .account-kicker').textContent = makerText('kicker');
+  $('#store-dialog .modal-close').setAttribute('aria-label', makerText('close'));
+  $('#store-dialog-title').textContent = makerText('profileTitle');
+  $('#store-account-label').textContent = makerText('account');
+  $('#maker-switch-account').textContent = makerText('switch');
+  $('#maker-sign-out').textContent = makerText('signOut');
+  $('#open-shop-settings').textContent = makerText('edit');
+  $('#seller-account-profile [data-open="help-dialog"]').textContent = makerText('guide');
+  const shopName = store?.shop?.name || 'Coastline Market';
+  $('#maker-profile-trigger').setAttribute('aria-label', makerText('account') + ': ' + shopName);
+  if (!signedIn) { setMakerAccountMode(makerAccountMode); return; }
+  const name = makerAccount?.name || shopName;
+  $('#maker-account-name').textContent = name;
+  $('#maker-account-email').textContent = makerAccount?.email || makerText('account');
+  $('#maker-account-avatar').textContent = makerInitials(name);
+  $('#store-summary').replaceChildren(element('dt', '', makerText('shop')), element('dd', '', store?.shop?.name || 'Coastline Market'), element('dt', '', makerText('location')), element('dd', '', store?.shop?.location || 'Nanjing, China'), element('dt', '', makerText('checkout')), element('dd', '', 'PayPal'));
+}
+function completeMakerAccount(viaGoogle = false) {
+  const identity = $('#maker-account-email-input').value.trim(), enteredName = $('#maker-account-name-input').value.trim();
+  const fallbackName = viaGoogle ? 'Google maker' : identity.split('@')[0] || 'Maker';
+  makerAccount = { name: (makerAccountMode === 'create' ? enteredName : '') || fallbackName, email: viaGoogle ? '' : identity };
+  $('#maker-account-password').value = '';
+  renderMakerAccount();
 }
 function persist() { try { sessionStorage.setItem(storageKey, JSON.stringify({ ...state, orders: [] })); } catch {} }
 function showToast(text) {
@@ -93,7 +154,7 @@ function showPage(page, scroll = true, animate = false) {
 }
 document.addEventListener('click', event => {
   const opener = event.target.closest('[data-open]');
-  if (opener) { openDialog(opener.dataset.open); return; }
+  if (opener) { if (opener.id === 'maker-profile-trigger') renderMakerAccount(); openDialog(opener.dataset.open); return; }
   if (event.target.closest('[data-close]')) { event.target.closest('dialog').close(); return; }
   if (event.target.closest('.skip-link')) { event.preventDefault(); $('#main-content').focus(); return; }
   const link = event.target.closest('[data-page-link]');
@@ -103,6 +164,13 @@ document.addEventListener('click', event => {
   if (location.hash !== '#' + page) history.pushState(null, '', '#' + page);
   showPage(page, true, event.detail !== 0);
 });
+$('#maker-switch-account').addEventListener('click', showMakerAuth);
+$('#maker-sign-out').addEventListener('click', () => { makerAccount = null; $('#maker-account-name-input').value = ''; $('#maker-account-email-input').value = ''; $('#maker-account-password').value = ''; showMakerAuth(); $('#maker-account-email-input').focus(); });
+$('#maker-auth-view [data-maker-account-mode="signin"]').addEventListener('click', () => setMakerAccountMode('signin'));
+$('#maker-auth-view [data-maker-account-mode="create"]').addEventListener('click', () => setMakerAccountMode('create'));
+$('#maker-account-form').addEventListener('submit', event => { event.preventDefault(); completeMakerAccount(false); });
+$('#maker-google-signin').addEventListener('click', () => completeMakerAccount(true));
+$('#maker-auth-back').addEventListener('click', () => { if (makerAccount === null) makerAccount = { name: store?.shop?.name || 'Coastline Market', email: '' }; renderMakerAccount(); });
 addEventListener('popstate', () => showPage(location.hash.slice(1), false));
 addEventListener('hashchange', () => showPage(location.hash.slice(1), false));
 document.addEventListener('keydown', event => {
@@ -130,13 +198,13 @@ function renderReadiness() {
   const items = [
     ['Product story', product ? suppliedFacts() + ' facts supplied · ' + (factFields.length - suppliedFacts()) + ' still to confirm' : 'Product facts could not be loaded', Boolean(product), 'facts', Boolean(product)],
     ['Product assistant', aiStatusCopy, Boolean(product), 'assistant', Boolean(product) && ['responded', 'fallback'].includes(aiProviderState)],
-    ['PayPal checkout', config.paypalReady ? 'Sandbox credentials set · checkout not tested this session' : 'Add sandbox credentials to try checkout', config.paypalReady, 'checkout', false]
+    ['PayPal checkout', config.paypalReady ? 'Checkout credentials set · not tested this session' : 'Connect PayPal to try checkout', config.paypalReady, 'checkout', false]
   ];
   items.forEach(([title, copy, configured, action, confirmed]) => {
     const ready = confirmed;
     const row = element('div', 'readiness-row'), mark = element('span', ready ? 'readiness-mark ready' : 'readiness-mark');
     mark.innerHTML = ready ? '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 3 3 7-7"/></svg>' : '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="M10 7v4m0 2h.01"/></svg>';
-    mark.setAttribute('aria-label', ready ? action === 'assistant' ? aiProviderState === 'fallback' ? 'Seller-fact fallback answered this session' : 'Live response received this session' : 'Configured' : configured ? action === 'assistant' ? 'Seller-fact answers available; live model not verified' : 'Sandbox credentials configured, live checkout not verified' : 'Setup needed');
+    mark.setAttribute('aria-label', ready ? action === 'assistant' ? aiProviderState === 'fallback' ? 'Seller-fact fallback answered this session' : 'Live response received this session' : 'Configured' : configured ? action === 'assistant' ? 'Seller-fact answers available; live model not verified' : 'Checkout credentials configured; live checkout not verified' : 'Setup needed');
     const words = element('div'); words.append(element('strong', '', title), element('p', '', copy));
     const button = element('button', 'text-button', action === 'facts' ? 'Review' : configured ? 'Open' : 'Set up'); button.type = 'button';
     button.addEventListener('click', () => {
@@ -151,7 +219,7 @@ function renderReadiness() {
   for (const [id, value] of [['overview-answers', state.metrics.answers], ['overview-orders', completed], ['overview-facts', product ? suppliedFacts() + '/' + factFields.length : '—'], ['insight-answers', state.metrics.answers], ['insight-checkouts', state.metrics.checkouts], ['insight-orders', completed]]) $('#' + id).textContent = value;
   $('#help-connections').replaceChildren();
   const aiSetup = aiProviderState === 'responded' ? 'Live model responded this session' : aiProviderState === 'fallback' ? 'Answered from seller facts' : config.aiReady ? 'Seller-fact fallback available · live model not tested' : 'Seller-fact answers available · no live model configured';
-  for (const [label, status, confirmed] of [['Product assistant', aiSetup, ['responded', 'fallback'].includes(aiProviderState)], ['PayPal sandbox', config.paypalReady ? 'Credentials set · checkout not tested' : 'Not configured', false]]) {
+  for (const [label, status, confirmed] of [['Product assistant', aiSetup, ['responded', 'fallback'].includes(aiProviderState)], ['PayPal checkout', config.paypalReady ? 'Credentials set · checkout not tested' : 'Not configured', false]]) {
     const row = element('div'); row.append(element('span', '', label), element('strong', confirmed ? 'status-good' : 'status-pending', status)); $('#help-connections').append(row);
   }
 }
@@ -162,11 +230,11 @@ function renderProduct() {
   $('#product-name').textContent = localized(product.name); $('#product-subtitle').textContent = localized(product.subtitle); $('#product-description').textContent = localized(product.description);
   renderMoneyParts($('#product-price'), product.price, product.currency, chinese ? 'zh-CN' : 'en-US');
   $('#tag-one').textContent = localized(product.tags[0]); $('#tag-two').textContent = localized(product.tags[1]); $('#product-dimensions').textContent = localized(product.facts.dimensions);
-  $('#product-stock').textContent = product.stock; $('#stock-label').textContent = product.isFictionalSample ? (chinese ? '示例库存' : 'sample stock') : (chinese ? '件有货' : 'in stock');
+  $('#product-stock').textContent = product.stock; $('#stock-label').textContent = chinese ? '件有货' : 'in stock';
   const availability = $('.product-status'); availability.replaceChildren(element('span', 'product-status-dot'), document.createTextNode(product.status !== 'active' ? ' ' + product.status : product.stock ? (chinese ? ' 店铺在售' : ' Available to buyers') : (chinese ? ' 暂时售罄' : ' Sold out')), element('span', 'tiny-divider', '/'), element('span', '', 'EN · 中文'));
   availability.classList.toggle('sold-out', !product.stock);
   $('#facts-dialog-title').textContent = chinese ? '商品资料' : 'Product facts';
-  $('#facts-dialog-copy').textContent = chinese ? '商品页、AI 助手和 PayPal 订单读取同一份资料。当前商品为虚构示例。' : 'The listing, AI assistant and PayPal order share these seller facts. This product is a fictional example.';
+  $('#facts-dialog-copy').textContent = chinese ? '商品页、AI 助手和 PayPal 订单读取同一份资料。' : 'The listing, AI assistant and PayPal order share these seller facts.';
   const factsRoot = $('#edit-dialog .fact-list'); factsRoot.replaceChildren();
   factFields.forEach(([key, en, zh]) => factsRoot.append(element('span', '', chinese ? zh : en), element('b', product.facts[key] ? '' : 'fact-missing', factValue(key, state.language))));
   factsRoot.append(element('span', '', chinese ? '价格' : 'Price'), element('b', '', money(product.price, product.currency, chinese ? 'zh-CN' : 'en-US')));
@@ -199,14 +267,15 @@ function renderStore(data) {
   renderCatalog();
   $('#store-location').textContent = data.shop.location; $('#store-region-label').textContent = data.shop.regionLabel; $('#store-name').textContent = data.shop.name;
   $('#store-avatar').textContent = data.shop.name.split(/\s+/).slice(0, 2).map(word => Array.from(word)[0]).join('').toUpperCase();
-  $('#store-account-label').textContent = data.shop.isFictionalSample ? 'Maker account · sample' : 'Maker account';
+  $('#store-account-label').textContent = makerText('account');
   $('.art-label').textContent = data.shop.name.toUpperCase() + ' / MAKER STUDIO';
   if (!$('#overview-art .tote')) { const art = $('.tote').cloneNode(true); art.removeAttribute('hidden'); $('#overview-art').prepend(art); }
-  $('#store-dialog-copy').textContent = data.shop.isFictionalSample ? 'A fictional maker shop for exploring the TradeWeave buyer journey.' : 'Your maker workspace.';
-  $('#store-summary').replaceChildren(element('dt', '', 'Shop'), element('dd', '', data.shop.name), element('dt', '', 'Location'), element('dd', '', data.shop.location), element('dt', '', 'Checkout'), element('dd', '', 'PayPal sandbox'));
+  $('#store-dialog-copy').textContent = data.shop.isFictionalSample ? makerText('profileCopy') : (state.language === 'Chinese' ? '你的商家工作区。' : 'Your maker workspace.');
+  if (makerAccount === undefined) makerAccount = { name: data.shop.name, email: '' };
+  renderMakerAccount();
   renderProduct();
 }
-$('#listing-language').addEventListener('click', () => { state.language = state.language === 'English' ? 'Chinese' : 'English'; persist(); renderProduct(); });
+$('#listing-language').addEventListener('click', () => { state.language = state.language === 'English' ? 'Chinese' : 'English'; persist(); renderProduct(); renderMakerAccount(); if (store) $('#store-dialog-copy').textContent = store.shop.isFictionalSample ? makerText('profileCopy') : (state.language === 'Chinese' ? '你的商家工作区。' : 'Your maker workspace.'); });
 $('#insights-facts').addEventListener('click', () => openDialog('edit-dialog'));
 
 // Local merchant editing uses the same server facts as every buyer-facing view.
@@ -220,7 +289,7 @@ function setEditorValue(path, value) {
 function editorDirty() { return editorDraft && JSON.stringify(editorDraft) !== editorOriginal; }
 function updateEditorStatus() {
   $('#editor-save').disabled = editorSaving || editorUploading || !editorDirty();
-  $('#editor-status').textContent = editorUploading ? 'Uploading product images…' : editorSaving ? 'Saving product details…' : editorDirty() ? 'Unsaved changes · translations are saved together.' : editorDraft?.id ? 'Saved locally · fictional sample product.' : 'New draft · not saved or visible to buyers.';
+  $('#editor-status').textContent = editorUploading ? 'Uploading product images…' : editorSaving ? 'Saving product details…' : editorDirty() ? 'Unsaved changes · translations are saved together.' : editorDraft?.id ? 'Saved locally.' : 'New draft · not saved or visible to buyers.';
 }
 function renderEditorFields() {
   const language = $('#editor-language').value, root = $('#editor-fields'); root.replaceChildren();
@@ -386,7 +455,7 @@ function renderOrders() {
       root.append(empty); return;
     }
     const failed = ordersLoadFailed && !state.orders.length;
-    empty.append(icon, element('h3', '', failed ? 'Orders could not be loaded.' : state.orders.length ? 'No matching orders' : 'Your first order starts with a story.'), element('p', '', failed ? 'Refresh orders to try again. Your saved orders have not been changed.' : state.orders.length ? 'Try another order ID or choose All statuses.' : 'Complete a PayPal sandbox checkout and its confirmation will appear here.'));
+    empty.append(icon, element('h3', '', failed ? 'Orders could not be loaded.' : state.orders.length ? 'No matching orders' : 'Your first order starts with a story.'), element('p', '', failed ? 'Refresh orders to try again. Your saved orders have not been changed.' : state.orders.length ? 'Try another order ID or choose All statuses.' : 'Complete a PayPal checkout and its confirmation will appear here.'));
     if (failed) {
       const retry = element('button', 'quiet-button', 'Refresh orders'); retry.type = 'button'; retry.addEventListener('click', loadMerchantOrders); empty.append(retry);
     } else if (!state.orders.length) {
@@ -408,21 +477,21 @@ function renderOrders() {
 }
 function showOrderDetails(order) {
   selectedOrder = order;
-  $('#order-dialog-copy').textContent = order.status === 'COMPLETED' ? 'PayPal returned a completed sandbox capture. No real money moved.' : 'PayPal has not returned a completed capture. This order is not shown as paid.';
+  $('#order-dialog-copy').textContent = order.status === 'COMPLETED' ? 'PayPal confirmed payment.' : 'PayPal has not returned a completed capture. This order is not shown as paid.';
   const root = $('#order-receipt'); root.replaceChildren();
   for (const [label, value] of [['Order ID', order.orderId], ['Capture ID', order.captureId || 'Not returned'], ['Product', order.productName], ['Quantity', order.quantity], ['Amount', money(order.amount, order.currency)], ['Status', statusLabel(order.status)]]) root.append(element('dt', '', label), element('dd', '', value));
   $('#merchant-tracking').value = order.tracking || ''; $('#merchant-fulfill').disabled = order.status !== 'COMPLETED'; $('#merchant-reconcile').disabled = !order.paypalOrderId || ['COMPLETED','FAILED','DECLINED','DENIED','REFUNDED'].includes(order.status); $('#merchant-order-message').textContent = '';
   if (order.status === 'COMPLETED') root.append(element('dt', '', 'Fulfillment'), element('dd', '', order.fulfillment || 'UNFULFILLED'));
-  root.append(element('dt', '', 'Ship to · sandbox'), element('dd', '', order.shipping ? [order.shipping.name, ...Object.values(order.shipping.address)].filter(Boolean).join(', ') : 'Not returned by PayPal. Confirm before dispatch.'));
+  root.append(element('dt', '', 'Ship to'), element('dd', '', order.shipping ? [order.shipping.name, ...Object.values(order.shipping.address)].filter(Boolean).join(', ') : 'Not returned by PayPal. Confirm before dispatch.'));
   for (const item of order.items || []) root.append(element('dt', '', item.name), element('dd', '', item.quantity + ' × ' + money(item.price)));
   openDialog('order-dialog');
 }
 $('#order-search').addEventListener('input', renderOrders); $('#order-filter').addEventListener('change', renderOrders);
 $('#download-receipt').addEventListener('click', () => {
   if (!selectedOrder) return;
-  const blob = new Blob([JSON.stringify({ environment: 'PayPal sandbox', ...selectedOrder }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(selectedOrder, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob), link = document.createElement('a');
-  link.href = url; link.download = 'tradeweave-sandbox-' + selectedOrder.orderId + '.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  link.href = url; link.download = 'tradeweave-order-' + selectedOrder.orderId + '.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 $('#share-button').addEventListener('click', async () => {
   try {
@@ -559,7 +628,7 @@ async function updateMerchantOrder(action) {
   if (!selectedOrder) return;
   $('#merchant-reconcile').disabled = true; $('#merchant-fulfill').disabled = true;
   $('#merchant-tracking').disabled = true;
-  try { const order = await api('/api/workspace/order', { method: 'POST', headers: { 'x-editor-token': config.editorToken }, body: JSON.stringify({ orderId: selectedOrder.paypalOrderId || selectedOrder.localId, action, tracking: $('#merchant-tracking').value.trim() }) }); await loadMerchantOrders(); showOrderDetails(order); $('#merchant-order-message').textContent = action === 'fulfill' ? 'Fulfillment recorded in this sandbox shop. No shipment service was contacted.' : 'PayPal payment status refreshed.'; }
+  try { const order = await api('/api/workspace/order', { method: 'POST', headers: { 'x-editor-token': config.editorToken }, body: JSON.stringify({ orderId: selectedOrder.paypalOrderId || selectedOrder.localId, action, tracking: $('#merchant-tracking').value.trim() }) }); await loadMerchantOrders(); showOrderDetails(order); $('#merchant-order-message').textContent = action === 'fulfill' ? 'Fulfillment recorded for this shop. No shipment service was contacted.' : 'PayPal payment status refreshed.'; }
   catch (error) { $('#merchant-order-message').textContent = error.message; $('#merchant-reconcile').disabled = !selectedOrder.paypalOrderId || ['COMPLETED','FAILED','DECLINED','DENIED','REFUNDED'].includes(selectedOrder.status); $('#merchant-fulfill').disabled = selectedOrder.status !== 'COMPLETED'; }
   finally { $('#merchant-tracking').disabled = false; }
 }
