@@ -1,4 +1,4 @@
-// Disposable browser fixture. REST calls are simulated; --sdk-render loads PayPal's public script only.
+// Disposable browser fixture. REST calls are simulated; --sdk-render loads PayPal's public script only with order routes disabled.
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname, basename } from 'node:path';
@@ -6,16 +6,27 @@ import { normalizeStore } from '../catalog.mjs';
 import { createHash } from 'node:crypto';
 import { deflateSync } from 'node:zlib';
 import { mkdir } from 'node:fs/promises';
+import { isIPv4 } from 'node:net';
 import { openStorage } from '../storage.mjs';
 import { simulatedAssistantResponse } from './fixtures/simulated-ai.mjs';
 
 const payments = process.argv.includes('--payments'), renderSdk = process.argv.includes('--sdk-render');
 const failAiOnce = process.argv.includes('--ai-failure-once');
+const lanBuyer = process.argv.includes('--lan-buyer');
 if (payments && renderSdk) throw new Error('Choose the simulated adapter or official SDK render check, not both.');
+if (lanBuyer && !(payments || renderSdk)) throw new Error('--lan-buyer requires --payments or --sdk-render.');
 const portArguments = process.argv.filter(argument => argument.startsWith('--port='));
 if (portArguments.length > 1) throw new Error('Pass at most one --port=NUMBER option.');
 const fixturePort = portArguments.length ? Number(portArguments[0].slice('--port='.length)) : 4174;
 if (!Number.isInteger(fixturePort) || fixturePort < 4174 || fixturePort > 65535) throw new Error('Fixture port must be an integer from 4174 through 65535.');
+const hostArguments = process.argv.filter(argument => argument.startsWith('--host='));
+if (hostArguments.length > 1 || lanBuyer !== (hostArguments.length === 1)) throw new Error('--host=PRIVATE_IPV4 is required only with --lan-buyer.');
+const fixtureHost = lanBuyer ? hostArguments[0].slice('--host='.length) : '127.0.0.1';
+if (lanBuyer) {
+  if (!isIPv4(fixtureHost)) throw new Error('--lan-buyer accepts only an IPv4 address.');
+  const [a, b] = fixtureHost.split('.').map(Number);
+  if (!(a === 10 || a === 192 && b === 168 || a === 172 && b >= 16 && b <= 31)) throw new Error('--lan-buyer accepts only a private RFC1918 IPv4 address.');
+}
 const temporary = await mkdtemp(join(tmpdir(), 'tradeweave-ui-'));
 const orders = new Map(), requests = new Map();
 let orderCount = 0, captureCount = 0, aiCount = 0;
@@ -47,7 +58,7 @@ if (edgeCases) {
   storage.addTicket('fixture-edge-owner', 'edge-question-001', '长问题测试'.repeat(400).slice(0, 2000), { productId: product.id, productName: product.name.en, orderId: null, history: [] }); storage.db.close();
 }
 await writeFile(join(temporary, 'store-data.json'), JSON.stringify(seed));
-Object.assign(process.env, { ENV_FILE: join(temporary, 'absent.env'), DISABLE_LOCAL_EDITOR: '0', PORT: String(fixturePort), HOST: '127.0.0.1', DATA_DIR: temporary, STORE_FILE: join(temporary, 'store-data.json'), MEDIA_DIR: join(temporary, 'media'), PAYPAL_CLIENT_ID: renderSdk ? 'sb' : payments ? 'fixture-client' : '', PAYPAL_CLIENT_SECRET: payments || renderSdk ? 'fixture-secret' : '', AI_API_KEY: 'isolated-ui-response', AI_MODEL: 'fixture', AI_API_URL: 'https://fixture.invalid/ai' });
+Object.assign(process.env, { ENV_FILE: join(temporary, 'absent.env'), DISABLE_LOCAL_EDITOR: lanBuyer ? '1' : '0', PORT: String(fixturePort), HOST: fixtureHost, DATA_DIR: temporary, STORE_FILE: join(temporary, 'store-data.json'), MEDIA_DIR: join(temporary, 'media'), PAYPAL_CLIENT_ID: renderSdk ? 'sb' : payments ? 'fixture-client' : '', PAYPAL_CLIENT_SECRET: payments || renderSdk ? 'fixture-secret' : '', AI_API_KEY: 'isolated-ui-response', AI_MODEL: 'fixture', AI_API_URL: 'https://fixture.invalid/ai' });
 const json = data => new Response(JSON.stringify(data), { headers: { 'content-type': 'application/json' } });
 globalThis.fetch = async (url, options = {}) => {
   const target = String(url);
@@ -73,7 +84,7 @@ const { server } = await import('../server.mjs');
 if (payments || renderSdk) {
   const app = server.listeners('request')[0]; server.removeListener('request', app);
   server.on('request', async (req, res) => {
-    const fixtureOrigin = 'http://127.0.0.1:' + fixturePort;
+    const fixtureOrigin = 'http://' + req.headers.host;
     const path = new URL(req.url, fixtureOrigin).pathname;
     if (req.method === 'GET' && ['/shop', '/shop/'].includes(path)) {
       let html = await readFile(new URL('../storefront.html', import.meta.url), 'utf8');
@@ -122,6 +133,6 @@ process.on('SIGINT', () => requestClose()); process.on('SIGTERM', () => requestC
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', input => { if (input.trim().toLowerCase() === 'q') requestClose(); });
 process.stdin.on('end', () => requestClose());
-console.log('Disposable UI fixture at http://127.0.0.1:' + fixturePort + ' — simulated AI' + (failAiOnce ? ' (first request fails, retry succeeds)' : '') + '; ' + (renderSdk ? 'official public sandbox SDK render only; REST payment routes disabled.' : payments ? 'simulated payment adapter (not PayPal SDK).' : 'PayPal disabled.'));
+console.log('Disposable UI fixture at http://' + (lanBuyer ? fixtureHost : '127.0.0.1') + ':' + fixturePort + ' — simulated AI' + (failAiOnce ? ' (first request fails, retry succeeds)' : '') + '; ' + (renderSdk ? 'official public sandbox SDK render only; REST payment routes disabled.' : payments ? 'simulated payment adapter (not PayPal SDK).' : 'PayPal disabled.') + (lanBuyer ? ' LAN buyer-only mode; maker workspace disabled.' : ''));
 console.log('Stop with Ctrl+C, type q and press Enter, or close the launcher input to close the server and remove its temporary data.');
 console.log('Fixture data: ' + temporary);

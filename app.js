@@ -5,7 +5,7 @@ const storageKey = 'tradeweave-workspace-v2';
 const pageTitles = { overview: 'Overview', products: 'Products', assistant: 'AI assistant', orders: 'Orders', insights: 'Insights' };
 const factFields = [
   ['material', 'Material', '材质'], ['production', 'Production', '制作方式'],
-  ['madeIn', 'Made in', '产地'], ['dimensions', 'Dimensions', '尺寸'],
+  ['madeIn', 'Made in', '产地'], ['dimensions', 'Dimensions', '尺寸'], ['capacity', 'Capacity', '容量'],
   ['care', 'Care', '保养'], ['dispatch', 'Dispatch', '发货时间'],
   ['shippingPrice', 'Shipping price', '运费'], ['arrivalDateGuarantee', 'Arrival guarantee', '送达日期承诺']
 ];

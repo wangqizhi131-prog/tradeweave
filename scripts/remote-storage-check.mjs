@@ -11,7 +11,7 @@ const seed = { shop: { name: 'Fixture' }, products: [{
   id: 'fixture-item', status: 'active', stock: 4, price: '5.00', currency: 'USD',
   name: { en: 'Fixture item', zh: '测试商品' }, subtitle: { en: 'A storage fixture.', zh: '持久化测试商品。' }, description: { en: 'An isolated storage test item.', zh: '隔离存储测试商品。' },
   tags: [{ en: '', zh: '' }, { en: '', zh: '' }], images: [], variants: [],
-  facts: Object.fromEntries(['material', 'production', 'madeIn', 'dimensions', 'care', 'dispatch', 'shippingPrice', 'arrivalDateGuarantee'].map(key => [key, null]))
+  facts: Object.fromEntries(['material', 'production', 'madeIn', 'dimensions', 'capacity', 'care', 'dispatch', 'shippingPrice', 'arrivalDateGuarantee'].map(key => [key, null]))
 }] };
 if (process.argv[2] === '--worker') {
   const url = 'file:' + process.argv[3].replaceAll('\\', '/');
@@ -63,9 +63,9 @@ if (process.argv[2] === '--worker') {
     const [code] = await once(child, 'exit');
     assert.equal(code, 0, 'The isolated remote storage checks must pass.');
 
-    const startServer = async (disableEditor = false) => {
-      await writeFile(join(directory, 'remote-store-data.json'), JSON.stringify(seed));
-      const server = spawn(process.execPath, [serverPath], { cwd: appRoot, env: { ...process.env, HOST: '127.0.0.1', PORT: '0', ENV_FILE: join(directory, 'empty.env'), DATA_DIR: join(directory, 'unused-local-data'), STORE_FILE: join(directory, 'remote-store-data.json'), MEDIA_DIR: join(directory, 'media'), TURSO_DATABASE_URL: databaseUrl, TURSO_AUTH_TOKEN: 'local-protocol-test-token', AI_API_KEY: '', AI_MODEL: '', PAYPAL_CLIENT_ID: '', PAYPAL_CLIENT_SECRET: '', DISABLE_LOCAL_EDITOR: disableEditor ? '1' : '0' }, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    const startServer = async (disableEditor = false, remoteUrl = databaseUrl, localSeed = seed) => {
+      await writeFile(join(directory, 'remote-store-data.json'), JSON.stringify(localSeed));
+      const server = spawn(process.execPath, [serverPath], { cwd: appRoot, env: { ...process.env, HOST: '127.0.0.1', PORT: '0', ENV_FILE: join(directory, 'empty.env'), DATA_DIR: join(directory, 'unused-local-data'), STORE_FILE: join(directory, 'remote-store-data.json'), MEDIA_DIR: join(directory, 'media'), TURSO_DATABASE_URL: remoteUrl, TURSO_AUTH_TOKEN: 'local-protocol-test-token', AI_API_KEY: '', AI_MODEL: '', PAYPAL_CLIENT_ID: '', PAYPAL_CLIENT_SECRET: '', DISABLE_LOCAL_EDITOR: disableEditor ? '1' : '0' }, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
       let output = '';
       server.stdout.setEncoding('utf8'); server.stderr.setEncoding('utf8');
       server.stdout.on('data', chunk => { output += chunk; }); server.stderr.on('data', chunk => { output += chunk; });
@@ -114,7 +114,25 @@ if (process.argv[2] === '--worker') {
     assert.equal(refreshed.status, 200, 'The restarted server must serve buyer-owned questions from the remote store.');
     assert.equal((await refreshed.json()).tickets.find(ticket => ticket.id === created.id)?.question, 'Will it arrive Friday?');
     await running.stop();
-    console.log('PASS: server routes await remote storage and retain a buyer question across app restart.');
+
+    const legacyDatabase = join(directory, 'legacy-capacity.sqlite');
+    const legacyUrl = 'file:' + legacyDatabase.replaceAll('\\', '/');
+    const legacyCup = { ...seed.products[0], id: 'riverbank-cup', facts: { ...seed.products[0].facts, dimensions: { en: '300 ml or 420 ml', zh: '300 毫升或 420 毫升' }, capacity: null } };
+    const legacySeed = { ...seed, products: [legacyCup] };
+    const preexistingLegacyStorage = await openRemoteStorage(legacyUrl, undefined, legacySeed);
+    preexistingLegacyStorage.db.close();
+    running = await startServer(true, legacyUrl, legacySeed);
+    const migratedStore = await (await fetch(running.base + '/api/store')).json();
+    assert.equal(migratedStore.products[0].facts.capacity.en, '300 ml or 420 ml', 'A server start must expose a migrated capacity from an existing remote catalog.');
+    assert.equal(migratedStore.products[0].facts.dimensions, null, 'The old capacity value must no longer appear as physical dimensions.');
+    await running.stop();
+    running = null;
+    const migratedStorage = await openRemoteStorage(legacyUrl, undefined, legacySeed);
+    const persistedFacts = (await migratedStorage.catalog()).store.products[0].facts;
+    assert.equal(persistedFacts.capacity.zh, '300 毫升或 420 毫升', 'The startup migration must persist the translated capacity in remote storage.');
+    assert.equal(persistedFacts.dimensions, null, 'The persisted remote catalog must mark physical dimensions as missing.');
+    migratedStorage.db.close();
+    console.log('PASS: server routes await remote storage, retain buyer questions across restart, and persist the narrowly scoped legacy capacity migration.');
   } finally {
     await running?.stop();
     await rm(directory, { recursive: true, force: true, maxRetries: 8, retryDelay: 100 });

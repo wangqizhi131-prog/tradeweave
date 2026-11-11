@@ -2,7 +2,22 @@ import { randomUUID } from 'node:crypto';
 
 export function normalizeStore(source) {
   const { product, products, ...rest } = source;
-  return { ...rest, products: (products || (product ? [product] : [])).map(item => ({ ...item, status: item.status || 'active', images: item.images || [], variants: item.variants || [] })) };
+  const factKeys = ['material', 'production', 'madeIn', 'dimensions', 'capacity', 'care', 'dispatch', 'shippingPrice', 'arrivalDateGuarantee'];
+  return { ...rest, products: (products || (product ? [product] : [])).map(item => {
+    const facts = Object.fromEntries(factKeys.map(key => [key, item.facts?.[key] ?? null]));
+    if (item.id === 'riverbank-cup' && facts.capacity == null && facts.dimensions && typeof facts.dimensions === 'object') {
+      const legacyCapacity = {
+        en: '300 ml or 420 ml', zh: '300 毫升或 420 毫升', ja: '300 ml または 420 ml',
+        es: '300 ml o 420 ml', fr: '300 ml ou 420 ml'
+      };
+      const supplied = Object.entries(facts.dimensions).filter(([, value]) => typeof value === 'string' && value.trim());
+      if (supplied.length && supplied.every(([language, value]) => value.trim() === legacyCapacity[language])) {
+        facts.capacity = facts.dimensions;
+        facts.dimensions = null;
+      }
+    }
+    return { ...item, facts, status: item.status || 'active', images: item.images || [], variants: item.variants || [] };
+  }) };
 }
 export function validateProduct(input, existing) {
   const fail = message => { const error = new Error(message); error.status = 400; throw error; };
@@ -30,8 +45,8 @@ export function validateProduct(input, existing) {
   if (!name.en) fail('Give the product an English name to save a draft.');
   if (!Array.isArray(input.tags) || input.tags.length !== 2) fail('Supply two tag fields.');
   const facts = {};
-  for (const key of ['material', 'production', 'madeIn', 'dimensions', 'care', 'dispatch', 'shippingPrice', 'arrivalDateGuarantee']) {
-    const value = input.facts?.[key] === null ? { en: '', zh: '' } : bilingual(input.facts?.[key], key, 300);
+  for (const key of ['material', 'production', 'madeIn', 'dimensions', 'capacity', 'care', 'dispatch', 'shippingPrice', 'arrivalDateGuarantee']) {
+    const value = input.facts?.[key] == null ? { en: '', zh: '' } : bilingual(input.facts[key], key, 300);
     facts[key] = Object.values(value).some(Boolean) ? value : null;
   }
   if (!Array.isArray(input.images) || input.images.length > 6 || input.images.some(path => typeof path !== 'string' || !/^\/media\/[a-f0-9]{64}\.(jpg|png|webp)$/.test(path)) || new Set(input.images).size !== input.images.length) fail('Choose up to six uploaded product images.');

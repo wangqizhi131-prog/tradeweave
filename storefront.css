@@ -31,8 +31,8 @@
 
 /* Respect the operating system reduced-motion preference. */
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
-.shop-image-note{margin:10px 0 0;color:var(--muted);font-size:11px;line-height:1.5;text-align:center}
-@media(max-width:360px){.shop-catalog-toolbar{grid-template-columns:minmax(0,1fr)}}
+.shop-image-note{margin:10px 0 0;color:var(--muted);font-size:12px;line-height:1.5;text-align:center}
+@media(max-width:360px){.shop-catalog-toolbar{grid-template-columns:minmax(0,1fr)}.shop-chat-tools{gap:8px}.shop-chat-tools>label{gap:6px;white-space:nowrap}.shop-chat-tools>.text-button{white-space:nowrap}}
 @media(max-width:400px){.shop-art{aspect-ratio:1.55}.shop-product-image{aspect-ratio:3/2}.shop-visual{min-width:0}.shop-image-thumbs{width:100%;min-width:0;box-sizing:border-box;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;padding-bottom:4px}.shop-image-thumbs button{flex:0 0 60px;scroll-snap-align:start}}
 
 /* Keep receipt actions and the close control visible while long order details scroll. */
@@ -47,3 +47,75 @@
 :is(#product-price,.product-price #product-price,.shop-price strong,.shop-purchase-summary strong,.shop-product-card strong,.shop-order-amount,.shop-cart-summary strong,.cart-summary-line strong,.cart-item-total,.order-total,.checkout-summary>strong,.merchant-product-actions strong){font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1}
 .price-currency-symbol,.shop-price-currency,.price-currency-code{font:inherit;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1,"onum" 0;letter-spacing:inherit}
 .price-amount{display:inline-block;vertical-align:baseline;font:inherit;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1,"onum" 0;font-synthesis:none;line-height:inherit;letter-spacing:inherit}
+
+/* Seller-fact transparency and restrained glass treatment for key buyer surfaces. */
+.shop-details{position:relative}
+.shop-details::before{content:'';display:block;height:1px;margin:0 0 0;background:repeating-linear-gradient(90deg,#9fb0c3 0 3px,transparent 3px 7px);opacity:.55}
+.shop-details[open]{border-color:#bdc9d5}
+.shop-details dl{padding:0 2px}
+.shop-facts-note,.shop-details>p{max-width:62ch}
+.shop-pay{box-shadow:0 8px 24px rgb(42 70 105 / 10%)}
+.shop-pay:hover:enabled{box-shadow:0 10px 28px rgb(42 70 105 / 16%)}
+.shop-answer-evidence{width:min(92%,560px);margin:10px 0 0;padding:12px 14px 11px;border:1px solid #d6e0e9;border-radius:10px;background:linear-gradient(135deg,rgb(246 249 252 / 94%),rgb(255 255 255 / 82%));box-shadow:0 5px 18px rgb(32 55 76 / 5%)}
+.shop-answer-evidence h3{margin:0 0 9px;color:#526b83;font-size:12px;font-weight:600;letter-spacing:.035em;text-transform:uppercase}
+.shop-answer-evidence-list{display:grid;grid-template-columns:minmax(92px,.38fr) minmax(0,1fr);gap:6px 12px;margin:0;font-size:12px;line-height:1.55}
+.shop-answer-evidence-list dt{color:var(--muted)}
+.shop-answer-evidence-list dd{margin:0;overflow-wrap:anywhere}
+.shop-answer-evidence-list .evidence-supplied{color:#294f70}
+.shop-answer-evidence-list .evidence-source{display:inline-flex;margin-left:7px;padding:1px 6px;border:1px solid #d7e1e9;border-radius:999px;color:#5d7183;font-size:10px;line-height:1.45;vertical-align:middle;white-space:nowrap}
+.shop-answer-evidence-list .evidence-source-listing{background:#edf3f8}
+.shop-answer-evidence-list .evidence-source-seller{background:#f4f6f5}
+.shop-answer-evidence-list .evidence-unknown{display:flex;align-items:center;gap:7px;color:#755a36}
+.shop-answer-evidence-list .evidence-none{color:#556b7b;font-weight:500}
+.shop-answer-evidence-list .evidence-unknown::before{content:'';width:6px;height:6px;flex:none;border:1px solid currentColor;border-radius:50%;background:transparent}
+.shop-evidence-note{margin:8px 0 0!important;padding-top:7px;border-top:1px solid #e5ebf1;color:#758392;font-size:12px;line-height:1.5}
+#shop-facts .shop-fact-missing{display:flex;align-items:center;gap:7px;width:fit-content;max-width:100%;padding:3px 8px;border:1px dashed #c5cdd4;border-radius:5px;background:#f5f7f8;color:#626f79;font-size:12px}
+#shop-facts .shop-fact-missing::before{content:'';width:6px;height:6px;flex:none;border:1px solid #8c9baa;border-radius:50%}
+#shop-facts .shop-fact-supplied{color:#3c5871}
+.shop-add-cart{border:1px solid rgb(255 255 255 / 42%);background:linear-gradient(135deg,rgb(74 113 148 / 96%),rgb(55 94 132 / 96%));box-shadow:inset 0 1px rgb(255 255 255 / 24%),0 8px 22px rgb(36 70 105 / 15%);backdrop-filter:blur(12px)}
+.shop-add-cart:hover:enabled{background:linear-gradient(135deg,rgb(68 105 142 / 98%),rgb(50 87 125 / 98%));box-shadow:inset 0 1px rgb(255 255 255 / 28%),0 10px 28px rgb(36 70 105 / 19%)}
+.shop-ask{border-color:rgb(144 170 197 / 66%);background:rgb(238 245 251 / 55%);color:#365c7e;box-shadow:inset 0 1px rgb(255 255 255 / 76%),0 4px 16px rgb(46 79 111 / 6%);backdrop-filter:blur(12px)}
+.shop-ask:hover{background:rgb(228 239 249 / 78%)}
+#shop-chat .shop-message.user>p{background:rgb(60 99 136 / 94%)}
+#shop-chat.buyer-dialog{border:1px solid rgb(255 255 255 / 68%);background:rgb(255 255 255 / 94%);backdrop-filter:blur(18px);box-shadow:0 28px 90px rgb(13 35 52 / 25%)}
+#shop-chat .buyer-dialog-heading{background:linear-gradient(120deg,rgb(244 248 252 / 94%),rgb(255 255 255 / 82%))}
+#shop-chat .shop-chat-bottom{background:rgb(250 252 254 / 94%)}
+.shop-cart-summary{background:rgb(240 246 251 / 90%);border:1px solid rgb(181 199 215 / 72%);backdrop-filter:blur(14px)}
+@media(max-width:600px){.shop-answer-evidence{width:96%;padding:11px 12px}.shop-answer-evidence-list{grid-template-columns:88px minmax(0,1fr);gap:6px 9px}#shop-chat.buyer-dialog{background:rgb(255 255 255 / 98%)}}
+@media(max-height:740px){#shop-chat.has-conversation .shop-prompts{display:none}#shop-chat.has-conversation .shop-conversation{padding-top:6px;padding-bottom:0}#shop-chat.has-conversation .shop-message{margin:8px 0}}
+@media(max-width:360px) and (max-height:740px){#shop-chat .buyer-dialog-heading{padding:14px 16px 10px}#shop-chat .buyer-dialog-heading h2{font-size:22px}.shop-chat-tools{margin-inline:16px;padding-block:6px}.shop-chat-tools select{min-height:36px}.shop-chat-bottom{padding:8px 16px max(10px,env(safe-area-inset-bottom))}.shop-chat-links{flex-wrap:wrap;gap:0 8px}.shop-chat-links>.text-button{min-height:40px;font-size:12px;white-space:normal}.shop-conversation{padding-inline:16px}}
+
+/* Buyer storefront palette: cool paper and a single TradeWeave blue accent. */
+.shop-body{--paper:#f5f7fa;--white:#fff;--ink:#172a3b;--muted:#526579;--line:#dce4ec;--green:#315e81;--green-dark:#284c69;--green-soft:#eaf1f7;--orange:#886642;background:var(--white);color:var(--ink)}
+.shop-preview{background:#edf3f8}
+.shop-demo{background:#f2f5f8}
+.shop-monogram{border-color:#b8c9d8}
+.shop-tags>span{color:#365f80;background:#edf3f8}
+.shop-subtitle{color:#5b7185}
+.shop-art{background:#edf1f4}
+.shop-art>span{color:#586b7b}
+.shop-pay{background:#3e7098;color:#fff;box-shadow:inset 0 1px rgb(255 255 255 / 20%),0 7px 18px rgb(36 70 105 / 13%)}
+.shop-pay:hover:enabled{background:#345f82;box-shadow:inset 0 1px rgb(255 255 255 / 20%),0 9px 22px rgb(36 70 105 / 18%)}
+.shop-pay:disabled{background:#edf1f5;color:#596b7a}
+.shop-confirmation{background:#edf3f8}
+.shop-order-empty{background:#f5f7fa}
+.shop-details::before{background:repeating-linear-gradient(90deg,#7894ad 0 3px,transparent 3px 7px)}
+.shop-prompts button{background:#edf3f8;color:#365f80}
+.shop-prompts button:hover{background:#e2ebf3}
+.shop-message>p{background:#edf3f8}
+#shop-chat .shop-message.user>p{background:#3e7098}
+#shop-chat #shop-chat-input{border-color:#b8c9d8}
+.buyer-dialog::backdrop{background:rgb(18 41 61 / 58%);backdrop-filter:blur(4px)}
+#shop-chat.buyer-dialog{border:1px solid rgb(255 255 255 / 78%);background:linear-gradient(145deg,rgb(255 255 255 / 90%),rgb(241 247 252 / 86%));backdrop-filter:blur(22px);box-shadow:0 28px 90px rgb(20 43 65 / 24%),inset 0 1px rgb(255 255 255 / 70%)}
+#shop-chat .buyer-dialog-heading{background:linear-gradient(120deg,rgb(245 249 253 / 84%),rgb(255 255 255 / 70%))}
+#shop-chat .shop-chat-bottom{background:rgb(248 251 254 / 82%)}
+@media(prefers-reduced-transparency:reduce){.shop-add-cart,.shop-ask{backdrop-filter:none}#shop-chat.buyer-dialog{backdrop-filter:none;background:#fff}}
+#shop-checkout-note:focus-visible{outline:2px solid var(--green);outline-offset:4px;border-radius:3px}
+
+/* Give buyer quantity controls a comfortable touch target without changing workspace controls. */
+.shop-body .qty-stepper{height:46px}
+.shop-body .qty-stepper button{width:44px;min-width:44px;height:44px;min-height:44px}
+
+/* Keep the empty assistant useful without taking over a phone screen. */
+#shop-chat:not(.has-conversation){height:min(560px,calc(100dvh - 40px))}
+@media(max-width:700px){#shop-chat:not(.has-conversation){width:calc(100vw - 24px);height:min(560px,calc(100dvh - 32px));margin:auto;border-radius:16px}}

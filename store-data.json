@@ -78,6 +78,7 @@
           "es": "38 × 34 × 10 cm",
           "fr": "38 × 34 × 10 cm"
         },
+        "capacity": null,
         "care": {
           "en": "Spot clean with a damp cloth.",
           "zh": "使用湿布局部清洁。",
@@ -201,7 +202,8 @@
           "es": "Nanjing, China",
           "fr": "Nankin, Chine"
         },
-        "dimensions": {
+        "dimensions": null,
+        "capacity": {
           "en": "300 ml or 420 ml",
           "zh": "300 毫升或 420 毫升",
           "ja": "300 ml または 420 ml",
@@ -303,6 +305,7 @@
           "es": "45 × 65 cm",
           "fr": "45 × 65 cm"
         },
+        "capacity": null,
         "care": {
           "en": "Machine wash cold; line dry.",
           "zh": "冷水机洗，自然晾干。",

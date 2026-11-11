@@ -2,7 +2,7 @@ const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 const storageKey = 'tradeweave-buyer-v1';
 const i18n = window.TradeWeaveI18n;
-const factFields = [['material', 'Material', '材质'], ['production', 'Production', '制作方式'], ['madeIn', 'Made in', '产地'], ['dimensions', 'Dimensions', '尺寸'], ['care', 'Care', '保养'], ['dispatch', 'Dispatch', '发货时间'], ['shippingPrice', 'Shipping price', '运费'], ['arrivalDateGuarantee', 'Arrival guarantee', '送达日期承诺']];
+const factFields = [['material', 'Material', '材质'], ['production', 'Production', '制作方式'], ['madeIn', 'Made in', '产地'], ['dimensions', 'Dimensions', '尺寸'], ['capacity', 'Capacity', '容量'], ['care', 'Care', '保养'], ['dispatch', 'Dispatch', '发货时间'], ['shippingPrice', 'Shipping price', '运费'], ['arrivalDateGuarantee', 'Arrival guarantee', '送达日期承诺']];
 let saved = {};
 try { saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}') || {}; } catch {}
 if (typeof saved !== 'object' || Array.isArray(saved)) saved = {};
@@ -29,13 +29,14 @@ let selectedVariant = null;
 let addedToCart = false;
 let galleryProductId = null, galleryImagePath = null;
 let store = null, product = null, config = {}, quantity = 1, busy = false, aiBusy = false, loading = false;
-let cartQuote = null, recoveringCreation = null;
+let cartQuote = null, recoveringCreation = null, cartNotice = null, quoteApproved = false;
 let activeCheckout = state.pendingCheckout || state.openCheckout, sdkPromise = null, paypalMounted = false, selectedOrder = null, toastTimer;
 let fxRate = null;
+let ordersStatus = null, ordersKnown = false;
 busy = Boolean(state.pendingCheckout);
-const t = (key, values) => i18n.get(state.language, key, values);
+const t = (key, values, language = state.language) => i18n.get(language, key, values);
 const currentLanguage = () => i18n.language(state.language);
-const localize = value => value?.[currentLanguage().product] || value?.en || value?.zh || '';
+const localize = (value, language = state.language) => value?.[i18n.language(language).product] || value?.en || value?.zh || Object.values(value || {}).find(text => typeof text === 'string' && text.trim()) || '';
 const needsFallback = value => Boolean(value && Object.values(value).some(text => typeof text === 'string' && text.trim()) && !value[currentLanguage().product]?.trim());
 function productNeedsFallback(item) {
   if (!item) return false;
@@ -81,10 +82,14 @@ function node(tag, className, text) { const item = document.createElement(tag); 
 function persist() { try { sessionStorage.setItem(storageKey, JSON.stringify(state)); return true; } catch { return false; } }
 function toast(text) { $('#shop-toast').textContent = text; $('#shop-toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#shop-toast').classList.remove('show'), 4500); }
 function statusLabel(status) { const key = ({ CREATING: 'statusCreating', CREATED: 'statusCreated', APPROVED: 'statusApproved', CAPTURE_PENDING: 'statusCapturePending', COMPLETED: 'completed', PENDING: 'statusPending', DECLINED: 'statusDeclined', DENIED: 'statusDenied', CANCELLED: 'statusCancelled', FAILED: 'statusFailed', PARTIALLY_REFUNDED: 'statusPartiallyRefunded', REFUNDED: 'statusRefunded' })[status] || 'statusUnconfirmed'; return t(key); }
+function renderOrdersStatus() {
+  if (!ordersStatus) return;
+  const { key, status, detail, detailKey } = ordersStatus;
+  $('#shop-orders-status').textContent = t(key, status ? { status: statusLabel(status) } : undefined) + (detailKey ? ' ' + t(detailKey) : detail ? ' ' + detail : '');
+}
+function setOrdersStatus(key, options = {}) { ordersStatus = { key, ...options }; renderOrdersStatus(); }
 function localizedOrderItem(item) {
-  const source = store?.products.find(entry => entry.id === item.productId);
-  const variant = source?.variants.find(entry => entry.id === item.variantId);
-  return source ? localize(source.name) + (variant ? ' · ' + localize(variant.name) : '') : item.name || t('product');
+  return item.name || t('product');
 }
 function translateStatic() {
   const text = (selector, key) => { const element = $(selector); if (element) element.textContent = t(key); };
@@ -167,8 +172,8 @@ function applyLanguage() {
   translateStatic();
   renderProduct(); renderOrders(); renderShopCatalog(); renderCart(); renderPending(); renderChat(); renderPolicyDialogIfOpen();
   aiStatus();
-  $('#shop-checkout-note').textContent = activeCheckout ? t('checkoutReview') : config.paypalReady ? t('sandboxBuyer') : t('checkoutUnavailable');
-  if ($('#shop-orders-status').textContent.trim()) $('#shop-orders-status').textContent = t('ordersLoaded');
+  $('#shop-checkout-note').textContent = checkoutInstruction();
+  renderOrdersStatus();
   $('#shop-language').value = state.language; $('#shop-reply-language').value = state.replyLanguage;
   showPage();
 }
@@ -183,6 +188,10 @@ async function api(path, options = {}) {
 }
 function showPage(scroll = false) {
   const page = ['#orders', '#product', '#cart'].includes(location.hash) ? location.hash.slice(1) : 'catalog';
+  if (page === 'product' && product && addedToCart && !state.cart.some(item => item.productId === product.id)) {
+    addedToCart = false;
+    renderProduct();
+  }
   $('#shop-product-view').hidden = page !== 'product' || !product; $('#shop-orders-view').hidden = page !== 'orders'; $('#shop-cart-view').hidden = page !== 'cart'; if (page === 'cart') renderCart(); $('#shop-catalog-view').hidden = page !== 'catalog' || !store;
   $('#shop-product-missing').hidden = page !== 'product' || !store || Boolean(product);
   $$('[data-shop-page]').forEach(link => { if (link.dataset.shopPage === page || page === 'product' && link.dataset.shopPage === 'catalog') link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
@@ -215,7 +224,10 @@ function renderProduct() {
   $('#shop-tags').replaceChildren(...product.tags.map(tag => node('span', '', localize(tag))));
   $('#shop-facts-label').textContent = t('facts'); $('#shop-facts-note').textContent = t('factsNote');
   $('#shop-facts').replaceChildren();
-  factFields.forEach(([key, en, zh]) => $('#shop-facts').append(node('dt', '', t('fact_' + key)), node('dd', '', localize(product.facts[key]) || t('notProvided'))));
+  factFields.forEach(([key, en, zh]) => {
+    const value = localize(product.facts[key]);
+    $('#shop-facts').append(node('dt', '', t('fact_' + key)), node('dd', value ? 'shop-fact-supplied' : 'shop-fact-missing', value || t('notProvided')));
+  });
   $('#shop-chat-product').textContent = localize(product.name); $('#shop-ask-label').textContent = t('askProduct');
   renderGallery(); renderVariants();
   $('#shop-subtotal-label').textContent = t('subtotal');
@@ -242,14 +254,35 @@ addEventListener('online', onlineState); addEventListener('offline', onlineState
 
 function renderChat() {
   const root = $('#shop-conversation'); root.replaceChildren();
+  $('#shop-chat').classList.toggle('has-conversation', chatHistory().some(message => message.role === 'user'));
   if (!chatHistory().length) root.append(node('p', 'shop-chat-welcome', t('chatWelcome')));
   chatHistory().forEach(message => {
     const item = node('div', 'shop-message ' + (message.isError ? 'notice' : message.role));
     item.append(node('span', '', message.role === 'user' ? t('you') : message.isError ? t('connectionNotice') : t('assistant')), node('p', '', message.text));
+    if (message.role === 'assistant' && Array.isArray(message.evidence) && message.evidence.length) {
+      const evidenceLanguage = message.evidenceLanguage || state.language, evidenceT = (key, values) => t(key, values, evidenceLanguage);
+      const evidence = node('section', 'shop-answer-evidence'), title = node('h3', '', evidenceT('evidenceTitle')), list = node('dl', 'shop-answer-evidence-list');
+      evidence.append(title);
+      message.evidence.forEach(field => {
+        const unknown = !field.value;
+        const valueClass = unknown ? 'evidence-unknown' : field.none ? 'evidence-none' : 'evidence-supplied';
+        const labelKey = field.labelKey || (['price', 'stock', 'options'].includes(field.key) ? 'evidence_' + field.key : 'fact_' + field.key);
+        const value = node('span', 'evidence-value', field.value || evidenceT('notProvided'));
+        const detail = node('dd', valueClass); detail.append(value);
+        if (!unknown && field.source) detail.append(node('span', 'evidence-source evidence-source-' + field.source, evidenceT(field.source === 'listing' ? 'evidenceSourceListing' : 'evidenceSourceSeller')));
+        list.append(node('dt', '', evidenceT(labelKey)), detail);
+      });
+      evidence.append(list, node('p', 'shop-evidence-note', evidenceT('evidenceNote')));
+      item.append(evidence);
+    }
     if (message.retryQuestion) { const retry = node('button', 'quiet-button shop-retry-question', t('retry')); retry.type = 'button'; retry.dataset.retryIndex = chatHistory().indexOf(message); item.append(retry); }
     root.append(item);
   });
-  root.scrollTop = root.scrollHeight;
+  const latest = root.lastElementChild;
+  if (latest?.classList.contains('assistant') && latest.offsetHeight > root.clientHeight) {
+    const offset = latest.getBoundingClientRect().top - root.getBoundingClientRect().top - root.clientTop;
+    root.scrollTop = Math.max(0, root.scrollTop + offset);
+  } else root.scrollTop = root.scrollHeight;
   $('#shop-new-chat').disabled = aiBusy || !chatHistory().length;
 }
 function aiStatus(text) {
@@ -257,14 +290,89 @@ function aiStatus(text) {
   $$('#shop-chat-form input, #shop-chat-form button, .shop-prompts button').forEach(control => control.disabled = aiBusy || !config.aiReady || !product);
   $('#shop-reply-language').disabled = aiBusy; $('#shop-chat-form').setAttribute('aria-busy', String(aiBusy));
 }
+function checkoutInstruction() {
+  if (!config.paypalReady) return t('checkoutUnavailable');
+  if (paypalMounted && quoteApproved) return t(state.openCheckout ? 'checkoutResumeReady' : 'checkoutStepTwo');
+  return t(state.openCheckout ? 'checkoutResumeLoad' : 'checkoutStepOne');
+}
 function chatHistory(id = product?.id) { return state.histories[id] || []; }
 function addMessage(role, text, isError = false, id = product?.id, metadata = {}) { state.histories[id] = [...chatHistory(id), { role, text, isError, ...metadata }].slice(-30); persist(); if (product?.id === id) renderChat(); }
+function answerEvidence(question, item = product, variant = selectedVariant, answerLanguage = state.replyLanguage) {
+  if (!item) return [];
+  const evidenceLanguage = answerLanguage || state.replyLanguage || state.language || state.locale || 'en';
+  const evidenceLocalize = value => localize(value, evidenceLanguage), evidenceT = (key, values) => t(key, values, evidenceLanguage);
+  const q = question.toLocaleLowerCase();
+  const keys = new Set();
+  const shippingPriceQuestion = /shipping\s+(?:price|costs?|fees?|charges?|rates?)\b|delivery\s+(?:price|costs?|fees?|charges?|rates?)\b|how much\s+(?:(?:is|does)\s+(?:the\s+)?(?:shipping|delivery)|to\s+ship)\b|how much\s+(?:will|would)\s+(?:the\s+)?(?:shipping|delivery)\s+be\b|what\s+(?:is|are)\s+(?:the\s+)?shipping\b|cost\s+to\s+ship\b|(?:free|included)\s+(?:shipping|delivery)\b|(?:is|are)\s+(?:the\s+)?(?:shipping|delivery)\s+(?:free|included)\b|(?:shipping|delivery)\s+(?:is\s+)?(?:extra|additional)\b|pay\s+extra\s+for\s+(?:shipping|delivery)\b|(?:pay|paying).{0,20}(?:for\s+)?(?:the\s+)?(?:shipping|delivery)\b|(?:extra|additional)\s+(?:(?:shipping|delivery)\s+(?:fee|charge|cost)|(?:fee|charge|cost)\s+(?:for\s+)?(?:shipping|delivery))\b|shipping\s+(?:is\s+)?free\b|ship(?:s|ped)?\s+(?:for\s+)?free\b|shipping\s+for\s+free\b|postage|送料無料|送料込み|送料|包邮|包郵|免运费|免郵費|运费|運費|邮费|郵費|配送費|frais de livraison|frais de port|co[uû]t\s+(?:de\s+)?(?:livraison|exp[eé]dition)|combien\s+(?:co[uû]te|co[uû]tent)\s+(?:(?:la\s+)|l[’']\s*)?(?:livraison|exp[eé]dition)|(?:livraison|exp[eé]dition)\s+(?:est(?:[- ]elle)?\s+)?(?:gratuite|offerte|incluse|payante)|livraison.{0,20}payante|suppl[eé]ment.{0,30}(?:livraison|exp[eé]dition)|(?:livraison|exp[eé]dition).{0,30}suppl[eé]ment|(?:coste|precio) del env[ií]o|cu[aá]nto cuesta el env[ií]o|env[ií]o\s+(?:es\s+)?(?:gratis|gratuito)|env[ií]o.{0,30}(?:costo|coste|cargo|adicional|extra)|(?:costo|coste|cargo).{0,30}env[ií]o|(?:env[ií]o|entrega).{0,25}(?:adicional|extra)|pagar.{0,25}(?:env[ií]o|entrega)|(?:env[ií]o|entrega).{0,25}pagar/i;
+  const expandedShippingPriceQuestion = /how much\s+to\s+send\b|cost\s+to\s+send\b|cu[aá]nto\s+cuesta\s+enviar\b/i;
+  const shippingPricePattern = new RegExp(`${shippingPriceQuestion.source}|${expandedShippingPriceQuestion.source}`, 'i');
+  const explicitArrivalQuestion = /\b(?:when|arrival|arrive|guarantee|guaranteed|date|estimate|by\s+(?:friday|monday|\w+day))\b|\bhere\b.{0,20}\b(?:by\s+)?(?:friday|monday|\w+day)\b|\bhow long\b.{0,30}\b(?:receive|get|reach)\b|\bwhat day\b.{0,25}\b(?:receive|get|reach|arrive)\b|\bwhen\b.{0,30}\b(?:receive|get|reach|expect)\b|什么时候到|何时到|到货|到貨|送达|送達|送到|到达|到達|(?:周|星期|礼拜)[一二三四五六日天]|保証|到着|届|lleg|entreg|garant|arriv/i;
+  const explicitDispatchTimingQuestion = /dispatch(?:\s+(?:time|timing|schedule))?|\bwhen\b.{0,50}\b(?:ship(?:ped|s)?|send out|dispatch)\b|\bhow long\b.{0,45}\b(?:before|until)\b.{0,25}\b(?:sent|shipped|dispatched|ship(?:s|ped)?)\b|\bhow long\b.{0,35}\b(?:shipping|delivery)\s+(?:take|takes|last|lasts)\b|\bhow soon\b.{0,40}\b(?:ship|send|dispatch)\b|\bprocessing\b.{0,25}\b(?:time|take|takes|days?)\b|shipping\s+(?:time|timeline|takes|in|within)\b|delivery\s+(?:time|timeline|takes|in|within)\b|发货时间|發貨時間|配送时间|配送時期|発送時期|配送時間|発送(?:まで|日数)|配送まで|d[eé]lai\s+(?:de\s+livraison|d[’']exp[eé]dition)|combien\s+de\s+temps.{0,45}(?:exp[eé]di|livr)|tard(?:a|an|ar).{0,40}(?:env[ií]|exped)|cu[aá]ndo.{0,45}(?:se\s+)?env[ií]a|quand.{0,45}(?:exp[eé]di|envoy)/i;
+  const explicitCapacityQuestion = /\b(?:capacit(?:y|ies)|volume|millilit(?:er|re)s?)\b|\b\d+\s*ml\b|容量|容積|内容量|何ミリリットル|capacidad|contenance|capacit[eé]|volume/i;
+  const ambiguousSizeQuestion = /\bsize\b|尺寸|大小|多大|寸法|サイズ|tama[nñ]o|taille/i;
+  const explicitItemPriceQuestion = /\b(?:product|item|listed)\s+(?:price|cost)\b|\b(?:product|item)\b.{0,24}\b(?:price|cost)\b|\b(?:price|cost)\s+(?:of|for)\s+(?:the\s+)?(?:product|item)\b|\b(?:price|cost)\s+(?:of|for)\s+(?:(?:the|this)\s+)?(?:tote|bag)\b.{0,32}\b(?:and|plus)\b|\bhow much\s+(?:does|is)\s+(?:(?:the|this)\s+)?(?:product|item|tote|bag)\b|商品价格|商品價格|商品の価格|precio del producto|prix du produit/i;
+  const optionsQuestion = /option|variant|specification|specs|\b(?:what|which)\s+(?:sizes?|colou?rs?)\b|\b(?:sizes?|colou?rs?)\s+(?:can\s+i\s+choose|are\s+available|do\s+you\s+offer)\b|\bavailable\s+in\b|规格|規格|选项|選項|尺寸|大小|颜色|顏色|オプション|仕様|サイズ|色|opci[oó]n|variante|talla|color|tama[nñ]os?.{0,25}(?:disponibles?|hay|puedo\s+elegir)|colores?.{0,25}(?:disponibles?|hay|puedo\s+elegir)|qu[eé]\s+(?:tallas?|colores?)\s+(?:hay|tienen|ofrecen|est[aá]n\s+disponibles?)|tailles?.{0,25}(?:(?:sont|sont-elles)\s+)?(?:disponibles?|propos[eé]es)|couleurs?.{0,25}(?:(?:sont|sont-elles)\s+)?(?:disponibles?|propos[eé]es)|quelles?\s+(?:tailles?|couleurs?|options?).{0,30}(?:disponibles?|propos[eé]es)/i;
+  const explicitStockQuestion = /\bstock\b|inventory|in stock|sold\s+out|\bany\s+left\b|\bhow\s+many\b.{0,30}\b(left|available|in stock)\b|\bdo\s+you\s+have\s+any\s+left\b|\bavailable\s+in\s+[^?!.]+|库存|庫存|在庫|existencias|inventario|agotad|queda|quantit[eé]s? en stock|rupture de stock|[eé]puis[eé]/i;
+  const mentionedVariant = (item.variants || []).find(option => Object.values(option.name || {}).some(name => {
+    const normalized = String(name || '').trim().toLocaleLowerCase();
+    return normalized.length > 1 && q.includes(normalized);
+  }));
+  const variantInquiry = mentionedVariant && /\b(?:in|option|variant|size|colour|color|available|availability|stock|sold out|left|price|cost|how much|choose|get|have|offer|come in)\b|规格|規格|尺寸|大小|颜色|顏色|选|選|价格|價格|多少钱|多少錢|有货|有貨|库存|庫存|サイズ|色|在庫|価格|いくら|talla|color|opci[oó]n|variante|precio|disponible|stock|elegir|puedo|talle|taille|couleur|option|prix/i.test(q);
+  const evidenceVariant = mentionedVariant || (!optionsQuestion.test(q) ? variant : null);
+  const materialOnlyQuestion = /material|fabric|cotton|材质|材料|材質|素材|面料|algod[oó]n|coton|mati[eè]re|\bmade of\b|\bmade from\b/i.test(q)
+    && !/production|handwoven|制作|作り|fabrication/i.test(q);
+  const groups = [
+    [/material|fabric|cotton|\bmade(?: of)?\b|production|handwoven|材质|材料|材質|素材|面料|制作|作り|素材|algod[oó]n|coton|mati[eè]re|fabrication|tejido|tissé/i, ['material', 'production', 'madeIn']],
+    [/care|clean|wash|stain|洗|清洁|清潔|护理|保养|お手入れ|手入れ|洗濯|cuidado|cuida|limpi|lav|entretenir|entretien|nettoy/i, ['care']],
+    [/dimension|measure|size|length|width|height|尺寸|大小|多大|寸法|サイズ|tama[nñ]o|dimensi[oó]n|mesure|taille/i, ['dimensions']],
+    [explicitCapacityQuestion, ['capacity']],
+    [/dispatch|ship(?:ped|s)?\b|\bsent\b|\bhow long\b.{0,45}\b(?:before|until)\b.{0,25}\b(?:sent|shipped|dispatched|ship(?:s|ped)?)\b|\bhow long\b.{0,35}\b(?:shipping|delivery)\s+(?:take|takes|last|lasts)\b|\bhow soon\b.{0,40}\b(?:ship|send|dispatch)\b|\bprocessing\b.{0,25}\b(?:time|take|takes|days?)\b|shipping\s+(?:time|timeline|takes|in|within)\b|delivery\s+(?:time|timeline|takes|in|within)\b|send out|発|発送(?:時期|まで|日数)|配送(?:時間|予定|时|時期|まで)|发货|發貨|运送时间|運送時間|tiempo de env[ií]o|expedici[oó]n|tard(?:a|an|ar).{0,40}(?:env[ií]|exped)|d[eé]lai\s+(?:de\s+livraison|d[’']exp[eé]dition)|combien\s+de\s+temps.{0,45}(?:exp[eé]di|livr)|cu[aá]ndo.{0,45}(?:se\s+)?env[ií]a|quand.{0,45}(?:exp[eé]di|envoy)/i, ['dispatch']],
+    [shippingPricePattern, ['shippingPrice']],
+    [/arriv|deliver(?:ed|s)?|delivery\s+(?:date|estimate|guarantee)|guarantee|by (?:friday|monday|\w+day)|\bhere\b.{0,20}\b(?:by\s+)?(?:friday|monday|\w+day)\b|\bhow long\b.{0,30}\b(?:receive|get|reach)\b|\bwhat day\b.{0,25}\b(?:receive|get|reach|arrive)\b|\bwhen\b.{0,30}\b(?:receive|get|reach|expect)\b|到货|到貨|送达|送達|送到|到达|到達|(?:周|星期|礼拜)[一二三四五六日天]|什么时候到|何时到|保証|到着|届|lleg(?:ada|a|an|ará|aran)|entreg|garant(?:[ií]a|iz)|arriv[eé]e|garantie/i, ['arrivalDateGuarantee']],
+    [/price|cost|how much|total|usd|价格|價格|多少钱|多少錢|金額|価格|いくら|precio|prix|cu[aá]nto|combien/i, ['price']],
+    [/stock|available|availability|in stock|sold\s+out|\bany\s+left\b|\bhow\s+many\b.{0,30}\b(left|available|in stock)\b|库存|庫存|有货|有貨|在庫|stock|disponible/i, ['stock']],
+    [optionsQuestion, ['options']]
+  ];
+  for (const [pattern, fields] of groups) if (pattern.test(q)) fields.forEach(key => {
+    if (materialOnlyQuestion && ['production', 'madeIn'].includes(key)) return;
+    if (key === 'price' && !explicitItemPriceQuestion.test(q) && (shippingPricePattern.test(q) || explicitDispatchTimingQuestion.test(q) || explicitArrivalQuestion.test(q))) return;
+    if (key === 'dispatch' && shippingPricePattern.test(q) && !explicitDispatchTimingQuestion.test(q)) return;
+    if (key === 'arrivalDateGuarantee' && shippingPricePattern.test(q) && !explicitArrivalQuestion.test(q)) return;
+    if (key === 'stock' && optionsQuestion.test(q) && !explicitStockQuestion.test(q) && !(mentionedVariant && /\bavailable\b|\bin stock\b|\bsold out\b|在庫|有货|有貨/i.test(q))) return;
+    keys.add(key);
+  });
+  if (ambiguousSizeQuestion.test(q) && localize(item.facts?.capacity)) keys.add('capacity');
+  if (variantInquiry) keys.add('options');
+  const evidence = [...keys].map(key => {
+    if (key === 'price') return { key: 'price', source: 'listing', value: evidenceVariant ? `${evidenceLocalize(evidenceVariant.name)}: ${evidenceVariant.price} ${item.currency || 'USD'}` : item.variants?.length ? item.variants.map(option => `${evidenceLocalize(option.name)}: ${option.price} ${item.currency || 'USD'}`).join('; ') : `${item.price} ${item.currency || 'USD'}` };
+    if (key === 'stock') return { key: 'stock', source: 'listing', value: evidenceVariant ? `${evidenceLocalize(evidenceVariant.name)}: ${evidenceVariant.stock}` : item.variants?.length ? item.variants.map(option => `${evidenceLocalize(option.name)}: ${option.stock}`).join('; ') : String(item.stock) };
+    if (key === 'options') return item.variants?.length ? { key: 'options', source: 'listing', value: item.variants.map(option => `${evidenceLocalize(option.name)}${Number(option.stock) > 0 ? '' : ' · ' + evidenceT('soldOut')}`).join(', ') } : { key: 'options', source: 'listing', value: evidenceT('noOptionsListed'), none: true };
+    return { key, source: 'seller', value: evidenceLocalize(item.facts?.[key]) || '' };
+  });
+  const careText = Object.values(item.facts?.care || {}).filter(value => typeof value === 'string').join(' ');
+  const careUnknowns = [
+    { key: 'machineWash', question: /machine.?wash|washing machine|\bwash(?:ed|ing)?\b.{0,18}\b(?:in|inside)\s+(?:the\s+)?(?:washing\s+)?machine\b|\bmachine\b.{0,18}\bwash(?:able|ed|ing)?\b|机洗|洗衣机|洗濯機|lavadora|lavar(?:se)?\b.{0,24}\ba\s+m[aá]quina\b|lavar(?:se)?\b.{0,24}\ben\s+(?:la\s+)?lavadora\b|lavado\s+a\s+m[aá]quina|machine à laver|\b(?:laver|lavé|lavable|lavage)\b.{0,15}\ben machine\b/i, fact: /machine.?wash|washing machine|\bwash(?:ed|ing)?\b.{0,18}\b(?:in|inside)\s+(?:the\s+)?(?:washing\s+)?machine\b|\bmachine\b.{0,18}\bwash(?:able|ed|ing)?\b|hand.?wash|hand washing|机洗|洗衣机|洗濯機|手洗|lavadora|lavar(?:se)?\b.{0,24}\ba\s+m[aá]quina\b|lavar(?:se)?\b.{0,24}\ben\s+(?:la\s+)?lavadora\b|lavado\s+a\s+m[aá]quina|machine à laver|\b(?:laver|lavé|lavable|lavage)\b.{0,15}\ben machine\b|lavage\s+(?:à|a)\s+la\s+main|laver\s+(?:à|a)\s+la\s+main|lavar\s+a\s+mano|lavado\s+a\s+mano/i },
+    { key: 'dryerSafety', question: /dryer|tumble.?dry|烘干|烘乾|烘干机|烘乾機|乾燥機|secadora|sèche-linge/i, fact: /dryer|tumble.?dry|烘干|烘乾|烘干机|烘乾機|乾燥機|secadora|sèche-linge/i }
+  ];
+  for (const detail of careUnknowns) {
+    if (detail.question.test(q) && !detail.fact.test(careText)) evidence.push({ key: detail.key, labelKey: 'evidence_' + detail.key, value: '' });
+  }
+  const policyGroups = [
+    [/\b(?:shipping|delivery)\s+polic(?:y|ies)\b|\bwhere\s+(?:do|can)\s+you\s+ship\b|\bcan\s+you\s+(?:ship|deliver)\s+to\b|\bdo\s+you\s+(?:ship|deliver)\s+to\b|\b(?:international|worldwide)\s+shipping\b|\bshipping\s+methods?\b|(?:能|可以|支持)?(?:寄|寄送|发|發|发货|發貨|配送|送货|送貨)(?:到|至)(?:哪里|哪裡|哪儿|哪兒|什么地方|哪些地方)|(?:支持|可以|能否|能)\s*(?:寄|寄送|发货|發貨|配送|送货|送貨).{0,8}(?:到|至)|(?:发货|發貨|寄送|配送)(?:范围|範圍|地区|地區)|配送政策|配送方針|配送规则|運送方針|env[ií]an?\s+a\b|a\s+qu[eé]\s+(?:lugares?|pa[ií]ses?).{0,20}env[ií]an|env[ií]os?\s+internacionales?|pol[ií]tica\s+de\s+env[ií]o|exp[eé]diez-vous\s+(?:au|en|à|dans)\b|politique\s+de\s+livraison|livrez-vous|配送先|どこに配送|どこへ発送|(?:日本へ|海外へ)?発送できますか/i, 'shipping', 'shipping'],
+    [/\breturns?\b|\brefunds?\b|\bexchanges?\b|返品|返金|退货|退貨|退款|退換|devoluci[oó]n|devolv\w*|reembolso|cambio|retour|remboursement|[eé]change/i, 'returns', 'returns'],
+    [/\bprivacy\b|\bpersonal\s+(?:data|information)\b|\buse\s+my\s+(?:data|information)\b|隐私|隱私|个人信息|個人情報|プライバシー|privacidad|datos personales|confidentialit[eé]|donn[eé]es personnelles/i, 'privacy', 'privacy'],
+    [/\bcontact\b|\bhow\s+can\s+i\s+reach\b|\breach\s+the\s+(?:seller|maker)\b|\bcontact\w*|\bjoindre\b|\bjoign(?:ez|ent|ant)\b|\bcontact\s+(?:details|information)\b|\be-?mail\b|联系|聯繫|聯絡|連絡|联系店主|連絡先|contacto|conta[cé]ctar|coordonn[eé]es/i, 'contact', 'contactInfo']
+  ];
+  for (const [pattern, key, labelKey] of policyGroups) if (pattern.test(q)) evidence.push({ key, labelKey, source: 'seller', value: evidenceLocalize(store?.shop?.policies?.[key]) || '' });
+  return evidence;
+}
 async function ask(question) {
   if (aiBusy || !product || !config.aiReady || !question.trim()) return;
   const history = chatHistory().filter(m => !m.isError).slice(-10).map(m => ({ role: m.role, content: m.text.slice(0, 1800) }));
-  const contextId = product.id, optionId = selectedVariant?.id;
+  const contextId = product.id, contextProduct = product, contextVariant = selectedVariant, optionId = selectedVariant?.id, answerLanguage = state.replyLanguage;
+  const evidence = answerEvidence(question, contextProduct, contextVariant, answerLanguage);
   addMessage('user', question); aiBusy = true; aiStatus(t('readingFacts')); renderChat();
-  try { const result = await api('/api/assistant', { method: 'POST', body: JSON.stringify({ productId: contextId, variantId: optionId, question, language: state.replyLanguage, history }) }); addMessage('assistant', result.answer, false, contextId); state.answers++; persist(); }
+  try { const result = await api('/api/assistant', { method: 'POST', body: JSON.stringify({ productId: contextId, variantId: optionId, question, language: answerLanguage, history }) }); addMessage('assistant', result.answer, false, contextId, { evidence, evidenceLanguage: answerLanguage }); state.answers++; persist(); }
   catch { addMessage('assistant', t('questionErrorSaved', { error: t('aiTemporaryError') }), true, contextId, { retryQuestion: question }); }
   finally { aiBusy = false; aiStatus(); renderChat(); if ($('#shop-chat').open) $('#shop-chat-input').focus(); }
 }
@@ -288,12 +396,13 @@ function renderOrders() {
   const root = $('#shop-orders'); root.replaceChildren();
   $('#shop-order-count').hidden = !state.orders.length; $('#shop-order-count').textContent = state.orders.length;
   if (!state.orders.length) {
+    if (!ordersKnown) return;
     const empty = node('div', 'shop-order-empty'), link = node('a', 'primary-button', t('browseShop')); link.href = '#catalog'; link.dataset.shopPage = 'catalog';
     empty.append(node('h2', '', t('ordersEmptyTitle')), node('p', '', t('ordersEmpty')), link); root.append(empty); return;
   }
   state.orders.forEach(order => {
     const row = node('article', 'shop-order-row'), info = node('div');
-    const firstItemName = order.items?.[0] ? localizedOrderItem(order.items[0]) : localize(store?.products.find(item => item.name.en === order.productName)?.name) || order.productName || t('product');
+    const firstItemName = order.items?.[0] ? localizedOrderItem(order.items[0]) : order.productName || t('product');
     info.append(node('strong', '', order.items?.length > 1 ? t('productsItems', { products: order.items.length, items: order.quantity }) : t('productQuantity', { quantity: order.quantity || 1, product: firstItemName })), node('small', '', t(order.paypalOrderId ? 'paypalRef' : 'shopRef', { id: order.orderId })), node('span', order.status === 'COMPLETED' ? 'fact-state supplied' : 'fact-state missing', statusLabel(order.status)));
     if (order.status === 'COMPLETED') info.append(node('small', '', t('fulfillment') + ' · ' + t(order.fulfillment === 'FULFILLED' ? 'fulfilled' : 'unfulfilled')));
     const button = node('button', 'quiet-button', t('viewDetails')); button.type = 'button'; button.addEventListener('click', () => receipt(order));
@@ -362,10 +471,10 @@ async function capture(orderId) {
     if (!captureResponseStatuses.has(result.status)) throw new Error(t('checkoutRecover'));
     state.pendingCheckout = null; state.openCheckout = null; activeCheckout = null;
     if (['COMPLETED', 'PENDING'].includes(result.status)) state.cart = [];
-    state.requestKey = null; cartQuote = null; persist();
-    await refreshOrders(); lockCheckout(false); renderPending(); renderCart();
+    state.requestKey = null; cartQuote = null; quoteApproved = false; persist();
+    const ordersRefreshed = await refreshOrders(); lockCheckout(false); renderPending(); renderCart();
     history.pushState(null, '', '#orders'); showPage(true);
-    $('#shop-orders-status').textContent = t('paymentReturned', { status: statusLabel(result.status) });
+    setOrdersStatus('paymentReturned', { status: result.status, detailKey: ordersRefreshed ? '' : 'orderRefreshError' });
   } catch (error) {
     $('#shop-checkout-note').textContent = error.message;
     renderPending();
@@ -382,12 +491,25 @@ async function capture(orderId) {
 $('#shop-retry-capture').addEventListener('click', async () => { if (activeCheckout) try { await capture(activeCheckout.id); } catch (error) { toast(error.message); } });
 async function beginCheckout() {
   if (busy || !config.paypalReady) return;
+  cartNotice = null;
   history.replaceState(null, '', '#cart'); showPage(); lockCheckout(true); $('#shop-buy').setAttribute('aria-busy', 'true');
   try {
     if (!state.openCheckout && !recoveringCreation) {
-      const displayed = cartTotal(), quote = await api('/api/cart/quote', { method: 'POST', body: JSON.stringify({ items: state.cart }) }); cartQuote = quote; renderCart();
-      if (displayed !== quote.amount) { $('#shop-cart-message').textContent = t('priceChanged'); lockCheckout(false); return; }
+      const displayed = cartItems(), displayedTotal = cartTotal(), quote = await api('/api/cart/quote', { method: 'POST', body: JSON.stringify({ items: state.cart }) });
+      const quoteLinesValid = Array.isArray(quote.items) && quote.items.every(line => line && typeof line === 'object');
+      const quoteItems = quoteLinesValid ? quote.items : [];
+      const lineDetailsChanged = !quoteLinesValid || quoteItems.length !== displayed.length || displayed.some(item => {
+        const quoted = quoteItems.find(line => line.productId === item.productId && (line.variantId || null) === (item.variantId || null));
+        return !quoted || quoted.quantity !== item.quantity;
+      });
+      const quoteValueChanged = quote.currency !== 'USD' || displayedTotal !== quote.amount || displayed.some(item => {
+        const quoted = quoteItems.find(line => line.productId === item.productId && (line.variantId || null) === (item.variantId || null));
+        return !quoted || quoted.price !== item.price;
+      });
+      cartQuote = quoteLinesValid ? quote : null; renderCart();
+      if (lineDetailsChanged || quoteValueChanged) { quoteApproved = false; cartNotice = 'priceChanged'; lockCheckout(false); return; }
     }
+    quoteApproved = true;
     await loadSdk();
     if (!paypalMounted) {
       const buttons = window.paypal.Buttons({ style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal', height: 48 },
@@ -399,7 +521,15 @@ async function beginCheckout() {
             const expected = cartQuote?.amount || cartTotal();
             activeCheckout = await api('/api/paypal/order', { method: 'POST', body: JSON.stringify({ items: state.cart, requestKey: state.requestKey }) });
             state.openCheckout = activeCheckout; persist(); renderPending();
-            if (activeCheckout.amount !== expected || activeCheckout.currency !== 'USD') throw new Error(t('checkoutSaved'));
+            const expectedItems = cartQuote?.items;
+            const sameItems = expectedItems && Array.isArray(activeCheckout.items) && expectedItems.length === activeCheckout.items.length && expectedItems.every((item, index) => {
+              const saved = activeCheckout.items[index];
+              return saved.productId === item.productId && (saved.variantId || null) === (item.variantId || null) && saved.quantity === item.quantity && saved.price === item.price;
+            });
+            if (activeCheckout.amount !== expected || activeCheckout.currency !== 'USD' || !sameItems) {
+              quoteApproved = false;
+              throw new Error(t('checkoutSaved'));
+            }
             state.checkouts++; persist(); return activeCheckout.id;
           } catch (error) { await refreshOrders(); lockCheckout(Boolean(state.pendingCheckout)); throw error; }
         },
@@ -410,7 +540,8 @@ async function beginCheckout() {
       if (!buttons.isEligible()) throw new Error(t('paypalUnavailable'));
       await buttons.render('#shop-paypal'); paypalMounted = true;
     }
-    $('#shop-checkout-note').textContent = t(state.openCheckout ? 'checkoutResumeNote' : 'checkoutReview');
+    $('#shop-checkout-note').textContent = checkoutInstruction();
+    $('#shop-checkout-note').focus();
     lockCheckout(false);
   } catch (error) { lockCheckout(Boolean(state.pendingCheckout)); $('#shop-checkout-note').textContent = error.message; toast(error.message); }
   finally { $('#shop-buy').setAttribute('aria-busy', 'false'); updateCartControls(); }
@@ -428,8 +559,8 @@ async function cancelCheckout() {
       persist(); lockCheckout(true); renderPending(); renderCart(); await refreshOrders(); toast(t('checkoutPending')); return;
     }
     if (['COMPLETED', 'PENDING'].includes(result.status)) state.cart = [];
-    activeCheckout = null; state.openCheckout = null; state.pendingCheckout = null; state.requestKey = null; cartQuote = null;
-    persist(); lockCheckout(false); renderPending(); renderCart(); await refreshOrders();
+    activeCheckout = null; state.openCheckout = null; state.pendingCheckout = null; state.requestKey = null; cartQuote = null; quoteApproved = false;
+    persist(); lockCheckout(false); renderPending(); renderCart(); $('#shop-checkout-note').textContent = checkoutInstruction(); await refreshOrders();
     toast(result.status === 'COMPLETED' || result.status === 'PENDING' ? t('paymentReturned', { status: statusLabel(result.status) }) : t('checkoutCancel'));
   }
   catch (error) { toast(error.message); renderPending(); }
@@ -443,7 +574,7 @@ async function initialize() {
     store = source.value; config = connection.status === 'fulfilled' ? connection.value : {};
     syncProduct(); renderShopCatalog(); void refreshFx();
     $('#shop-preview').hidden = !(config.workspaceReady && new URLSearchParams(location.search).get('preview') === '1');
-    translateStatic(); $('#shop-checkout-note').textContent = activeCheckout ? t('checkoutReview') : config.paypalReady ? t('sandboxBuyer') : t('checkoutUnavailable');
+    translateStatic(); $('#shop-checkout-note').textContent = checkoutInstruction();
     await refreshOrders(); renderPending(); renderProduct(); renderCart(); aiStatus();
   } catch (error) { console.error(error); $('#shop-load-error').hidden = false; $('#shop-load-message').textContent = error.message; }
   finally { loading = false; $('#shop-loading').hidden = true; showPage(); }
@@ -555,7 +686,7 @@ function renderPending() {
   $('#shop-pending').hidden = !order; $('#shop-resume-checkout').hidden = !state.openCheckout; $('#shop-cancel-checkout').hidden = !state.openCheckout; $('#shop-retry-capture').hidden = !state.pendingCheckout;
   $('#shop-resume-checkout').textContent = t('resumePayPal'); $('#shop-cancel-checkout').textContent = t('cancelCheckoutAction'); $('#shop-retry-capture').textContent = t('retryCapture');
   if (order) {
-    const summary = (order.items || []).map(item => item.quantity + ' × ' + (localizedOrderItem(item) || t('unavailable'))).join(' · ') || order.productName || t('savedCheckout');
+    const summary = (order.items || []).map(item => item.quantity + ' × ' + (localizedOrderItem(item) || t('unavailable')) + ' · ' + priceLabel(item.price, order.currency) + ' ' + t('each')).join(' · ') || order.productName || t('savedCheckout');
     $('#shop-pending-copy').textContent = t(state.pendingCheckout ? 'checkoutPending' : 'checkoutAwaiting') + ' · ' + summary + ' · ' + priceLabel(order.amount, order.currency) + '. ' + t('savedSnapshot');
   }
 }
@@ -576,17 +707,18 @@ function updateCartControls() {
   $('#shop-language').title = $('#shop-language').disabled ? ({ en: 'Finish or cancel checkout to change language.', 'zh-CN': '完成或取消结账后可切换语言。', ja: '言語を変更するには決済を完了またはキャンセルしてください。', es: 'Finaliza o cancela el pago para cambiar el idioma.', fr: 'Terminez ou annulez le paiement pour changer de langue.' }[state.language] || '') : '';
   $('#shop-buy').disabled = busy || !items.length || invalid || !config.paypalReady;
   $('#shop-buy').textContent = busy ? t('checkoutProgress') : !config.paypalReady ? t('checkoutUnavailable') : state.openCheckout ? t('resumePayPal') : t('continuePayPal');
-  $('#shop-buy').hidden = paypalMounted && Boolean(items.length) && !invalid && config.paypalReady && !state.pendingCheckout;
-  $('#shop-paypal').hidden = !paypalMounted || !items.length || invalid || !config.paypalReady || Boolean(state.pendingCheckout);
+  const paymentReady = paypalMounted && quoteApproved && Boolean(items.length) && !invalid && config.paypalReady && !state.pendingCheckout;
+  $('#shop-buy').hidden = paymentReady;
+  $('#shop-paypal').hidden = !paymentReady;
   $('#shop-paypal').style.pointerEvents = busy ? 'none' : '';
   $('#shop-cart-count').textContent = state.cart.reduce((sum, i) => sum + i.quantity, 0); $('#shop-cart-count').hidden = !state.cart.length;
 }
 function changeCart(index, difference) {
   if (busy || activeCheckout) return;
-  state.cart[index].quantity += difference; state.requestKey = null; cartQuote = null; recoveringCreation = null; persist(); renderCart();
+  state.cart[index].quantity += difference; state.requestKey = null; cartQuote = null; cartNotice = null; quoteApproved = false; recoveringCreation = null; persist(); renderCart(); $('#shop-checkout-note').textContent = checkoutInstruction();
 }
 function renderCart() {
-  const root = $('#shop-cart-list'), items = cartItems(); root.replaceChildren(); $('#shop-cart-message').textContent = '';
+  const root = $('#shop-cart-list'), items = cartItems(); root.replaceChildren(); $('#shop-cart-message').textContent = cartNotice ? t(cartNotice) : '';
   if (!items.length) root.append(node('p', 'shop-order-empty', t('emptyCart')));
   items.forEach((item, index) => {
     const row = node('article', 'shop-cart-row'), details = node('div', 'shop-cart-item-info');
@@ -596,7 +728,7 @@ function renderCart() {
     const minus = node('button', '', '−'), plus = node('button', '', '+'); minus.type = plus.type = 'button'; minus.setAttribute('aria-label', t('decreaseProduct', { product: item.name })); plus.setAttribute('aria-label', t('increaseProduct', { product: item.name }));
     minus.disabled = busy || Boolean(activeCheckout) || item.quantity <= 1; plus.disabled = busy || Boolean(activeCheckout) || item.quantity >= Math.min(5, item.stock || 0);
     minus.addEventListener('click', () => changeCart(index, -1)); plus.addEventListener('click', () => changeCart(index, 1)); stepper.append(minus, node('span', '', item.quantity), plus);
-    const remove = node('button', 'text-button', t('remove')); remove.type = 'button'; remove.setAttribute('aria-label', t('remove') + ' ' + item.name); remove.disabled = busy || Boolean(activeCheckout); remove.addEventListener('click', () => { state.cart.splice(index, 1); state.requestKey = null; cartQuote = null; persist(); renderCart(); }); controls.append(stepper, remove);
+    const remove = node('button', 'text-button', t('remove')); remove.type = 'button'; remove.setAttribute('aria-label', t('remove') + ' ' + item.name); remove.disabled = busy || Boolean(activeCheckout); remove.addEventListener('click', () => { state.cart.splice(index, 1); state.requestKey = null; cartQuote = null; cartNotice = null; quoteApproved = false; persist(); renderCart(); $('#shop-checkout-note').textContent = checkoutInstruction(); }); controls.append(stepper, remove);
     const itemTotal = node('strong', 'cart-item-total'); renderBuyerPrice(itemTotal, Number(item.price) * item.quantity); row.append(details, controls, itemTotal); root.append(row);
   });
   renderBuyerPrice($('#shop-cart-total'), activeCheckout?.amount || cartTotal()); updateCartControls(); updateFxNotes();
@@ -607,25 +739,28 @@ $('#shop-add-cart').addEventListener('click', () => {
   if (found && found.quantity + quantity > Math.min(5, selectedVariant ? selectedVariant.stock : product.stock)) { toast(t('maxCartQty')); return; }
   if (!found && state.cart.length >= 20) { toast(t('cartLimit')); return; }
   if (found) found.quantity += quantity; else state.cart.push({ productId: product.id, variantId: selectedVariant?.id || null, quantity });
-  state.requestKey = null; cartQuote = null; persist(); renderCart(); addedToCart = true;
+  state.requestKey = null; cartQuote = null; cartNotice = null; quoteApproved = false; persist(); renderCart(); $('#shop-checkout-note').textContent = checkoutInstruction(); addedToCart = true;
   $('#shop-product-note').textContent = t('toastAdded'); $('#shop-add-confirmation').hidden = false;
 });
 async function refreshOrders() {
   $('#shop-refresh-orders').disabled = true;
+  ordersKnown = false; ordersStatus = null; $('#shop-orders-status').textContent = ''; renderOrders();
   try {
-    const result = await api('/api/buyer/orders'); state.orders = result.orders; persist(); renderOrders();
+    const result = await api('/api/buyer/orders'); state.orders = result.orders; ordersKnown = true; persist(); renderOrders();
     if (!activeCheckout && state.requestKey) { const attempt = result.orders.find(o => o.requestKey === state.requestKey); if (attempt && terminalCheckoutStatuses.has(attempt.status)) { state.requestKey = null; persist(); } }
-    $('#shop-orders-status').textContent = t('ordersLoaded');
+    setOrdersStatus('ordersLoaded');
     if (activeCheckout) {
       const saved = result.orders.find(o => o.paypalOrderId === activeCheckout.id);
-      if (saved && terminalCheckoutStatuses.has(saved.status)) { if (saved.status === 'COMPLETED') state.cart = []; activeCheckout = null; state.pendingCheckout = null; state.openCheckout = null; state.requestKey = null; cartQuote = null; lockCheckout(false); persist(); renderCart(); }
+      if (saved && terminalCheckoutStatuses.has(saved.status)) { if (saved.status === 'COMPLETED') state.cart = []; activeCheckout = null; state.pendingCheckout = null; state.openCheckout = null; state.requestKey = null; cartQuote = null; quoteApproved = false; lockCheckout(false); persist(); renderCart(); }
     }
-  } catch (error) { $('#shop-orders-status').textContent = t('orderRefreshError') + ' ' + error.message; }
+    return true;
+  } catch (error) { renderOrders(); setOrdersStatus('orderRefreshError', { detail: error.message }); return false; }
   finally { $('#shop-refresh-orders').disabled = false; renderPending(); }
 }
 $('#shop-refresh-orders').addEventListener('click', refreshOrders);
 function resumeOrder(order) {
   if ((busy || activeCheckout) && activeCheckout?.id !== order.paypalOrderId) { toast(t('resolveCheckout')); return; }
+  quoteApproved = false;
   state.cart = order.items.map(i => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity })); cartQuote = { amount: order.amount, items: order.items }; state.requestKey = order.requestKey || state.requestKey;
   if (order.paypalOrderId) { activeCheckout = { ...order, id: order.paypalOrderId }; state.openCheckout = activeCheckout; state.pendingCheckout = null; recoveringCreation = null; }
   else { activeCheckout = null; state.openCheckout = null; recoveringCreation = order; }
